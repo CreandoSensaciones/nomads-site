@@ -1,0 +1,6 @@
+drupal.domain:
+  js:
+    js/domain.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal

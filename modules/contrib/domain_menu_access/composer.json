@@ -1,0 +1,57 @@
+{
+    "name": "drupal/domain_menu_access",
+    "description": "Domain-based access control for menu link.",
+    "license": "GPL-2.0-or-later",
+    "type": "drupal-module",
+    "authors": [
+        {
+            "name": "maciej.zgadzaj",
+            "homepage": "https://www.drupal.org/u/maciejzgadzaj",
+            "role": "Maintainer"
+        },
+        {
+            "name": "Oleksandr Dekhteruk (pifagor)",
+            "homepage": "https://www.drupal.org/u/pifagor",
+            "role": "Co-maintainer"
+        },
+        {
+            "name": "Sebastien MALOT (Sebastien M.)",
+            "homepage": "https://www.drupal.org/u/sebastien-m",
+            "role": "Co-maintainer"
+        },
+        {
+            "name": "Tim Diels (tim-diels)",
+            "homepage": "https://www.drupal.org/u/tim-diels",
+            "role": "Co-maintainer"
+        }
+    ],
+    "homepage": "https://www.drupal.org/project/domain_menu_access",
+    "support": {
+        "issues": "https://drupal.org/project/issues/domain_menu_access",
+        "source": "https://git.drupalcode.org/project/domain_menu_access"
+    },
+    "require": {
+        "drupal/domain": "^1.0 || ^2.0"
+    },
+    "require-dev": {
+        "drupal/menu_block": "^1.0",
+        "phpstan/phpstan-deprecation-rules": "^1.1",
+        "phpstan/phpstan-strict-rules": "^1.5"
+    },
+    "suggest": {
+        "drupal/menu_block": "Provides configurable blocks of menu links and is needed to allow to install the submodule domain_menu_access_menu_block"
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://packages.drupal.org/8"
+        }
+    ],
+    "minimum-stability": "dev",
+    "config": {
+        "allow-plugins": {
+            "phpstan/extension-installer": true
+        },
+        "sort-packages": true
+    }
+}

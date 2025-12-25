@@ -1,0 +1,20 @@
+include:
+  - project: $_GITLAB_TEMPLATES_REPO
+    ref: $_GITLAB_TEMPLATES_REF
+    file:
+      - '/includes/include.drupalci.main.yml'
+      # EXPERIMENTAL: For Drupal 7, remove the above line and uncomment the below.
+      # - '/includes/include.drupalci.main-d7.yml'
+      - '/includes/include.drupalci.variables.yml'
+      - '/includes/include.drupalci.workflows.yml'
+
+cspell:
+  allow_failure: false
+phpcs:
+  allow_failure: false
+phpstan:
+  allow_failure: false
+eslint:
+  allow_failure: false
+composer-lint:
+  allow_failure: false

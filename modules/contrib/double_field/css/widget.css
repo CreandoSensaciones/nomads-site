@@ -1,0 +1,19 @@
+.double-field-widget-inline .fieldset__wrapper {
+  display: flex;
+  gap: var(--space-m, 1rem);
+}
+
+.double-field-widget-inline .fieldset__wrapper > div {
+  margin-block: 0;
+}
+
+/* Visually hide fieldset in the "multivalue" table. */
+.field-multiple-table .double-field-elements {
+  border: none;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.field-multiple-table .double-field-elements .fieldset__wrapper {
+  margin-block: 0;
+}

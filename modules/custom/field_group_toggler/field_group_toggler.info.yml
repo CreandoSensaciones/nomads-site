@@ -1,0 +1,7 @@
+name: Field group toggler
+type: module
+description: Adds an on/off toggle to Field Group wrappers for forms and display.
+core_version_requirement: ^10 || ^11
+package: Custom
+dependencies:
+  - field_group:field_group

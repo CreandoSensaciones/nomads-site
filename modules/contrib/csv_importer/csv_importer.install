@@ -1,0 +1,131 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall hooks for the csv_importer module.
+ */
+
+use Drupal\Core\Database\Database;
+
+/**
+ * Returns the schema definition for csv_importer_history table.
+ *
+ * @return array
+ *   The table schema definition.
+ */
+function csv_importer_history_schema(): array {
+  return [
+    'description' => 'Logs of CSV imports for tracking and revert purposes.',
+    'fields' => [
+      'id' => [
+        'description' => 'Primary Key: Unique import ID.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'name' => [
+        'description' => 'The name of the imported CSV file.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'path' => [
+        'description' => 'The full path to the imported CSV file.',
+        'type' => 'varchar',
+        'length' => 512,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'entity_type' => [
+        'description' => 'The entity type that was imported.',
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'entity_bundle' => [
+        'description' => 'The entity bundle that was imported.',
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => FALSE,
+        'default' => '',
+      ],
+      'imported_count' => [
+        'description' => 'Number of entities imported.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'entity_ids' => [
+        'description' => 'Serialized array of entity IDs that were created.',
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => FALSE,
+      ],
+      'import_date' => [
+        'description' => 'The Unix timestamp when the import was performed.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'status' => [
+        'description' => 'Import status: 0 = active, 1 = reverted.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['id'],
+    'indexes' => [
+      'name' => ['name'],
+      'entity_type' => ['entity_type'],
+      'import_date' => ['import_date'],
+      'status' => ['status'],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_schema().
+ */
+function csv_importer_schema(): array {
+  $schema['csv_importer_history'] = csv_importer_history_schema();
+  return $schema;
+}
+
+/**
+ * Implements hook_install().
+ */
+function csv_importer_install(): void {
+  $connection = Database::getConnection();
+  if (!$connection->schema()->tableExists('csv_importer_history')) {
+    $connection->schema()->createTable('csv_importer_history', csv_importer_history_schema());
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function csv_importer_uninstall(): void {
+  $connection = Database::getConnection();
+  $connection->schema()->dropTable('csv_importer_history');
+}
+
+/**
+ * Add csv_importer_history table for tracking imports.
+ */
+function csv_importer_update_9001() {
+  $schema = Database::getConnection()->schema();
+
+  if (!$schema->tableExists('csv_importer_history')) {
+    $schema->createTable('csv_importer_history', csv_importer_history_schema());
+    return t('Added csv_importer_history table for tracking CSV imports.');
+  }
+
+  return t('csv_importer_history table already exists.');
+}

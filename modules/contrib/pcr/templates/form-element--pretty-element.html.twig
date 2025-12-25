@@ -1,0 +1,18 @@
+{#
+/**
+ * @file
+ * Theme to overwrite the default radios and checkboxes and convert them
+ * to pretty elements.
+ *
+ * Available variables
+ * - attributes: A list of HTML attributes for the wrapper element.
+ * - children: The rendered element(radios/checkboxes).
+ *
+ * @see template_preprocess_radios()
+ * @see template_preprocess_checkboxes()
+ */
+#}
+<div class="pretty-element">
+  <input{{ attributes }} />{{ children }}
+  <label for={{ attributes.id }}>{{ element['#title'] }}</label>
+</div>

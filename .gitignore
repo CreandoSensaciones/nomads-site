@@ -1,0 +1,13 @@
+/sites/*/files/
+/sites/*/private/
+/sites/*/settings.php
+/sites/*/settings.local.php
+/sites/*/services.yml
+/nomads_site.sql
+/vendor/
+/web/sites/*/files/
+/web/sites/*/private/
+/web/sites/*/settings.php
+/web/sites/*/settings.local.php
+/web/sites/*/services.yml
+.DS_Store

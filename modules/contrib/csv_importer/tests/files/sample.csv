@@ -1,0 +1,4 @@
+nid,title,field_text,langcode
+1000,Test page 1,values(Text 1 value+Text 2 value)
+1001,Test page 2,multiple(Text 3 value+Text 4 value)
+1010,Test page 3 updated,multiple(Text 5 value+Text 6 value)

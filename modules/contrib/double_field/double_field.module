@@ -1,0 +1,115 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @file
+ * Primary module hooks for Double Field module.
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\field\Entity\FieldStorageConfig;
+use Symfony\Component\Validator\Constraints\NotEqualTo;
+
+/**
+ * Implements hook_theme().
+ */
+function double_field_theme(): array {
+  $item = ['render element' => 'elements'];
+  return [
+    'double_field_item' => $item,
+    'double_field_definition_list' => $item,
+  ];
+}
+
+/**
+ * Prepares variables for double-field-item template.
+ */
+function template_preprocess_double_field_item(array &$variables): void {
+  $variables['settings'] = $variables['elements']['#settings'];
+  $variables['field_settings'] = $variables['elements']['#field_settings'];
+  $variables['item']['first'] = $variables['elements']['#item']->first;
+  $variables['item']['second'] = $variables['elements']['#item']->second;
+}
+
+
+/**
+ * Prepares variables for double-field-definition-list template.
+ */
+function template_preprocess_double_field_definition_list(array &$variables): void {
+  $variables['settings'] = $variables['elements']['#settings'];
+  $variables['field_settings'] = $variables['elements']['#field_settings'];
+  $variables['items'] = $variables['elements']['#items'];
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ */
+function double_field_field_storage_config_update(EntityInterface $entity): void {
+  \assert($entity instanceof  FieldStorageConfig);
+  if ($entity->getType() === 'double_field') {
+    $settings = $entity->getSettings();
+    $original_settings = $entity->original->getSettings();
+
+    $first_type_is_changed = $settings['storage']['first']['type'] != $original_settings['storage']['first']['type'];
+    $second_type_is_changed = $settings['storage']['second']['type'] != $original_settings['storage']['second']['type'];
+
+    if ($first_type_is_changed || $second_type_is_changed) {
+      Drupal::messenger()->addWarning(
+        \t('Since storage type has been changed you need to verify the configuration of corresponding widget on form display page.'),
+      );
+    }
+  }
+}
+
+/**
+ * Implements hook_validation_constraint_alter().
+ */
+function double_field_validation_constraint_alter(array &$definitions): void {
+  // This constraint is required to test empty boolean values.
+  $definitions['NotEqualTo']['class'] = NotEqualTo::class;
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function double_field_theme_suggestions_double_field_item(array $variables): array {
+  return ['double_field_item__' . $variables['elements']['#field_name']];
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function double_field_theme_suggestions_double_field_definition_list(array $variables): array {
+  return ['double_field_definition_list__' . $variables['elements']['#field_name']];
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter().
+ */
+function double_field_theme_suggestions_item_list_alter(array &$suggestions, array $variables): void {
+  $field_name = $variables['context']['double_field']['field_name'] ?? NULL;
+  if ($field_name) {
+    $suggestions[] = 'item_list__double_field__' . $field_name;
+  }
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter().
+ */
+function double_field_theme_suggestions_table_alter(array &$suggestions, array $variables): void {
+  $field_name = $variables['attributes']['double-field--field-name'] ?? NULL;
+  if ($field_name) {
+    $suggestions[] = 'table__double_field__' . $field_name;
+  }
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter().
+ */
+function double_field_theme_suggestions_details_alter(array &$suggestions, array $variables): void {
+  $field_name = $variables['element']['#attributes']['double-field--field-name'] ?? NULL;
+  if ($field_name) {
+    $suggestions[] = 'details__double_field__' . $field_name;
+  }
+}

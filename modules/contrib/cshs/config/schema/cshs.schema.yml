@@ -1,0 +1,47 @@
+field.widget.settings.cshs:
+  type: mapping
+  label: 'CSHS field widget settings'
+  mapping:
+    save_lineage:
+      type: boolean
+      label: 'Save lineage'
+    force_deepest:
+      type: boolean
+      label: 'Force selection of deepest level'
+    parent:
+      type: string
+      label: 'Parent'
+    level_labels:
+      type: label
+      label: 'Labels per hierarchy-level'
+    hierarchy_depth:
+      type: integer
+      label: 'Hierarchy depth'
+    required_depth:
+      type: integer
+      label: 'Required depth'
+    none_label:
+      type: label
+      label: 'The "no selection" label'
+    allow_unpublished:
+      type: boolean
+      label: 'Allow unpublished term selections'
+field.formatter.settings.cshs_group_by_root:
+  type: mapping
+  label: 'CSHS Group By Root settings'
+  mapping:
+    linked:
+      type: boolean
+      label: 'Linked'
+    reverse:
+      type: boolean
+      label: 'Reverse'
+    sort:
+      type: string
+      label: 'Sort'
+    depth:
+      type: integer
+      label: 'Depth'
+    last_child:
+      type: boolean
+      label: 'Last child'

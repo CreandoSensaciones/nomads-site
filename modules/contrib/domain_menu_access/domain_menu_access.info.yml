@@ -1,0 +1,17 @@
+name: Domain Menu Access
+description: 'Domain-based access control for menu link.'
+package: Domain
+
+type: module
+core_version_requirement: ^10.2 || ^11
+dependencies:
+  - domain:domain
+  - domain:domain_access
+  - drupal:menu_link_content
+
+configure: domain_menu_access.settings
+
+# Information added by Drupal.org packaging script on 2025-04-08
+version: '2.0.1'
+project: 'domain_menu_access'
+datestamp: 1744139147

@@ -1,0 +1,13 @@
+cshs.base:
+  version: VERSION
+  js:
+    build/cshs.js: {}
+    build/jquery.simpler-select.js: {}
+  css:
+    theme:
+      build/cshs.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once
+    - core/drupalSettings

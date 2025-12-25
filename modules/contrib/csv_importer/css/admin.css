@@ -1,0 +1,25 @@
+.csv-importer-admin {
+  margin-bottom: 1rem;
+}
+
+.status-active {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.status-reverted {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.button--danger {
+  color: #fff;
+  border-color: #dc3545;
+  background-color: #dc3545;
+}
+
+.button--danger:hover {
+  color: #fff;
+  border-color: #bd2130;
+  background-color: #c82333;
+}

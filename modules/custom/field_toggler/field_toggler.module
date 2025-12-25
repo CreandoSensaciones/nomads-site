@@ -1,0 +1,104 @@
+<?php
+
+/**
+ * @file
+ * Provides the Field toggler module.
+ *
+ * Implementiert die Toggler-Logik durch einen dedizierten Wrapper für das Widget,
+ * um FAPI-Konflikte und States-API-Probleme zu vermeiden.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Entity\ContentEntityFormInterface;
+use Drupal\field\Entity\FieldConfig;
+
+/**
+ * Helper to get the third party settings key.
+ */
+function _field_toggler_third_party() {
+  return 'field_toggler';
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function field_toggler_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  $form_object = $form_state->getFormObject();
+  
+  if ($form_object instanceof ContentEntityFormInterface) {
+    
+    // 1. States API Library hinzufügen
+    $form['#attached']['library'][] = 'core/drupal.states';
+
+    $field_name = 'field_permanent_inhabitants'; // **Anpassen auf den tatsächlichen Feldnamen in der Prod.-Version**
+    $label = t('Toggle'); 
+    
+    // Konfiguriertes Label aus Third Party Settings laden
+    $entity = $form_object->getEntity();
+    $bundle = $entity->bundle();
+    
+    $field_config = \Drupal::entityTypeManager()
+      ->getStorage('field_config')
+      ->load('node.' . $bundle . '.' . $field_name);
+    
+    if ($field_config instanceof FieldConfig) {
+      $third_party = $field_config->getThirdPartySettings(_field_toggler_third_party());
+      if (!empty($third_party['label'])) {
+        $label = $third_party['label'];
+      }
+    }
+
+    if (isset($form[$field_name])) {
+        
+        $field_container = &$form[$field_name];
+        
+        // 2. Toggler-Element definieren
+        $toggler_element = [
+          '#type' => 'checkbox',
+          '#title' => $label,
+          // Setze den Default-Wert basierend auf dem geladenen Storage-Wert deines Moduls.
+          // Hier wird vorerst 0 (unchecked) hartkodiert.
+          '#default_value' => 0, 
+          '#name' => 'field_toggler_toggle', // Expliziter Name für States API
+          '#weight' => -100, 
+        ];
+        
+        // 3. States API Konditionen
+        $toggle_name = 'field_toggler_toggle'; 
+        $target_selector = ':input[name="' . $toggle_name . '"]';
+        
+        // 4. Erzeuge den Widget-Wrapper
+        $widget_wrapper = [
+            '#type' => 'container',
+            '#weight' => -99,
+            '#attributes' => ['class' => ['field-toggler-widget-wrapper']],
+            // States auf den Container anwenden
+            '#states' => [
+                'visible' => [$target_selector => ['checked' => TRUE]],
+                'invisible' => [$target_selector => ['checked' => FALSE]],
+            ],
+        ];
+        
+        // 5. Verschiebe alle Widget-Teile in den Wrapper
+        $elements_to_move = [];
+        
+        foreach ($field_container as $key => $child) {
+            // Verschiebe alle Kinder, die keine FAPI-Properties sind und nicht unser Toggler sind.
+            if (!str_starts_with((string) $key, '#') && $key !== 'field_toggler_toggle') {
+                $elements_to_move[$key] = $child;
+                unset($field_container[$key]);
+            }
+        }
+        
+        // 6. Füge die verschobenen Elemente dem Wrapper hinzu
+        $widget_wrapper += $elements_to_move;
+
+        // 7. Toggler und Wrapper zurück in den Feld-Container einfügen
+        $field_container['field_toggler_toggle'] = $toggler_element;
+        $field_container['widget_wrapper'] = $widget_wrapper;
+        
+        // Bereinigung des Haupt-Containers
+        unset($field_container['#name']); 
+    }
+  }
+}

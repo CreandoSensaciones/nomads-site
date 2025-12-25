@@ -1,0 +1,20 @@
+services:
+  domain_source.element_manager:
+    class: Drupal\domain_source\DomainSourceElementManager
+    arguments: ['@entity_type.manager', '@renderer', '@plugin.manager.entity_reference_selection']
+  Drupal\domain_source\DomainSourceElementManagerInterface: '@domain_source.element_manager'
+  domain_source.path_processor:
+    class: Drupal\domain_source\HttpKernel\DomainSourcePathProcessor
+    arguments:
+      [
+        '@domain.negotiator',
+        '@module_handler',
+        '@entity_type.manager',
+        '@config.factory',
+        '@logger.factory',
+      ]
+    tags:
+      - { name: path_processor_outbound, priority: 90 }
+  domain_source.token:
+    class: Drupal\domain_source\DomainSourceToken
+    arguments: ['@config.factory']

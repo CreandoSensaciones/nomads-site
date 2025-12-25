@@ -1,0 +1,10 @@
+name: CSV Importer
+type: module
+description: 'Import content from CSV.'
+package: CSV
+core_version_requirement: ^10 || ^11
+
+# Information added by Drupal.org packaging script on 2025-11-11
+version: '8.x-2.1'
+project: 'csv_importer'
+datestamp: 1762861594

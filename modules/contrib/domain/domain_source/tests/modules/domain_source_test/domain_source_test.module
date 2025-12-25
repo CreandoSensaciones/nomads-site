@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * @file
+ * Adds test module hook.
+ */
+
+/**
+ * Implements hook_domain_source_path_alter().
+ */
+function domain_source_test_domain_source_alter(&$source, $path, $options) {
+  // Always make our test REST links go to the primary domain.
+  var_dump($path);
+  $parts = explode('/', $path);
+  if (isset($parts[1]) && $parts[1] === 'domain-format-test') {
+    /** @var \Drupal\domain\DomainStorageInterface $storage */
+    $storage = \Drupal::entityTypeManager()->getStorage('domain');
+    /** @var \Drupal\domain\DomainInterface $source */
+    $source = $storage->loadDefaultDomain();
+  }
+}

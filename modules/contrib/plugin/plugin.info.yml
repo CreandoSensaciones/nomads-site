@@ -1,0 +1,10 @@
+name: Plugin
+description: Provides tools that extend Drupal's plugin system.
+core_version_requirement: ^9.1 || ^10 || ^11
+type: module
+configure: plugin.plugin_type.list
+
+# Information added by Drupal.org packaging script on 2024-08-31
+version: '8.x-2.13'
+project: 'plugin'
+datestamp: 1725123471

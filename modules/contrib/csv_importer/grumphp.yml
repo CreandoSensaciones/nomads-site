@@ -1,0 +1,8 @@
+parameters:
+  git_hook_variables:
+    EXEC_GRUMPHP_COMMAND: "composer exec grumphp"
+  hooks_preset: local
+  tasks:
+    phpcs:
+      standard: ["Drupal", "DrupalPractice"]
+      triggered_by: ["php", "module", "theme", "inc"]

@@ -1,0 +1,15 @@
+name: Pretty Checkbox Radio
+description: Allows checkboxes and radiobuttons to be converted to buttons-friendly elements.
+package: User interface
+
+type: module
+core_version_requirement: ^9 || ^10 || ^11
+
+dependencies:
+  - drupal:options
+  - better_exposed_filters:better_exposed_filters (>=6.0.3 || >=7.0.0)
+
+# Information added by Drupal.org packaging script on 2024-08-20
+version: '2.0.5'
+project: 'pcr'
+datestamp: 1724185768

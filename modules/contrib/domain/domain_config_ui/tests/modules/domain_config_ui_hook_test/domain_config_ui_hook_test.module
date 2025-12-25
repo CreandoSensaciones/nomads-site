@@ -1,0 +1,13 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for this module.
+ */
+
+/**
+ * Implements hook_domain_config_ui_disallowed_routes_alter().
+ */
+function domain_config_ui_hook_test_domain_config_ui_disallowed_routes_alter(&$disallowed) {
+  $disallowed[] = 'entity.user.admin_form';
+}

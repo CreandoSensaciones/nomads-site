@@ -1,0 +1,21 @@
+.DS_Store
+
+/vendor/
+/web/
+/node_modules/
+/.editorconfig
+/.ddev/
+/.idea/
+
+# PHPUnit output
+junit.xml
+phpunit.xml
+.phpunit.result.cache
+
+docker-compose.yml
+
+*.patch
+.envrc
+.envrc.local
+.composer-plugin.env
+composer.lock

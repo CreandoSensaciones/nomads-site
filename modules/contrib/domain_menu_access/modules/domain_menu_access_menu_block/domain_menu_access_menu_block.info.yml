@@ -1,0 +1,14 @@
+name: Domain Menu Access (Menu Block)
+description: 'Support for Menu Block for domain-based access control for menu link based on the menu.'
+package: Domain
+
+type: module
+core_version_requirement: ^9 || ^10 || ^11
+dependencies:
+  - domain_menu_access:domain_menu_access
+  - menu_block:menu_block
+
+# Information added by Drupal.org packaging script on 2025-04-08
+version: '2.0.1'
+project: 'domain_menu_access'
+datestamp: 1744139147

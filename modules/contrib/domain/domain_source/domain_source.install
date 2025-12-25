@@ -1,0 +1,65 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Domain Access module.
+ */
+
+use Drupal\Core\Config\FileStorage;
+use Drupal\Core\Config\InstallStorage;
+use Drupal\system\Entity\Action;
+
+/**
+ * Implements hook_install().
+ *
+ * Installs the domain source field on nodes. We don't do this via schema.yml
+ * files because we have an unknown number of node types.
+ */
+function domain_source_install() {
+  if (\Drupal::isConfigSyncing()) {
+    // Configuration is assumed to already be checked by the config importer
+    // validation events.
+    return;
+  }
+  // Assign domain source to bundles.
+  $list = [];
+  $node_types = \Drupal::entityTypeManager()->getStorage('node_type')->loadMultiple();
+  foreach ($node_types as $type => $info) {
+    $list[$type] = 'node';
+  }
+  // Install our fields.
+  foreach ($list as $bundle => $entity_type) {
+    domain_source_confirm_fields($entity_type, $bundle);
+  }
+
+  // Install our actions.
+  $domains = \Drupal::entityTypeManager()->getStorage('domain')->loadMultiple();
+  foreach ($domains as $domain) {
+    _domain_source_create_domain_source_set_action($domain, TRUE);
+  }
+}
+
+/**
+ * Install domain source actions.
+ */
+function domain_source_update_8001() {
+  if (!Action::load('domain_source_unset_action')) {
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $module_handler = \Drupal::moduleHandler();
+
+    // Save the unset domain source action to config.
+    $config_install_path = $module_handler->getModule('domain_source')->getPath() . '/' . InstallStorage::CONFIG_INSTALL_DIRECTORY;
+    $storage = new FileStorage($config_install_path);
+    $entity_type_manager
+      ->getStorage('action')
+      ->create($storage->read('system.action.domain_source_unset_action'))
+      ->trustData()
+      ->save();
+  }
+
+  // Install our actions.
+  $domains = \Drupal::entityTypeManager()->getStorage('domain')->loadMultiple();
+  foreach ($domains as $domain) {
+    _domain_source_create_domain_source_set_action($domain, TRUE);
+  }
+}

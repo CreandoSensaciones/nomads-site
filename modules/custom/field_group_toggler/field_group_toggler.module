@@ -1,0 +1,276 @@
+<?php
+
+/**
+ * @file
+ * Field group toggler based on description tokens.
+ *
+ * Usage in field group "Description" (Format settings):
+ *   [toggle-label:My label]
+ *   [toggle-on-text:Shown text]
+ *   [toggle-off-text:Hidden text]
+ */
+
+use Drupal\Core\Entity\ContentEntityFormInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Parses [toggle-...] tokens from the field group description.
+ *
+ * Supported:
+ *   [toggle-label:Some label]
+ *   [toggle-on-text:Some text]
+ *   [toggle-off-text:Some text]
+ *
+ * @param object $group
+ *   Field group config object from field_group.
+ *
+ * @return array
+ *   Settings with keys: label, on_text, off_text, mode.
+ */
+function _field_group_toggler_parse_description_tokens($group) {
+  $settings = [
+    'label' => '',
+    'on_text' => '',
+    'off_text' => '',
+    // For now we only support hiding fields when OFF.
+    'mode' => 'only_when_on',
+  ];
+
+  if (empty($group->format_settings['description'])) {
+    return $settings;
+  }
+
+  $desc = $group->format_settings['description'];
+
+  if (preg_match('/\[toggle-label:([^\]]+)\]/i', $desc, $m)) {
+    $settings['label'] = trim($m[1]);
+  }
+  if (preg_match('/\[toggle-on-text:([^\]]+)\]/i', $desc, $m)) {
+    $settings['on_text'] = trim($m[1]);
+  }
+  if (preg_match('/\[toggle-off-text:([^\]]+)\]/i', $desc, $m)) {
+    $settings['off_text'] = trim($m[1]);
+  }
+
+  return $settings;
+}
+
+/**
+ * Recursively attach process and pre_render callbacks to field group elements.
+ */
+function _field_group_toggler_attach_callbacks(array &$element) {
+  foreach ($element as $key => &$child) {
+    if (!is_array($child)) {
+      continue;
+    }
+
+    // Field group wrappers provided by field_group have '#field_group'.
+    if (!empty($child['#field_group'])) {
+      if (!isset($child['#process']) || !is_array($child['#process'])) {
+        $child['#process'] = [];
+      }
+      $child['#process'][] = 'field_group_toggler_field_group_form_process';
+
+      if (!isset($child['#pre_render']) || !is_array($child['#pre_render'])) {
+        $child['#pre_render'] = [];
+      }
+      $child['#pre_render'][] = 'field_group_toggler_field_group_pre_render';
+    }
+
+    // Recurse into children.
+    _field_group_toggler_attach_callbacks($child);
+  }
+}
+
+/**
+ * Global form alter to hook into all content entity forms.
+ */
+function field_group_toggler_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  $form_object = $form_state->getFormObject();
+  if ($form_object instanceof ContentEntityFormInterface) {
+    _field_group_toggler_attach_callbacks($form);
+
+    // Ensure our submit handler runs to store toggle state.
+    if (isset($form['actions']['submit'])) {
+      if (!isset($form['actions']['submit']['#submit'])) {
+        $form['actions']['submit']['#submit'] = [];
+      }
+      $form['actions']['submit']['#submit'][] = 'field_group_toggler_entity_form_submit';
+    }
+  }
+}
+
+/**
+ * Process callback to inject toggle widget into field groups on forms.
+ */
+function field_group_toggler_field_group_form_process(array &$element, FormStateInterface $form_state, array &$complete_form) {
+  if (empty($element['#field_group'])) {
+    return $element;
+  }
+
+  $group = $element['#field_group'];
+  $settings = _field_group_toggler_parse_description_tokens($group);
+
+  // No toggle configured, do nothing.
+  if ($settings['label'] === '') {
+    return $element;
+  }
+
+  // Default state is ON.
+  $default = TRUE;
+
+  // Try to load stored state for existing entity.
+  $form_object = $form_state->getFormObject();
+  if ($form_object instanceof ContentEntityFormInterface) {
+    $entity = $form_object->getEntity();
+    if ($entity instanceof EntityInterface && !$entity->isNew()) {
+      /** @var \Drupal\field_group_toggler\Service\FieldGroupTogglerStorage $storage */
+      $storage = \Drupal::service('field_group_toggler.storage');
+      $langcode = $entity->language()->getId();
+      $stored = $storage->load($entity, $group->group_name, $langcode);
+      if ($stored !== NULL) {
+        $default = (bool) $stored;
+      }
+    }
+  }
+
+  // Checkbox whose value is stored in _field_group_toggler[group_name].
+  $element['field_group_toggler'] = [
+    '#type' => 'checkbox',
+    '#title' => $settings['label'],
+    '#default_value' => $default,
+    '#weight' => -99,
+    '#parents' => ['_field_group_toggler', $group->group_name],
+  ];
+
+  return $element;
+}
+
+/**
+ * Entity form submit handler to persist toggle state per entity.
+ */
+function field_group_toggler_entity_form_submit(array $form, FormStateInterface $form_state) {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof ContentEntityFormInterface) {
+    return;
+  }
+
+  /** @var \Drupal\Core\Entity\EntityInterface $entity */
+  $entity = $form_object->getEntity();
+  if (!$entity instanceof EntityInterface || $entity->isNew()) {
+    // We do not store state for unsaved entities.
+    return;
+  }
+
+  /** @var \Drupal\field_group_toggler\Service\FieldGroupTogglerStorage $storage */
+  $storage = \Drupal::service('field_group_toggler.storage');
+
+  $values = $form_state->getValue('_field_group_toggler') ?? [];
+  $langcode = $entity->language()->getId();
+
+  foreach ($values as $group_name => $is_on) {
+    $storage->save($entity, $group_name, (bool) $is_on, $langcode);
+  }
+}
+
+/**
+ * Pre render callback to apply toggle state on field group elements.
+ *
+ * Currently this only affects the entity edit form. It hides all children
+ * of the group when the stored state is OFF.
+ */
+function field_group_toggler_field_group_pre_render(array $element) {
+  if (empty($element['#field_group'])) {
+    return $element;
+  }
+
+  $group = $element['#field_group'];
+  $group_name = $group->group_name;
+
+  // We only care about forms where an entity is attached to the group.
+  /** @var \Drupal\Core\Entity\EntityInterface|null $entity */
+  $entity = $element['#entity'] ?? NULL;
+  if (!$entity instanceof EntityInterface || $entity->isNew()) {
+    return $element;
+  }
+
+  /** @var \Drupal\field_group_toggler\Service\FieldGroupTogglerStorage $storage */
+  $storage = \Drupal::service('field_group_toggler.storage');
+
+  $langcode = $entity->language()->getId();
+  $is_on = $storage->load($entity, $group_name, $langcode);
+
+  // If we have no stored state, do not interfere.
+  if ($is_on === NULL) {
+    return $element;
+  }
+
+  $settings = _field_group_toggler_parse_description_tokens($group);
+  $mode = $settings['mode'];
+  $on_text = $settings['on_text'];
+  $off_text = $settings['off_text'];
+
+  $show_fields = TRUE;
+  $show_toggle_text = FALSE;
+
+  switch ($mode) {
+    case 'always_show':
+      $show_fields = TRUE;
+      $show_toggle_text = FALSE;
+      break;
+
+    case 'only_when_on':
+      $show_fields = (bool) $is_on;
+      $show_toggle_text = FALSE;
+      break;
+
+    case 'only_toggle_text':
+      $show_fields = FALSE;
+      $show_toggle_text = TRUE;
+      break;
+
+    case 'toggle_text_and_always':
+      $show_fields = TRUE;
+      $show_toggle_text = TRUE;
+      break;
+
+    case 'toggle_text_and_only_when_on':
+      $show_fields = (bool) $is_on;
+      $show_toggle_text = TRUE;
+      break;
+  }
+
+  // Hide all children when fields should not be shown.
+  if (!$show_fields) {
+    if (isset($element['#children'])) {
+      $element['#children'] = '';
+    }
+    foreach ($element as $key => &$child) {
+      if (!is_string($key) || $key[0] === '#') {
+        continue;
+      }
+      if (is_array($child)) {
+        $child['#access'] = FALSE;
+      }
+    }
+  }
+
+  // Optional info text inside the group wrapper.
+  if ($show_toggle_text) {
+    $text = $is_on ? $on_text : $off_text;
+    if ($text) {
+      $element['_field_group_toggler_text'] = [
+        '#type' => 'inline_template',
+        '#template' => '<div class="field-group-toggler-text field-group-toggler-{{ state }}">{{ text }}</div>',
+        '#context' => [
+          'state' => $is_on ? 'on' : 'off',
+          'text' => $text,
+        ],
+        '#weight' => -100,
+      ];
+    }
+  }
+
+  return $element;
+}

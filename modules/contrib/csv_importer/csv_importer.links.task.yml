@@ -1,0 +1,17 @@
+csv_importer.admin:
+  title: Import CSV
+  route_name: csv_importer.admin
+  base_route: system.admin_content
+  weight: 10
+
+csv_importer.import:
+  title: Import
+  route_name: csv_importer.admin
+  parent_id: csv_importer.admin
+  weight: 0
+
+csv_importer.history:
+  title: History
+  route_name: csv_importer.history
+  parent_id: csv_importer.admin
+  weight: 10

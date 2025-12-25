@@ -1,0 +1,32 @@
+services:
+  domain_config_ui.manager:
+    class: Drupal\domain_config_ui\DomainConfigUIManager
+    arguments: [
+      '@request_stack',
+      '@current_route_match',
+      '@router.admin_context',
+      '@path.current',
+      '@path.matcher',
+      '@config.factory',
+      '@module_handler'
+    ]
+  Drupal\domain_config_ui\DomainConfigUIManagerInterface: '@domain_config_ui.manager'
+  domain_config_ui.factory:
+    class: Drupal\domain_config_ui\Config\ConfigFactory
+    decorates: config.factory
+    decoration_priority: 1
+    tags:
+      - { name: event_subscriber }
+      - {
+          name: service_collector,
+          tag: 'config.factory.override',
+          call: addOverride,
+        }
+    arguments:
+      [
+        '@config.storage',
+        '@event_dispatcher',
+        '@config.typed',
+        '@service_container',
+        'domain_config_ui.manager'
+      ]

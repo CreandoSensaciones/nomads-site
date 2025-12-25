@@ -1,0 +1,10 @@
+name: OptGroup Taxonomy Select
+description: This module will provide the OptGroup Select widget on Entity Reference(Term).
+core_version_requirement: ^10 || ^11
+package: Other
+type: module
+
+# Information added by Drupal.org packaging script on 2025-04-18
+version: '8.x-1.5'
+project: 'optgroup_taxonomy_select'
+datestamp: 1744981369

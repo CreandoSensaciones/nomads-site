@@ -1,0 +1,4 @@
+pretty_elements:
+  css:
+    theme:
+      css/pretty_elements.css: {}

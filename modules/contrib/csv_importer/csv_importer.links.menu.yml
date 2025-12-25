@@ -1,0 +1,6 @@
+csv_importer.admin:
+  title: "Import CSV"
+  description: "Import content from CSV files"
+  route_name: csv_importer.admin
+  parent: system.admin_content
+  weight: 10

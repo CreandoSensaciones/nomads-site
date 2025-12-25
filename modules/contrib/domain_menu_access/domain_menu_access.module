@@ -1,0 +1,105 @@
+<?php
+
+/**
+ * @file
+ * Domain-based access control for menu link.
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\domain_access\DomainAccessManagerInterface;
+
+/**
+ * Implements hook_ENTITY_TYPE_presave().
+ *
+ * Fires only if Devel Generate module is present, to assign test menu
+ * link content to domains.
+ */
+function domain_menu_access_menu_link_content_presave(EntityInterface $node) {
+  domain_access_presave_generate($node);
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ *
+ * Move Domain Access fields to an advanced tab like other node settings.
+ */
+function domain_menu_access_form_menu_link_content_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  /** @var \Drupal\menu_link_content\Form\MenuLinkContentForm $form_object */
+  $form_object = $form_state->getFormObject();
+  /** @var \Drupal\menu_link_content\Entity\MenuLinkContent $entity */
+  $entity = $form_object->getEntity();
+
+  $config = \Drupal::config('domain_menu_access.settings')->get('menu_enabled');
+
+  if (isset($config) && in_array($entity->getMenuName(), $config, TRUE)) {
+    $form['domain'] = [
+      '#type' => 'details',
+      '#title' => t('Domain'),
+      '#open' => TRUE,
+      '#weight' => 25,
+    ];
+
+    $form[DomainAccessManagerInterface::DOMAIN_ACCESS_FIELD]['#group'] = 'domain';
+    $form[DomainAccessManagerInterface::DOMAIN_ACCESS_ALL_FIELD]['#group'] = 'domain';
+
+    // Add the options hidden from the user silently to the form.
+    $manager = \Drupal::service('domain.element_manager');
+    $form = $manager->setFormOptions($form, $form_state, DomainAccessManagerInterface::DOMAIN_ACCESS_FIELD);
+  }
+  else {
+    $form[DomainAccessManagerInterface::DOMAIN_ACCESS_FIELD]['#access'] = FALSE;
+    $form[DomainAccessManagerInterface::DOMAIN_ACCESS_ALL_FIELD]['#access'] = FALSE;
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK().
+ *
+ * Show selected domains for each menu link on the menu edit page.
+ * Filter menu items not assigned to active domain.
+ */
+function domain_menu_access_preprocess_table__menu_overview(&$variables) {
+  $position = 1;
+
+  $header = [
+    'tag' => 'th',
+    'content' => t('Domains'),
+  ];
+  // Add column right after menu name.
+  array_splice($variables['header'], $position, 0, [$header]);
+
+  foreach ($variables['rows'] as $index => $row) {
+
+    $uuid = $variables['rows'][$index]['attributes']->storage()['data-drupal-selector']->value();
+    $uuid = str_replace('edit-links-menu-plugin-idmenu-link-content', '', $uuid);
+    $entity = \Drupal::service('entity.repository')->loadEntityByUuid('menu_link_content', $uuid);
+    $selected_domains = $assigned_domains = [];
+    if ($entity && $entity->hasField('field_domain_access')) {
+      $domains = $entity->field_domain_access->getValue();
+      foreach ($domains as $key => $value) {
+        if ($entity->field_domain_access[$key]->entity) {
+          $assigned_domains[] = $entity->field_domain_access[$key]->entity->get('id');
+          $selected_domains[] = $entity->field_domain_access[$key]->entity->get('name');
+        }
+      }
+    }
+    // Add column right after menu name.
+    $cell = [
+      'tag' => 'td',
+      'content' => [
+        '#markup' => implode('<br>', $selected_domains),
+      ],
+    ];
+    array_splice($variables['rows'][$index]['cells'], $position, 0, [$cell]);
+
+    // Do not show menu item if not assigned to active domain.
+    /** @var \Drupal\domain\DomainNegotiatorInterface $domain_negotiator */
+    $domain_negotiator = \Drupal::service('domain.negotiator');
+    $active_domain = $domain_negotiator->getActiveId();
+    $canAdministerDomains = \Drupal::currentUser()->hasPermission('administer menu items across domains');
+    if (!$canAdministerDomains && (count($assigned_domains) === 0 || !in_array($active_domain, $assigned_domains, TRUE))) {
+      $variables['rows'][$index]['attributes']->addClass('visually-hidden');
+    }
+  }
+}
