@@ -2,4 +2,6 @@ name: Field toggler
 type: module
 description: Adds a per field on/off toggle which controls visibility and display of field values.
 core_version_requirement: ^10 || ^11
-package: Custom
+package: 'Nomads Site'
+dependencies:
+  - nomads_listing

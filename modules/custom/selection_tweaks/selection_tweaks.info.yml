@@ -1,0 +1,7 @@
+name: Selection Tweaks
+type: module
+description: Selection adjustments for Nomads Listings.
+package: 'Nomads Listings'
+core_version_requirement: '^11'
+dependencies:
+  - nomads_listing:nomads_listing

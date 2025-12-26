@@ -1,0 +1,8 @@
+name: Magical Links
+type: module
+description: 'Providing a widget and formatter for external links.'
+package: 'Nomads Site'
+core_version_requirement: '^10 || ^11'
+dependencies:
+  - drupal:link
+  - drupal:field

@@ -1,0 +1,7 @@
+name: 'Listing Form Progress'
+type: module
+description: 'Progress UI for listing forms.'
+package: 'Nomads Site'
+core_version_requirement: '^11'
+dependencies:
+  - nomads_listing:nomads_listing

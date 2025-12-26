@@ -1,0 +1,254 @@
+<?php
+
+/**
+ * @file
+ * Listing Form Progress module.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Drupal\node\NodeInterface;
+use Drupal\node\NodeForm;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+
+/**
+ * Implements hook_form_FORM_ID_alter() for listing add/edit forms.
+ */
+function nomads_listing_form_progress_form_node_listing_form_alter(array &$form, FormStateInterface $form_state, $form_id): void {
+  $entity = $form_state->getFormObject()->getEntity();
+  if (!$entity instanceof NodeInterface || $entity->bundle() !== 'listing') {
+    return;
+  }
+
+  $form_state->set('nomads_listing_is_new', $entity->isNew());
+  nomads_listing_form_progress_attach_submit_handler($form, $form_state, 'nomads_listing_form_progress_listing_submit');
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for details add/edit forms.
+ */
+function nomads_listing_form_progress_form_node_details_form_alter(array &$form, FormStateInterface $form_state, $form_id): void {
+  $entity = $form_state->getFormObject()->getEntity();
+  if (!$entity instanceof NodeInterface || $entity->bundle() !== 'details') {
+    return;
+  }
+
+  $listing_id = (int) \Drupal::request()->query->get('listing_ref');
+  if ($listing_id && isset($form['field_listing_ref'][0]['target_id'])) {
+    $field_element = &$form['field_listing_ref'][0]['target_id'];
+    $current_default = $field_element['#default_value'] ?? NULL;
+    if (!$current_default) {
+      $listing = \Drupal\node\Entity\Node::load($listing_id);
+      if ($listing) {
+        $field_element['#default_value'] = $listing;
+      }
+    }
+  }
+
+  nomads_listing_form_progress_attach_submit_handler($form, $form_state, 'nomads_listing_form_progress_details_submit');
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function nomads_listing_form_progress_entity_insert(\Drupal\Core\Entity\EntityInterface $entity): void {
+  if (!$entity instanceof NodeInterface || $entity->bundle() !== 'details') {
+    return;
+  }
+
+  if (!$entity->hasField('field_listing_ref') || $entity->get('field_listing_ref')->isEmpty()) {
+    return;
+  }
+
+  $listing_id = (int) $entity->get('field_listing_ref')->target_id;
+  if (!$listing_id) {
+    return;
+  }
+
+  $listing = \Drupal\node\Entity\Node::load($listing_id);
+  if (!$listing || !$listing->hasField('field_listings_ref')) {
+    return;
+  }
+
+  $listing->set('field_listings_ref', $entity->id());
+  $listing->save();
+}
+
+/**
+ * Submit handler for listing add/edit form.
+ */
+function nomads_listing_form_progress_listing_submit(array &$form, FormStateInterface $form_state): void {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof NodeForm) {
+    return;
+  }
+
+  $listing = $form_object->getEntity();
+  if (!$listing instanceof NodeInterface || $listing->bundle() !== 'listing') {
+    return;
+  }
+
+  $listing_id = (int) $listing->id();
+  if (!$listing_id) {
+    return;
+  }
+
+  $is_new = (bool) $form_state->get('nomads_listing_is_new');
+  if ($is_new) {
+    $url = Url::fromRoute('node.add', ['node_type' => 'details'], [
+      'query' => [
+        'listing_ref' => $listing_id,
+      ],
+    ]);
+    nomads_listing_form_progress_force_redirect($form_state, $url);
+    return;
+  }
+
+  $details_id = nomads_listing_form_progress_get_details_id($listing_id, $listing);
+  if ($details_id) {
+    $url = Url::fromRoute('entity.node.edit_form', [
+      'node' => $details_id,
+    ]);
+    nomads_listing_form_progress_force_redirect($form_state, $url);
+  }
+}
+
+/**
+ * Submit handler for details add/edit form.
+ */
+function nomads_listing_form_progress_details_submit(array &$form, FormStateInterface $form_state): void {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof NodeForm) {
+    return;
+  }
+
+  $details = $form_object->getEntity();
+  if (!$details instanceof NodeInterface || $details->bundle() !== 'details') {
+    return;
+  }
+
+  $listing_id = (int) \Drupal::request()->query->get('listing_ref');
+  if (!$listing_id && $details->hasField('field_listing_ref') && !$details->get('field_listing_ref')->isEmpty()) {
+    $listing_id = (int) $details->get('field_listing_ref')->target_id;
+  }
+
+  if ($listing_id) {
+    $url = Url::fromRoute('entity.node.canonical', [
+      'node' => $listing_id,
+    ]);
+    nomads_listing_form_progress_force_redirect($form_state, $url);
+  }
+}
+
+/**
+ * Wrapper submit handler for listing forms.
+ */
+/**
+ * Attach a submit handler to the form and primary action buttons.
+ */
+function nomads_listing_form_progress_attach_submit_handler(array &$form, FormStateInterface $form_state, string $handler): void {
+  if (!isset($form['#submit']) || !is_array($form['#submit'])) {
+    $form['#submit'] = [];
+  }
+  if (!in_array($handler, $form['#submit'], TRUE)) {
+    $form['#submit'][] = $handler;
+  }
+
+  if (isset($form['actions']['submit'])) {
+    if (!isset($form['actions']['submit']['#submit']) || !is_array($form['actions']['submit']['#submit'])) {
+      $form['actions']['submit']['#submit'] = [];
+    }
+    if (!in_array($handler, $form['actions']['submit']['#submit'], TRUE)) {
+      $form['actions']['submit']['#submit'][] = $handler;
+    }
+  }
+
+  if (isset($form['actions']['publish'])) {
+    if (!isset($form['actions']['publish']['#submit']) || !is_array($form['actions']['publish']['#submit'])) {
+      $form['actions']['publish']['#submit'] = [];
+    }
+    if (!in_array($handler, $form['actions']['publish']['#submit'], TRUE)) {
+      $form['actions']['publish']['#submit'][] = $handler;
+    }
+  }
+}
+
+/**
+ * Force a redirect response regardless of other handlers.
+ */
+function nomads_listing_form_progress_force_redirect(FormStateInterface $form_state, Url $url): void {
+  \Drupal::request()->query->remove('destination');
+  $form_state->setIgnoreDestination(TRUE);
+  $form_state->setRedirectUrl($url);
+  $form_state->setResponse(new RedirectResponse($url->setAbsolute()->toString()));
+}
+
+/**
+ * Resolve or create a details node for a listing.
+ */
+function nomads_listing_form_progress_get_details_id(int $listing_id, NodeInterface $listing): ?int {
+  $details_id = NULL;
+
+  if ($listing->hasField('field_listings_ref') && !$listing->get('field_listings_ref')->isEmpty()) {
+    $details_id = (int) $listing->get('field_listings_ref')->target_id;
+  }
+
+  if (!$details_id) {
+    $details_id = nomads_listing_form_progress_find_details_for_listing($listing_id);
+    if ($details_id && $listing->hasField('field_listings_ref')) {
+      $listing->set('field_listings_ref', $details_id);
+      $listing->save();
+    }
+  }
+
+  if (!$details_id) {
+    $details_id = nomads_listing_form_progress_create_details_for_listing($listing);
+    if ($details_id && $listing->hasField('field_listings_ref')) {
+      $listing->set('field_listings_ref', $details_id);
+      $listing->save();
+    }
+  }
+
+  return $details_id;
+}
+
+/**
+ * Find details node id that references the listing.
+ */
+function nomads_listing_form_progress_find_details_for_listing(int $listing_id): ?int {
+  $query = \Drupal::entityQuery('node')
+    ->accessCheck(FALSE)
+    ->condition('type', 'details')
+    ->condition('field_listing_ref', $listing_id)
+    ->range(0, 1);
+
+  $ids = $query->execute();
+  if (!$ids) {
+    return NULL;
+  }
+
+  return (int) reset($ids);
+}
+
+/**
+ * Create a details node referencing the listing.
+ */
+function nomads_listing_form_progress_create_details_for_listing(NodeInterface $listing): ?int {
+  $details = \Drupal\node\Entity\Node::create([
+    'type' => 'details',
+    'title' => 'Details for ' . $listing->label(),
+    'langcode' => $listing->language()->getId(),
+    'field_listing_ref' => [
+      ['target_id' => $listing->id()],
+    ],
+  ]);
+
+  try {
+    $details->save();
+  }
+  catch (\Exception $e) {
+    return NULL;
+  }
+
+  return $details->id() ? (int) $details->id() : NULL;
+}

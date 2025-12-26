@@ -1,0 +1,15 @@
+name: 'Nomads Site'
+type: theme
+description: 'Custom theme for Nomads Site.'
+package: 'Nomads Site'
+core_version_requirement: '^11'
+base theme: stable9
+libraries:
+  - nomads_site/global-styling
+regions:
+  top_nav: 'Top Nav'
+  header: 'Header'
+  title: 'Title'
+  content: 'Content'
+  content_bottom: 'Content Bottom'
+  footer: 'Footer'

@@ -1,0 +1,4 @@
+buttons:
+  css:
+    theme:
+      css/buttons.css: {}

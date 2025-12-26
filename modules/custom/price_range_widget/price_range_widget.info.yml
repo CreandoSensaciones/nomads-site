@@ -1,0 +1,7 @@
+name: Price Range Widget
+type: module
+description: Tweaks the min/max price inputs for listings.
+package: Nomads Listings
+core_version_requirement: ^10 || ^11
+dependencies:
+  - nomads_listing:nomads_listing

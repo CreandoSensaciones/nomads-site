@@ -1,0 +1,182 @@
+<?php
+
+/**
+ * @file
+ * Conditional Fields Widgets admin helpers.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+use Drupal\field\Entity\FieldConfig;
+
+/**
+ * Implements hook_form_FORM_ID_alter() for conditional_field_edit_form.
+ */
+function conditional_fields_widgets_form_conditional_field_edit_form_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
+  _conditional_fields_widgets_adjust_value_widget($form, $form_state);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for conditional_field_edit_form_tab.
+ */
+function conditional_fields_widgets_form_conditional_field_edit_form_tab_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
+  _conditional_fields_widgets_adjust_value_widget($form, $form_state);
+}
+
+/**
+ * Force option widgets and relax entry limits in conditional fields UI.
+ */
+function _conditional_fields_widgets_adjust_value_widget(array &$form, FormStateInterface $form_state): void {
+  if (!isset($form['value']['field']) || !is_array($form['value']['field'])) {
+    return;
+  }
+
+  $replacement = _conditional_fields_widgets_build_options_element($form, $form_state);
+  if ($replacement !== NULL) {
+    $form['value']['field'] = $replacement;
+  }
+
+  $field_element = &$form['value']['field'];
+  _conditional_fields_widgets_relax_limits($field_element);
+  _conditional_fields_widgets_force_options_widgets($field_element);
+}
+
+/**
+ * Recursively relax cardinality limits on widget elements.
+ */
+function _conditional_fields_widgets_relax_limits(array &$element): void {
+  if (isset($element['#cardinality'])) {
+    $element['#cardinality'] = -1;
+  }
+  if (isset($element['#max_delta'])) {
+    $element['#max_delta'] = -1;
+  }
+
+  foreach (Element::children($element) as $child_key) {
+    if (is_array($element[$child_key])) {
+      _conditional_fields_widgets_relax_limits($element[$child_key]);
+    }
+  }
+}
+
+/**
+ * Recursively force options widgets to radios/checkboxes.
+ */
+function _conditional_fields_widgets_force_options_widgets(array &$element): void {
+  if (isset($element['#options']) && isset($element['#type'])) {
+    $is_multiple = ($element['#multiple'] ?? NULL);
+    if ($is_multiple === NULL && isset($element['#cardinality'])) {
+      $is_multiple = ((int) $element['#cardinality']) !== 1;
+    }
+
+    if ($is_multiple) {
+      $element['#type'] = 'checkboxes';
+      $element['#multiple'] = TRUE;
+      if (!is_array($element['#default_value'] ?? NULL)) {
+        $default = $element['#default_value'] ?? NULL;
+        $element['#default_value'] = $default === NULL || $default === '' ? [] : [$default];
+      }
+    }
+    else {
+      $element['#type'] = 'radios';
+      $element['#multiple'] = FALSE;
+      if (is_array($element['#default_value'] ?? NULL)) {
+        $element['#default_value'] = reset($element['#default_value']);
+      }
+    }
+  }
+
+  foreach (Element::children($element) as $child_key) {
+    if (is_array($element[$child_key])) {
+      _conditional_fields_widgets_force_options_widgets($element[$child_key]);
+    }
+  }
+}
+
+/**
+ * Build an options element for the dependee field when possible.
+ */
+function _conditional_fields_widgets_build_options_element(array $form, FormStateInterface $form_state): ?array {
+  if (
+    empty($form['entity_type']['#value']) ||
+    empty($form['bundle']['#value']) ||
+    empty($form['field_name']['#value']) ||
+    empty($form['uuid']['#value'])
+  ) {
+    return NULL;
+  }
+
+  $entity_type = $form['entity_type']['#value'];
+  $bundle = $form['bundle']['#value'];
+  $uuid = $form['uuid']['#value'];
+  $field_name_raw = $form['field_name']['#value'];
+  $field_name = explode('-', $field_name_raw)[0] ?? $field_name_raw;
+
+  $form_display = \Drupal::entityTypeManager()
+    ->getStorage('entity_form_display')
+    ->load("$entity_type.$bundle.default");
+  if (!$form_display) {
+    return NULL;
+  }
+
+  $component = $form_display->getComponent($field_name);
+  if (empty($component['third_party_settings']['conditional_fields'][$uuid])) {
+    return NULL;
+  }
+
+  $condition = $component['third_party_settings']['conditional_fields'][$uuid];
+  $dependee = $condition['dependee'] ?? '';
+  if ($dependee === '') {
+    return NULL;
+  }
+
+  $field_definition = FieldConfig::loadByName($entity_type, $bundle, $dependee);
+  if (!$field_definition) {
+    return NULL;
+  }
+
+  $supported_types = [
+    'boolean',
+    'entity_reference',
+    'list_integer',
+    'list_float',
+    'list_string',
+  ];
+  if (!in_array($field_definition->getType(), $supported_types, TRUE)) {
+    return NULL;
+  }
+
+  $entity_storage = \Drupal::entityTypeManager()->getStorage($entity_type);
+  $bundle_key = $entity_storage->getEntityType()->getKey('bundle');
+  $values = [];
+  if ($bundle_key) {
+    $values[$bundle_key] = $bundle;
+  }
+  $owner_key = $entity_storage->getEntityType()->getKey('uid');
+  if ($owner_key) {
+    $values[$owner_key] = \Drupal::currentUser()->id();
+  }
+  $dummy_entity = $entity_storage->create($values);
+
+  $value_form = $condition['settings']['value_form'] ?? NULL;
+  if ($value_form) {
+    $dummy_entity->set($dependee, $value_form);
+  }
+  $items = $dummy_entity->get($dependee);
+
+  $widget = \Drupal::service('plugin.manager.field.widget')->getInstance([
+    'field_definition' => $field_definition,
+    'form_mode' => 'default',
+    'configuration' => [
+      'type' => 'options_buttons',
+    ],
+  ]);
+  if (!$widget) {
+    return NULL;
+  }
+
+  $element = $form['value']['field'];
+  $element = $widget->formElement($items, 0, $element, $form, $form_state);
+
+  return $element;
+}

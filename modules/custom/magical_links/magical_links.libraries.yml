@@ -1,0 +1,15 @@
+widget:
+  css:
+    theme:
+      css/magical_links_widget.css: {}
+  js:
+    js/magical_links_widget.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupal.ajax
+    - core/once
+
+formatter:
+  css:
+    theme:
+      css/magical_links_formatter.css: {}

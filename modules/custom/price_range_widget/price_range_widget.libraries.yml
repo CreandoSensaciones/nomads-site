@@ -1,0 +1,9 @@
+price_range_widget:
+  css:
+    theme:
+      css/price_range_widget.css: {}
+  js:
+    js/price_range_widget.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

@@ -1,0 +1,27 @@
+.magical-links-formatter {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  text-decoration: none;
+}
+
+.magical-links-formatter__icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid #c7ccd4;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #1b1b1b;
+}
+
+.magical-links-formatter__icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.magical-links-formatter__text {
+  font-weight: 600;
+}

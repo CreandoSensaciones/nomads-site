@@ -1,0 +1,24 @@
+.price-range-widget .price-range-widget__row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr) minmax(140px, 200px);
+  gap: 16px;
+  align-items: start;
+}
+
+.price-range-widget .price-range-widget__row > .field--name-field-min-price,
+.price-range-widget .price-range-widget__row > .field--name-field-max-price,
+.price-range-widget .price-range-widget__row > .price-range-widget__currency {
+  min-width: 0;
+}
+
+.price-range-widget .price-range-widget__row .form-item__label {
+  margin-bottom: 4px;
+}
+
+.price-range-widget .price-range-widget__currency-hidden {
+  display: none;
+}
+
+.price-range-widget .price-range-widget__currency .form-item__description {
+  margin-bottom: 0;
+}

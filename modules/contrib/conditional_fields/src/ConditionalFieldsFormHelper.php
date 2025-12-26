@@ -267,10 +267,15 @@ class ConditionalFieldsFormHelper {
         'checked',
         '!checked',
       ])) {
-        $dependent_form_field = $this->elementAddProperty($dependent_form_field,
-          '#element_validate',
-          [self::class, 'dependentValidate'],
-          'append');
+        if (is_array($dependent_form_field)) {
+          $dependent_form_field = $this->elementAddProperty($dependent_form_field,
+            '#element_validate',
+            [self::class, 'dependentValidate'],
+            'append');
+        }
+        else {
+          continue;
+        }
       }
 
       $states = $this->addStateToGroup($state, $options, $states);

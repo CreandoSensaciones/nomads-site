@@ -1,0 +1,37 @@
+<?php
+
+/**
+ * @file
+ * Price range widget tweaks for listings.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_form_alter().
+ */
+function price_range_widget_form_alter(array &$form, FormStateInterface $form_state, $form_id): void {
+  if (!price_range_widget_has_price_range($form)) {
+    return;
+  }
+
+  $form['#attached']['library'][] = 'price_range_widget/price_range_widget';
+}
+
+/**
+ * Checks if the form contains the min/max price fields.
+ */
+function price_range_widget_has_price_range(array $form): bool {
+  if (isset($form['field_min_price']) || isset($form['field_max_price'])) {
+    return TRUE;
+  }
+
+  $has_min = isset($form['field_min_price']['widget'][0])
+    || isset($form['field_min_price'][0])
+    || isset($form['field_min_price']['0']);
+  $has_max = isset($form['field_max_price']['widget'][0])
+    || isset($form['field_max_price'][0])
+    || isset($form['field_max_price']['0']);
+
+  return $has_min && $has_max;
+}

@@ -4,19 +4,34 @@
  * @file
  * Provides the Field toggler module.
  *
- * Implementiert die Toggler-Logik durch einen dedizierten Wrapper für das Widget,
- * um FAPI-Konflikte und States-API-Probleme zu vermeiden.
+ * Implements toggle logic with a dedicated widget wrapper to avoid
+ * FAPI conflicts and States API issues.
  */
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\ContentEntityFormInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\Core\Render\Element;
 
 /**
  * Helper to get the third party settings key.
  */
 function _field_toggler_third_party() {
   return 'field_toggler';
+}
+
+/**
+ * Checks if the field belongs to the details content type.
+ */
+function _field_toggler_is_details_field(FieldDefinitionInterface $field_definition): bool {
+  if (method_exists($field_definition, 'getTargetEntityTypeId') && $field_definition->getTargetEntityTypeId() !== 'node') {
+    return FALSE;
+  }
+  if (method_exists($field_definition, 'getTargetBundle') && $field_definition->getTargetBundle() !== 'details') {
+    return FALSE;
+  }
+  return TRUE;
 }
 
 /**
@@ -27,78 +42,170 @@ function field_toggler_form_alter(array &$form, FormStateInterface $form_state, 
   
   if ($form_object instanceof ContentEntityFormInterface) {
     
-    // 1. States API Library hinzufügen
+    // 1. Attach States API library.
     $form['#attached']['library'][] = 'core/drupal.states';
 
-    $field_name = 'field_permanent_inhabitants'; // **Anpassen auf den tatsächlichen Feldnamen in der Prod.-Version**
-    $label = t('Toggle'); 
-    
-    // Konfiguriertes Label aus Third Party Settings laden
-    $entity = $form_object->getEntity();
-    $bundle = $entity->bundle();
-    
-    $field_config = \Drupal::entityTypeManager()
-      ->getStorage('field_config')
-      ->load('node.' . $bundle . '.' . $field_name);
-    
-    if ($field_config instanceof FieldConfig) {
-      $third_party = $field_config->getThirdPartySettings(_field_toggler_third_party());
-      if (!empty($third_party['label'])) {
-        $label = $third_party['label'];
+    if (!method_exists($form_object, 'getFormDisplay')) {
+      return;
+    }
+
+    $form_display = $form_object->getFormDisplay($form_state);
+    if (!$form_display) {
+      return;
+    }
+
+    foreach (array_keys($form_display->getComponents()) as $field_name) {
+      $widget = $form_display->getRenderer($field_name);
+      $component = $form_display->getComponent($field_name) ?? [];
+      $label = '';
+      if ($widget) {
+        $label = $widget->getThirdPartySetting(_field_toggler_third_party(), 'label', '');
+      }
+      if ($label === '' && isset($component['third_party_settings'][_field_toggler_third_party()]['label'])) {
+        $label = $component['third_party_settings'][_field_toggler_third_party()]['label'];
+      }
+      if ($label === '' && isset($component['settings']['third_party_settings'][_field_toggler_third_party()]['label'])) {
+        $label = $component['settings']['third_party_settings'][_field_toggler_third_party()]['label'];
+      }
+      if ($label === '' && isset($component['settings'][_field_toggler_third_party()]['label'])) {
+        $label = $component['settings'][_field_toggler_third_party()]['label'];
+      }
+      if ($label === '' || $label === NULL) {
+        $field_config = FieldConfig::loadByName('node', $form_object->getEntity()->bundle(), $field_name);
+        if ($field_config) {
+          $label = $field_config->getThirdPartySetting(_field_toggler_third_party(), 'label', $label);
+        }
+      }
+      if ($label === '' || $label === NULL) {
+        continue;
+      }
+
+      if (isset($form[$field_name]) && is_array($form[$field_name])) {
+        field_toggler_apply_toggle($form[$field_name], $field_name, $label);
+        continue;
+      }
+
+      $field_element = NULL;
+      if (field_toggler_find_field_element($form, $field_name, $field_element) && is_array($field_element)) {
+        field_toggler_apply_toggle($field_element, $field_name, $label);
       }
     }
+  }
+}
 
-    if (isset($form[$field_name])) {
-        
-        $field_container = &$form[$field_name];
-        
-        // 2. Toggler-Element definieren
-        $toggler_element = [
-          '#type' => 'checkbox',
-          '#title' => $label,
-          // Setze den Default-Wert basierend auf dem geladenen Storage-Wert deines Moduls.
-          // Hier wird vorerst 0 (unchecked) hartkodiert.
-          '#default_value' => 0, 
-          '#name' => 'field_toggler_toggle', // Expliziter Name für States API
-          '#weight' => -100, 
-        ];
-        
-        // 3. States API Konditionen
-        $toggle_name = 'field_toggler_toggle'; 
-        $target_selector = ':input[name="' . $toggle_name . '"]';
-        
-        // 4. Erzeuge den Widget-Wrapper
-        $widget_wrapper = [
-            '#type' => 'container',
-            '#weight' => -99,
-            '#attributes' => ['class' => ['field-toggler-widget-wrapper']],
-            // States auf den Container anwenden
-            '#states' => [
-                'visible' => [$target_selector => ['checked' => TRUE]],
-                'invisible' => [$target_selector => ['checked' => FALSE]],
-            ],
-        ];
-        
-        // 5. Verschiebe alle Widget-Teile in den Wrapper
-        $elements_to_move = [];
-        
-        foreach ($field_container as $key => $child) {
-            // Verschiebe alle Kinder, die keine FAPI-Properties sind und nicht unser Toggler sind.
-            if (!str_starts_with((string) $key, '#') && $key !== 'field_toggler_toggle') {
-                $elements_to_move[$key] = $child;
-                unset($field_container[$key]);
-            }
-        }
-        
-        // 6. Füge die verschobenen Elemente dem Wrapper hinzu
-        $widget_wrapper += $elements_to_move;
+/**
+ * Adds the toggle and wrapper to a field widget.
+ */
+function field_toggler_apply_toggle(array &$field_container, string $field_name, string $label): void {
+  // 2. Define the toggle element.
+  $toggle_name = 'field_toggler_toggle_' . $field_name;
+  $toggler_element = [
+    '#type' => 'checkbox',
+    '#title' => $label,
+    // Default value is hardcoded to 0 (unchecked) for now.
+    '#default_value' => 0,
+    '#name' => $toggle_name,
+    '#weight' => -100,
+  ];
 
-        // 7. Toggler und Wrapper zurück in den Feld-Container einfügen
-        $field_container['field_toggler_toggle'] = $toggler_element;
-        $field_container['widget_wrapper'] = $widget_wrapper;
-        
-        // Bereinigung des Haupt-Containers
-        unset($field_container['#name']); 
+  // 3. States API conditions.
+  $target_selector = ':input[name="' . $toggle_name . '"]';
+
+  // 4. Build the widget wrapper.
+  $widget_wrapper = [
+    '#type' => 'container',
+    '#weight' => -99,
+    '#attributes' => ['class' => ['field-toggler-widget-wrapper']],
+    // Apply States to the container.
+    '#states' => [
+      'visible' => [$target_selector => ['checked' => TRUE]],
+      'invisible' => [$target_selector => ['checked' => FALSE]],
+    ],
+  ];
+
+  // 5. Move widget children into the wrapper.
+  $elements_to_move = [];
+
+  foreach ($field_container as $key => $child) {
+    // Move children that are not FAPI properties and not the toggle element.
+    if (!str_starts_with((string) $key, '#') && $key !== $toggle_name) {
+      $elements_to_move[$key] = $child;
+      unset($field_container[$key]);
     }
+  }
+
+  // 6. Add moved elements to the wrapper.
+  $widget_wrapper += $elements_to_move;
+
+  // 7. Insert the toggle and wrapper back into the field container.
+  $field_container[$toggle_name] = $toggler_element;
+  $field_container['widget_wrapper'] = $widget_wrapper;
+
+  // Cleanup.
+  unset($field_container['#name']);
+}
+
+/**
+ * Finds a field element in a form by field name.
+ */
+function field_toggler_find_field_element(array &$element, string $field_name, ?array &$found = NULL): bool {
+  if (isset($element['#field_name']) && $element['#field_name'] === $field_name) {
+    $found = &$element;
+    return TRUE;
+  }
+
+  foreach (Element::children($element) as $child_key) {
+    if (!isset($element[$child_key]) || !is_array($element[$child_key])) {
+      continue;
+    }
+    if (field_toggler_find_field_element($element[$child_key], $field_name, $found)) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Implements hook_field_widget_third_party_settings_form().
+ */
+function field_toggler_field_widget_third_party_settings_form($plugin, FieldDefinitionInterface $field_definition, $form, $form_state) {
+  if (!_field_toggler_is_details_field($field_definition)) {
+    return [];
+  }
+
+  return [
+    'label' => [
+      '#type' => 'textfield',
+      '#title' => t('Toggle label'),
+      '#default_value' => $plugin->getThirdPartySetting(_field_toggler_third_party(), 'label', ''),
+      '#description' => t('Leave empty to disable the toggle for this field.'),
+      '#element_validate' => ['field_toggler_label_validate'],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_field_widget_third_party_settings_summary().
+ */
+function field_toggler_field_widget_third_party_settings_summary($plugin, FieldDefinitionInterface $field_definition) {
+  if (!_field_toggler_is_details_field($field_definition)) {
+    return [];
+  }
+
+  $label = $plugin->getThirdPartySetting(_field_toggler_third_party(), 'label', t('Toggle'));
+  if ($label === '' || $label === NULL) {
+    return [];
+  }
+  return [t('Toggle label: @label', ['@label' => $label])];
+}
+
+/**
+ * Normalizes empty labels so the setting is removed.
+ */
+function field_toggler_label_validate($element, $form_state, $form) {
+  $value = is_string($element['#value']) ? trim($element['#value']) : $element['#value'];
+  if ($value === '' || $value === NULL) {
+    $form_state->setValueForElement($element, NULL);
   }
 }

@@ -1,0 +1,6 @@
+admin_modules:
+  js:
+    js/admin-modules-collapse.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

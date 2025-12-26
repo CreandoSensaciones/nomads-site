@@ -1,0 +1,7 @@
+name: Automatic Tags
+type: module
+description: Automatically maintain field_tags based on listing data.
+package: 'Nomads Listings'
+core_version_requirement: '^11'
+dependencies:
+  - nomads_listing:nomads_listing

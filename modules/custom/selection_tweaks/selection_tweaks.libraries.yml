@@ -1,0 +1,6 @@
+selection_tweaks:
+  js:
+    js/selection_tweaks.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

@@ -1,0 +1,9 @@
+relevanceslider:
+  css:
+    theme:
+      css/relevanceslider.css: {}
+  js:
+    js/relevanceslider.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

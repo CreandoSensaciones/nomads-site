@@ -1,0 +1,74 @@
+/* Nomads Site base styles. */
+
+:root {
+  --ns-max-width: 1200px;
+  --ns-gutter: 24px;
+  --ns-bg: #f5f2ed;
+  --ns-surface: #ffffff;
+  --ns-text: #1f1f1f;
+  --ns-muted: #5a5a5a;
+  --ns-border: #e2ddd6;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Georgia", "Times New Roman", serif;
+  background: var(--ns-bg);
+  color: var(--ns-text);
+}
+
+a {
+  color: inherit;
+}
+
+.layout-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.region {
+  padding: 16px var(--ns-gutter);
+}
+
+.region > * {
+  max-width: var(--ns-max-width);
+  margin: 0 auto;
+}
+
+.region-top-nav,
+.region-header,
+.region-footer {
+  background: var(--ns-surface);
+  border-bottom: 1px solid var(--ns-border);
+}
+
+.region-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--ns-border);
+  border-bottom: 0;
+}
+
+.region-title {
+  padding-top: 8px;
+  color: var(--ns-muted);
+}
+
+.region-content {
+  flex: 1 1 auto;
+  padding-top: 8px;
+  padding-bottom: 32px;
+}
+
+@media (min-width: 900px) {
+  .region {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+}

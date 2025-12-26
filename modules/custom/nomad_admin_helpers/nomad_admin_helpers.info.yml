@@ -1,0 +1,5 @@
+name: Nomad Admin Helpers
+type: module
+description: Small UX tweaks for admin pages.
+core_version_requirement: ^10 || ^11
+package: Admin helpers

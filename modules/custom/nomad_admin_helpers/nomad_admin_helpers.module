@@ -1,0 +1,16 @@
+<?php
+
+/**
+ * @file
+ * Nomad Admin Helpers module hooks.
+ */
+
+/**
+ * Implements hook_page_attachments().
+ */
+function nomad_admin_helpers_page_attachments(array &$attachments): void {
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  if ($route_name === 'system.modules_list') {
+    $attachments['#attached']['library'][] = 'nomad_admin_helpers/admin_modules';
+  }
+}

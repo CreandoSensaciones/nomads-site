@@ -1,0 +1,8 @@
+name: Conditional Fields Widgets
+type: module
+description: Admin helper to normalize conditional field value widgets.
+core_version_requirement: ^10 || ^11
+package: Admin helpers
+dependencies:
+  - conditional_fields:conditional_fields
+  - nomad_admin_helpers:nomad_admin_helpers

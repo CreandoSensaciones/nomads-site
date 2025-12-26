@@ -1,26 +1,26 @@
 FIELD TOGGLER MODULE
 --------------------
 
-### Überblick
+### Overview
 
-Das Field Toggler Modul erweitert jedes konfigurierbare Drupal-Feld um eine optionale Umschaltfunktion (Toggle).
-Der Toggler steuert die Sichtbarkeit des Feld-Widgets im Formular und die Anzeige der Feldwerte im Frontend.
+The Field Toggler module adds an optional toggle to configurable Drupal fields.
+The toggle controls field widget visibility in the form and the display of field values on the frontend.
 
-### Optimierungen in dieser Version (Best Practice Tweak)
+### Improvements in this version (Best Practice Tweak)
 
-1.  **Volle Delta-Unterstützung (Multi-Value Fields):** Die Anzeigelogik in `hook_preprocess_field()` wurde erweitert, um den Ein/Aus-Zustand für *jedes* einzelne Element eines Multi-Value-Feldes (jedes Delta) abzurufen und zu respektieren.
-2.  **Datenbank-Cleanup:** Die Funktion `hook_entity_delete()` wurde in der `field_toggler.module` implementiert. Dadurch werden alle zugehörigen Toggle-Zustände (`field_toggler_state`-Tabelle) automatisch bereinigt und gelöscht, sobald die übergeordnete Content Entity (z.B. ein Node) gelöscht wird.
+1.  **Full delta support (multi-value fields):** The display logic in `hook_preprocess_field()` was extended to load and respect the on/off state for each item (delta) of a multi-value field.
+2.  **Database cleanup:** The `hook_entity_delete()` implementation in `field_toggler.module` removes related toggle state records (`field_toggler_state` table) when the parent content entity (e.g. a node) is deleted.
 
-### Hauptfunktionen
+### Core features
 
-* **Toggler-Konfiguration pro Feld:** Label, Off Text und On Text werden als Third Party Settings gespeichert.
-* **Formular:** Ein Toggle-Checkbox erscheint neben dem Feld-Widget. Bei OFF ist das Widget unsichtbar (Wert bleibt gespeichert).
-* **Speicherung:** Eine eigene Datenbanktabelle (`field_toggler_state`) speichert den entity-spezifischen Status.
-* **Anzeige (Formatter):** Fünf konfigurierbare Modi steuern, wann Feldwerte und/oder ON/OFF-Texte im Frontend angezeigt werden.
+* **Per-field toggle configuration:** Label, Off text, and On text are stored as third-party settings.
+* **Form:** A toggle checkbox appears next to the field widget. When OFF, the widget is hidden (value remains stored).
+* **Storage:** A dedicated database table (`field_toggler_state`) stores entity-specific state.
+* **Display (formatter):** Five configurable modes determine when field values and/or ON/OFF texts are shown on the frontend.
 
-### Architektur
+### Architecture
 
-* Third Party Settings auf FieldConfig (Konfiguration).
-* Dedicated Service (`FieldTogglerStorage`) für Datenbank-Zugriffe.
-* `hook_preprocess_field()` für die Steuerung der Frontend-Anzeige.
-* `hook_entity_delete()` für automatisiertes Database Cleanup.
+* Third-party settings on FieldConfig (configuration).
+* Dedicated service (`FieldTogglerStorage`) for database access.
+* `hook_preprocess_field()` for frontend display control.
+* `hook_entity_delete()` for automated database cleanup.
