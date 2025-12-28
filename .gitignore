@@ -11,3 +11,7 @@
 /web/sites/*/settings.local.php
 /web/sites/*/services.yml
 .DS_Store
+
+# Local Composer cache
+.composer/
+composer.phar
