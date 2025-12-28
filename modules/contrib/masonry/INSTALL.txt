@@ -1,0 +1,71 @@
+Requirements
+============
+
+To work with the 4.x version of masonry,
+This project requires two third party libraries to be placed in your
+/libraries directory.
+Both are provided by David DeSandro desandro.com
+
+The items on the Status report page ( /admin/reports/status )
+will indicate if they are available and installed on your system correctly.
+
+Multiple installation processes can be used as Drupal community does not have
+a clear consensus on how to manage external libraries:
+- manual installation by downloading the assets
+- use wikimedia/composer-merge-plugin plugin
+- use oomphinc/composer-installers-extender plugin
+- use NPM or Bower packagists
+- etc...
+
+Composer installation using merge plugin
+===================================
+
+1- Install wikimedia/composer-merge-plugin :
+  composer require wikimedia/composer-merge-plugin
+
+2- Edit your "merge-plugin" section under "extra" in your *root* composer.json
+  so it looks like :
+  "extra": {
+    "merge-plugin": {
+      "include": [
+        "modules/contrib/masonry/composer.libraries.json"
+      ],
+
+Beware to change the path to your contrib module folder if under web or docroot
+for instance.
+
+3- Install the module itself:
+  composer require drupal/masonry
+
+
+Manual dependencies installation
+===================================
+
+Module
+-------
+
+Download and unzip masonry module from https://www.drupal.org/project/masonry
+and place it into /modules/contrib folder.
+
+Masonry
+-------
+
+Download and unzip masonry from http://masonry.desandro.com/
+(CDN at https://unpkg.com/masonry-layout/dist/masonry.pkgd.min.js)
+and place it into /libraries folder so the following path exists:
+
+    /libraries/masonry/dist/masonry.pkgd.min.js
+
+ImagesLoaded
+------------
+
+Download and unzip imagesloaded from http://imagesloaded.desandro.com/
+(CDN at https://unpkg.com/imagesloaded/imagesloaded.pkgd.min.js)
+and place it into /libraries folder so the following path exists:
+
+    /libraries/imagesloaded/imagesloaded.pkgd.min.js
+
+Composer installation using installer-extender plugin
+===================================
+
+See documentation at https://www.drupal.org/docs/develop/using-composer/manage-dependencies#third-party-libraries

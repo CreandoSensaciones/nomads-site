@@ -1,0 +1,60 @@
+field.formatter.settings.masonry_media:
+  type: mapping
+  label: 'Masonry media formatter settings'
+  mapping:
+    masonry:
+      type: boolean
+      label: 'Enable Masonry'
+    view_mode:
+      type: string
+      label: 'View mode'
+    link:
+      type: boolean
+      label: 'Link to referenced entity'
+    layoutColumnWidth:
+      type: string
+      label: 'Column width'
+    gutterWidth:
+      type: string
+      label: 'Gutter width'
+    stampSelector:
+      type: string
+      label: 'Stamp selector'
+    isLayoutResizable:
+      type: boolean
+      label: 'Resizable'
+    isLayoutAnimated:
+      type: boolean
+      label: 'Animated'
+    layoutAnimationDuration:
+      type: integer
+      label: 'Animation duration'
+    isLayoutFitsWidth:
+      type: boolean
+      label: 'Fit width'
+    isLayoutRtlMode:
+      type: boolean
+      label: 'RTL mode'
+    isLayoutImagesLoadedFirst:
+      type: boolean
+      label: 'Load images first'
+    isLayoutImagesLazyLoaded:
+      type: boolean
+      label: 'Lazyload listener'
+    imageLazyloadSelector:
+      type: string
+      label: 'Lazyload selector'
+    imageLazyloadedSelector:
+      type: string
+      label: 'Lazyloaded selector'
+    isItemsWidthForce:
+      type: boolean
+      label: 'Force item width'
+    isItemsPositionInPercent:
+      type: boolean
+      label: 'Percent position'
+    extraOptions:
+      type: sequence
+      label: 'Extra options'
+      sequence:
+        type: string

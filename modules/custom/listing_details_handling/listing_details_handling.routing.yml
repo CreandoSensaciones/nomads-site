@@ -1,0 +1,11 @@
+listing_details_handling.details_action:
+  path: '/node/{node}/details'
+  defaults:
+    _controller: '\Drupal\listing_details_handling\Controller\ListingDetailsHandlingController::detailsAction'
+  requirements:
+    _custom_access: '\Drupal\listing_details_handling\Controller\ListingDetailsHandlingController::accessDetailsAction'
+    node: '\d+'
+  options:
+    parameters:
+      node:
+        type: entity:node

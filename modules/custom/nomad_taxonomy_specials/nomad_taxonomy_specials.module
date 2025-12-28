@@ -1,0 +1,147 @@
+<?php
+
+/**
+ * @file
+ * Nomad Taxonomy Specials module.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_field_widget_form_alter().
+ */
+function nomad_taxonomy_specials_field_widget_form_alter(array &$element, FormStateInterface $form_state, array $context): void {
+  $items = $context['items'] ?? NULL;
+  if (!$items) {
+    return;
+  }
+
+  $definition = $items->getFieldDefinition();
+  if ($definition->getType() !== 'entity_reference') {
+    return;
+  }
+
+  $target_type = $definition->getSetting('target_type');
+  if ($target_type !== 'taxonomy_term') {
+    return;
+  }
+
+  $handler_settings = $definition->getSetting('handler_settings') ?? [];
+  $target_bundles = $handler_settings['target_bundles'] ?? [];
+  if (!in_array('type', $target_bundles, TRUE)) {
+    return;
+  }
+
+  $settings = nomad_taxonomy_specials_build_settings();
+  if (empty($settings['groups'])) {
+    return;
+  }
+
+  $element['#attributes']['data-nomad-taxonomy-specials'] = '1';
+  if (isset($element['ui']['#attributes']) && is_array($element['ui']['#attributes'])) {
+    $element['ui']['#attributes']['data-nomad-taxonomy-specials'] = '1';
+  }
+  $element['#attached']['library'][] = 'nomad_taxonomy_specials/widget';
+  if (isset($element['ui']['#attached']) && is_array($element['ui']['#attached'])) {
+    $element['ui']['#attached']['library'][] = 'nomad_taxonomy_specials/widget';
+  }
+
+  if (!isset($element['#attached']['drupalSettings']['nomadTaxonomySpecials'])) {
+    $element['#attached']['drupalSettings']['nomadTaxonomySpecials'] = $settings;
+  }
+  if (isset($element['ui']['#attached']) && is_array($element['ui']['#attached'])) {
+    if (!isset($element['ui']['#attached']['drupalSettings']['nomadTaxonomySpecials'])) {
+      $element['ui']['#attached']['drupalSettings']['nomadTaxonomySpecials'] = $settings;
+    }
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function nomad_taxonomy_specials_form_alter(array &$form, FormStateInterface $form_state, $form_id): void {
+  if (!isset($form['field_types']) || !is_array($form['field_types'])) {
+    return;
+  }
+
+  $settings = nomad_taxonomy_specials_build_settings();
+  if (empty($settings['groups'])) {
+    return;
+  }
+
+  if (!isset($form['#attached'])) {
+    $form['#attached'] = [];
+  }
+  $form['#attached']['library'][] = 'nomad_taxonomy_specials/widget';
+  if (!isset($form['#attached']['drupalSettings']['nomadTaxonomySpecials'])) {
+    $form['#attached']['drupalSettings']['nomadTaxonomySpecials'] = $settings;
+  }
+
+  if (!isset($form['field_types']['#attributes']) || !is_array($form['field_types']['#attributes'])) {
+    $form['field_types']['#attributes'] = [];
+  }
+  $form['field_types']['#attributes']['data-nomad-taxonomy-specials'] = '1';
+}
+
+/**
+ * Build the incompatibility settings for the type vocabulary.
+ */
+function nomad_taxonomy_specials_build_settings(): array {
+  static $settings = NULL;
+  if ($settings !== NULL) {
+    return $settings;
+  }
+
+  $vid = 'type';
+  $term_storage = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
+  $terms = $term_storage->loadTree($vid, 0, NULL, TRUE);
+  if (!$terms) {
+    $settings = [];
+    return $settings;
+  }
+
+  $parent_map = [];
+  $term_ids = [];
+  foreach ($terms as $term) {
+    $term_id = (int) $term->id();
+    $term_ids[$term_id] = TRUE;
+    $parent_map[$term_id] = 0;
+    foreach ($term->get('parent')->getValue() as $parent) {
+      $parent_id = (int) ($parent['target_id'] ?? 0);
+      if ($parent_id) {
+        $parent_map[$term_id] = $parent_id;
+        break;
+      }
+    }
+  }
+
+  $term_to_top = [];
+  $groups = [];
+  foreach (array_keys($term_ids) as $term_id) {
+    $current = $term_id;
+    $guard = 0;
+    while (!empty($parent_map[$current]) && $guard < 50) {
+      $current = $parent_map[$current];
+      $guard++;
+    }
+    $top_id = $current;
+    $term_to_top[$term_id] = $top_id;
+    if (!isset($groups[$top_id])) {
+      $groups[$top_id] = [];
+    }
+    $groups[$top_id][] = $term_id;
+  }
+
+  foreach ($groups as $top_id => $group_terms) {
+    $groups[$top_id] = array_values(array_unique($group_terms));
+  }
+
+  $settings = [
+    'vocabulary' => $vid,
+    'exclusiveTopLevelIds' => [25, 14],
+    'termToTopLevel' => $term_to_top,
+    'groups' => $groups,
+  ];
+
+  return $settings;
+}

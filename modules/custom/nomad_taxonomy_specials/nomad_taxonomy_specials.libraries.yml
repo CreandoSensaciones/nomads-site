@@ -1,0 +1,7 @@
+widget:
+  js:
+    js/nomad_taxonomy_specials.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - core/drupalSettings

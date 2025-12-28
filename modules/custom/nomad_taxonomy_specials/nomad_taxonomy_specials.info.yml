@@ -1,0 +1,5 @@
+name: 'Nomad Taxonomy Specials'
+type: module
+description: 'Enforces special incompatibility rules for the type vocabulary.'
+package: 'Nomads Site'
+core_version_requirement: ^11

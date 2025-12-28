@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * @file
+ * Nomads Listings module.
+ */
+
+/**
+ * Implements hook_field_formatter_info_alter().
+ */
+function nomads_listing_field_formatter_info_alter(array &$info): void {
+  if (!isset($info['nomads_hidden'])) {
+    return;
+  }
+
+  $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
+  $definitions = $field_type_manager->getDefinitions();
+  $field_types = array_keys($definitions);
+
+  $info['nomads_hidden']['field_types'] = $field_types;
+}
+
+/**
+ * Implements hook_page_attachments().
+ */
+function nomads_listing_page_attachments(array &$attachments): void {
+  $attachments['#attached']['library'][] = 'nomads_listing/base';
+}

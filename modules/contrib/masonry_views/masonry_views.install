@@ -1,0 +1,31 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Masonry Views module.
+ *
+ * Sponsored by: www.freelance-drupal.com.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function masonry_views_install($is_syncing) {
+  // Run this module after the views_infinite_scroll.
+  module_set_weight('masonry_views', 2);
+}
+
+/**
+ * Ensures masonry_views runs after views_infinite_scroll.
+ */
+function masonry_views_update_8100(&$sandbox) {
+  module_set_weight('masonry_views', 2);
+}
+
+/**
+ * Update configurations for masonry views.
+ */
+function masonry_views_update_9300(&$sandbox) {
+  \Drupal::messenger()->addWarning('You have upgraded module masonry views from a previous version.');
+  \Drupal::messenger()->addWarning('You MUST ensure proper configuration of your masonry views as this process could not automatically upgrade all configurations.');
+}
