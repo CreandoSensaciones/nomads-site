@@ -1,0 +1,5 @@
+name: Nomads Listings Moderation
+type: module
+description: Moderation tools and workflow helpers for Nomads listings.
+core_version_requirement: ^10 || ^11
+package: Nomads
