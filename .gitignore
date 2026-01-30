@@ -1,6 +1,20 @@
+# local junk
+*.zip
+*.log
+server.log
+*:Zone.Identifier
+
 /sites/*/files/
 /sites/*/private/
 /sites/*/settings.php
+# Local DB dumps and backups
+*.sql
+*.sql.gz
+*.dump
+*.dump.gz
+
+# Project specific
+nomads_site_backup_*.sql
 /sites/*/settings.local.php
 /sites/*/services.yml
 /nomads_site.sql
@@ -15,3 +29,7 @@
 # Local Composer cache
 .composer/
 composer.phar
+
+# Project specific
+nomads_site_backup_*.sql
+
