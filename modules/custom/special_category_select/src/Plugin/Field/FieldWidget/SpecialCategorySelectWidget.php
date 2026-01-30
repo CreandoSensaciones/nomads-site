@@ -29,6 +29,8 @@ class SpecialCategorySelectWidget extends WidgetBase {
     return [
       'leaves_only' => FALSE,
       'sortable' => TRUE,
+      'tree_column_label' => '',
+      'selected_column_label' => '',
     ] + parent::defaultSettings();
   }
 
@@ -50,6 +52,18 @@ class SpecialCategorySelectWidget extends WidgetBase {
       '#default_value' => $this->getSetting('sortable'),
       '#description' => $this->t('Allow drag-and-drop ordering in the selected column.'),
     ];
+    $elements['tree_column_label'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Tree column label'),
+      '#default_value' => $this->getSetting('tree_column_label'),
+      '#description' => $this->t('Overrides the label above the category tree column. Leave empty to use the vocabulary label.'),
+    ];
+    $elements['selected_column_label'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Selected column label'),
+      '#default_value' => $this->getSetting('selected_column_label'),
+      '#description' => $this->t('Overrides the label above the selected list column.'),
+    ];
 
     return $elements;
   }
@@ -65,6 +79,16 @@ class SpecialCategorySelectWidget extends WidgetBase {
     $summary[] = $this->t('Sortable: @value', [
       '@value' => $this->getSetting('sortable') ? $this->t('Yes') : $this->t('No'),
     ]);
+    if ($this->getSetting('tree_column_label') !== '') {
+      $summary[] = $this->t('Tree column label: @value', [
+        '@value' => $this->getSetting('tree_column_label'),
+      ]);
+    }
+    if ($this->getSetting('selected_column_label') !== '') {
+      $summary[] = $this->t('Selected column label: @value', [
+        '@value' => $this->getSetting('selected_column_label'),
+      ]);
+    }
     return $summary;
   }
 
@@ -113,12 +137,22 @@ class SpecialCategorySelectWidget extends WidgetBase {
     $cardinality = $this->fieldDefinition->getFieldStorageDefinition()->getCardinality();
     $max_selection = $cardinality > 0 ? (string) $cardinality : '';
 
+    $is_required = $this->fieldDefinition->isRequired();
+    if ($is_required) {
+      $element['#required'] = TRUE;
+      $element['#attributes']['class'][] = 'form-required';
+    }
+
+    $ui_title = $element['#title'] ?? $this->fieldDefinition->getLabel() ?? $this->t('Categories');
     $element['ui_title'] = [
       '#type' => 'html_tag',
       '#tag' => 'p',
-      '#value' => $this->t('Categories'),
+      '#value' => $ui_title,
       '#attributes' => ['class' => ['special-category-select__title']],
     ];
+    if ($is_required) {
+      $element['ui_title']['#attributes']['class'][] = 'form-required';
+    }
 
     $element['ui'] = [
       '#type' => 'container',
@@ -138,12 +172,22 @@ class SpecialCategorySelectWidget extends WidgetBase {
         'class' => ['special-category-select__tree'],
       ],
     ];
+    $tree_column_label = $this->getSetting('tree_column_label');
+    if ($tree_column_label !== '') {
+      $element['ui']['tree']['column_title'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#value' => $tree_column_label,
+        '#attributes' => ['class' => ['special-category-select__tree-title']],
+      ];
+    }
     $vocabulary_storage = \Drupal::entityTypeManager()->getStorage('taxonomy_vocabulary');
     $vocabulary_ids = $this->getTargetVocabularyIds();
     $vocabularies = $vocabulary_storage->loadMultiple($vocabulary_ids);
+    $show_vocab_labels = ($tree_column_label === '');
 
     foreach ($vocabulary_ids as $vid) {
-      if (isset($vocabularies[$vid])) {
+      if ($show_vocab_labels && isset($vocabularies[$vid])) {
         $element['ui']['tree']['vocab_' . $vid] = [
           '#type' => 'html_tag',
           '#tag' => 'p',
@@ -164,10 +208,14 @@ class SpecialCategorySelectWidget extends WidgetBase {
         'class' => ['special-category-select__selected'],
       ],
     ];
+    $selected_column_label = $this->getSetting('selected_column_label');
+    if ($selected_column_label === '') {
+      $selected_column_label = (string) $this->t('Selected Categories');
+    }
     $element['ui']['selected']['title'] = [
       '#type' => 'html_tag',
       '#tag' => 'p',
-      '#value' => $this->t('Selected Categories'),
+      '#value' => $selected_column_label,
       '#attributes' => ['class' => ['special-category-select__selected-title']],
     ];
     $element['ui']['selected']['list'] = [

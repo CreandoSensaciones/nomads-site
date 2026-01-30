@@ -1,7 +1,0 @@
-name: Special Category Select
-type: module
-description: 'Placeholder for Special Category select functionality.'
-package: 'Nomads Site'
-core_version_requirement: '^11'
-dependencies:
-  - nomads_listing:nomads_listing

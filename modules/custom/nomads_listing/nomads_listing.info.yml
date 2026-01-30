@@ -1,5 +1,5 @@
 name: Nomads Listings
 type: module
-description: 'Features, widgets and formatters for listings.'
-package: 'Nomads Site'
+description: 'Listing helpers: theme templates and base CSS library.'
+package: 'Nomads Listings'
 core_version_requirement: '^11'

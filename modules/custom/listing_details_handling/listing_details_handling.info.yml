@@ -1,7 +1,0 @@
-name: 'Listing Details Handling'
-type: module
-description: 'Handles listing/details cross-references and progress redirects.'
-package: 'Nomads Site'
-core_version_requirement: '^11'
-dependencies:
-  - nomads_listing:nomads_listing

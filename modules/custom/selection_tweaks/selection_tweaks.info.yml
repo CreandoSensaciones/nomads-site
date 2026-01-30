@@ -1,7 +1,7 @@
 name: Selection Tweaks
 type: module
-description: Selection adjustments for Nomads Listings.
-package: 'Nomads Listings'
+description: Enforces grouped selection limits for multi-selects and checkboxes.
+package: 'Nomads Widgets'
 core_version_requirement: '^11'
 dependencies:
   - nomads_listing:nomads_listing

@@ -1,7 +1,7 @@
-name: Field group toggler
+name: 'Field Group Toggler'
 type: module
-description: Adds an on/off toggle to Field Group wrappers for forms and display.
-core_version_requirement: ^10 || ^11
-package: Custom
+description: 'Field Group formatter that adds a checkbox toggle to details groups.'
+package: 'Nomads Widgets'
+core_version_requirement: '^11'
 dependencies:
   - field_group:field_group

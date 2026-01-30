@@ -1,5 +1,0 @@
-services:
-  listing_details_handling.redirect_subscriber:
-    class: Drupal\listing_details_handling\EventSubscriber\ListingDetailsHandlingRedirectSubscriber
-    tags:
-      - { name: event_subscriber }

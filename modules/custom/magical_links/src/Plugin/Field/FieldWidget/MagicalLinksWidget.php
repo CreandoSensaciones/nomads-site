@@ -2,21 +2,23 @@
 
 namespace Drupal\magical_links\Plugin\Field\FieldWidget;
 
-use Drupal\Core\Field\Attribute\FieldWidget;
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Render\Markup;
 use Drupal\link\Plugin\Field\FieldWidget\LinkWidget;
 
 /**
  * Plugin implementation of the 'magical_links' widget.
+ *
+ * @FieldWidget(
+ *   id = "magical_links",
+ *   label = @Translation("Magical Links"),
+ *   field_types = {
+ *     "link"
+ *   }
+ * )
  */
-#[FieldWidget(
-  id: 'magical_links',
-  label: new TranslatableMarkup('Magical Links'),
-  field_types: ['link'],
-)]
 class MagicalLinksWidget extends LinkWidget {
 
   /**
@@ -32,11 +34,17 @@ class MagicalLinksWidget extends LinkWidget {
     $element['uri']['#attributes']['data-magical-links-uri'] = '1';
     $element['title']['#attributes']['data-magical-links-title'] = '1';
 
+    $repo = \Drupal::service('magical_links.definition_repository');
+    $definitions_data = $repo->getDefinitions('links', 'field_icons', 'field_prefill', TRUE, FALSE);
+    $definitions = $definitions_data['definitions'];
+
     $element['magical_links'] = [
       '#type' => 'markup',
       '#weight' => -10,
-      '#markup' => Markup::create($this->buildIconRow()),
+      '#markup' => Markup::create($this->buildIconRow($definitions)),
     ];
+
+    $definitions_data['cacheable_metadata']->applyTo($element);
 
     return $element;
   }
@@ -44,16 +52,27 @@ class MagicalLinksWidget extends LinkWidget {
   /**
    * Build the icon row markup.
    */
-  protected function buildIconRow(): string {
-    $icons = $this->getIconDefinitions();
+  protected function buildIconRow(array $definitions): string {
+    $groups = $this->getIconGroups($definitions);
     $markup = '<div class="magical-links-widget__icons">';
 
-    foreach ($icons as $icon) {
-      $label = $icon['label'] ?? '';
-      $prefix = $icon['prefix'] ?? '';
-      $markup .= '<button type="button" class="magical-links-widget__icon" data-prefix="' . $prefix . '" data-label="' . $label . '" aria-label="' . $label . '">';
-      $markup .= $this->buildIconMarkup($icon);
-      $markup .= '</button>';
+    foreach ($groups as $group) {
+      $group_label = (string) ($group['label'] ?? '');
+      $markup .= '<div class="magical-links-widget__group">';
+      if ($group_label !== '') {
+        $markup .= '<div class="magical-links-widget__group-title">' . Html::escape($group_label) . '</div>';
+      }
+      $markup .= '<div class="magical-links-widget__group-items">';
+      foreach (($group['items'] ?? []) as $icon) {
+        $label = (string) ($icon['label'] ?? '');
+        $prefix = (string) ($icon['prefix'] ?? $icon['prefill'] ?? '');
+        $link_text = (string) ($icon['link_text'] ?? '');
+        $markup .= '<button type="button" class="magical-links-widget__icon" data-prefix="' . Html::escape($prefix) . '" data-link-text="' . Html::escape($link_text) . '" data-tooltip="' . Html::escape($label) . '" aria-label="' . Html::escape($label) . '">';
+        $markup .= $this->buildIconMarkup($icon, $label, $link_text);
+        $markup .= '</button>';
+      }
+      $markup .= '</div>';
+      $markup .= '</div>';
     }
 
     $markup .= '</div>';
@@ -61,27 +80,34 @@ class MagicalLinksWidget extends LinkWidget {
   }
 
   /**
-   * Icon definitions for the widget.
+   * Group icons by parent term in tree order.
    */
-  protected function getIconDefinitions(): array {
-    return magical_links_icon_definitions();
+  protected function getIconGroups(array $definitions): array {
+    $groups = [];
+    foreach ($definitions as $definition) {
+      $group_key = $definition['group_key'] ?? 'root';
+      if (!isset($groups[$group_key])) {
+        $groups[$group_key] = [
+          'label' => (string) ($definition['group_label'] ?? ''),
+          'items' => [],
+        ];
+      }
+      $groups[$group_key]['items'][] = $definition;
+    }
+
+    return array_values($groups);
   }
 
   /**
-   * Build icon markup (PNG if available, SVG fallback).
+   * Build icon markup (term icon or SVG fallback).
    */
-  protected function buildIconMarkup(array $icon): string {
-    $icon_file = $icon['icon'] ?? '';
-    if ($icon_file) {
-      $module_path = \Drupal::service('extension.list.module')->getPath('magical_links');
-      $public_path = '/' . $module_path . '/icons/' . $icon_file;
-      $full_path = DRUPAL_ROOT . '/' . $module_path . '/icons/' . $icon_file;
-      if (is_file($full_path)) {
-        return '<img src="' . $public_path . '" alt="" />';
-      }
+  protected function buildIconMarkup(array $icon, string $label, string $link_text): string {
+    $icon_url = (string) ($icon['icon_url'] ?? '');
+    if ($icon_url !== '') {
+      $alt = $link_text !== '' ? $link_text : $label;
+      return '<img src="' . Html::escape($icon_url) . '" alt="' . Html::escape($alt) . '" />';
     }
 
-    $label = $icon['label'] ?? '';
     $label_lower = strtolower($label);
     if ($label_lower === 'facebook') {
       return $this->svgFacebook();

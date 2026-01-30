@@ -2,24 +2,25 @@
 
 namespace Drupal\magical_links\Plugin\Field\FieldFormatter;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
-use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\link\LinkItemInterface;
 
 /**
  * Plugin implementation of the 'magical_links' formatter.
+ *
+ * @FieldFormatter(
+ *   id = "magical_links",
+ *   label = @Translation("Magical Links"),
+ *   field_types = {
+ *     "link"
+ *   }
+ * )
  */
-#[FieldFormatter(
-  id: 'magical_links',
-  label: new TranslatableMarkup('Magical Links'),
-  field_types: [
-    'link',
-  ],
-)]
 class MagicalLinksFormatter extends FormatterBase {
 
   /**
@@ -73,6 +74,11 @@ class MagicalLinksFormatter extends FormatterBase {
     $element = [];
     $entity = $items->getEntity();
     $settings = $this->getSettings();
+    $repo = \Drupal::service('magical_links.definition_repository');
+    $definitions_data = $repo->getDefinitions('links', 'field_icons', 'field_prefill', FALSE, TRUE);
+    $definitions = $definitions_data['definitions'];
+    $group_definitions = $this->buildGroupDefinitions($definitions);
+    $groups = [];
 
     foreach ($items as $delta => $item) {
       /** @var \Drupal\link\LinkItemInterface $item */
@@ -87,28 +93,45 @@ class MagicalLinksFormatter extends FormatterBase {
         $link_title = \Drupal::token()->replace($item->title, [$entity->getEntityTypeId() => $entity], ['clear' => TRUE]);
       }
 
+      $match_title = $link_title;
+
       if (!empty($settings['trim_length'])) {
         $link_title = Unicode::truncate($link_title, $settings['trim_length'], FALSE, TRUE);
       }
 
-      $icon = $this->getIconByUrl($url->toString());
-
-      $element[$delta] = [
-        '#type' => 'link',
-        '#title' => [
-          '#markup' => $icon . '<span class="magical-links-formatter__text">' . $link_title . '</span>',
-        ],
-        '#url' => $url,
-        '#options' => [
-          'attributes' => [
-            'class' => ['magical-links-formatter'],
-          ],
-        ],
-        '#attached' => [
-          'library' => ['magical_links/formatter'],
-        ],
+      $definition = $this->matchDefinition($url->toString(), $match_title, $definitions);
+      $group_key = $definition['group_key'] ?? '__unmatched';
+      if (!isset($groups[$group_key])) {
+        $groups[$group_key] = [];
+      }
+      $is_website = (bool) ($definition['is_website'] ?? FALSE);
+      $groups[$group_key][] = [
+        'url' => $url,
+        'label' => $link_title,
+        'icon_url' => $definition['icon_url'] ?? '',
+        'icon_alt' => $definition['icon_alt'] ?? '',
+        'order' => $definition['order'] ?? 999999,
+        'index' => $delta,
+        'is_website' => $is_website,
       ];
     }
+
+    $element['#type'] = 'container';
+    $element['#attributes']['class'][] = 'magical-links-formatter__groups';
+    $element['#attached']['library'][] = 'magical_links/formatter';
+
+    foreach ($group_definitions as $group_key => $group_definition) {
+      if (empty($groups[$group_key])) {
+        continue;
+      }
+      $element[] = $this->buildGroupRenderArray($groups[$group_key], $group_definition['label'] ?? '');
+    }
+
+    if (!empty($groups['__unmatched'])) {
+      $element[] = $this->buildGroupRenderArray($groups['__unmatched'], '');
+    }
+
+    $definitions_data['cacheable_metadata']->applyTo($element);
 
     return $element;
   }
@@ -121,37 +144,150 @@ class MagicalLinksFormatter extends FormatterBase {
   }
 
   /**
-   * Get the icon markup based on the URL.
+   * Build a render array for a group of links.
    */
-  protected function getIconByUrl(string $url): string {
-    $host = strtolower((string) parse_url($url, PHP_URL_HOST));
-    if (str_contains($host, 'facebook.com')) {
-      return '<span class="magical-links-formatter__icon">' . $this->svgFacebook() . '</span>';
+  protected function buildGroupRenderArray(array $items, string $label): array {
+    usort($items, static function (array $a, array $b): int {
+      $order_a = (int) ($a['order'] ?? 0);
+      $order_b = (int) ($b['order'] ?? 0);
+      if ($order_a !== $order_b) {
+        return $order_a <=> $order_b;
+      }
+      return (int) ($a['index'] ?? 0) <=> (int) ($b['index'] ?? 0);
+    });
+
+    $group = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['magical-links-formatter__group'],
+      ],
+    ];
+
+    if ($label !== '') {
+      $group['label'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['magical-links-formatter__group-title'],
+        ],
+        '#markup' => Html::escape($label),
+      ];
     }
-    if (str_contains($host, 'instagram.com')) {
-      return '<span class="magical-links-formatter__icon">' . $this->svgInstagram() . '</span>';
+
+    $group['items'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['magical-links-formatter__group-items'],
+      ],
+    ];
+
+    foreach ($items as $delta => $item) {
+      $icon_markup = $this->buildIconMarkup($item['icon_url'] ?? '', $item['icon_alt'] ?? '', $item['label'] ?? '');
+      $title_markup = $icon_markup . '<span class="magical-links-formatter__item-label">' . Html::escape((string) ($item['label'] ?? '')) . '</span>';
+      $is_website = (bool) ($item['is_website'] ?? FALSE);
+      $attributes = [
+        'class' => ['magical-links-formatter__item'],
+        'target' => 'nomads_links',
+      ];
+      $rel = ['noopener', 'noreferrer'];
+      if (!$is_website) {
+        $rel[] = 'nofollow';
+      }
+      $attributes['rel'] = implode(' ', array_unique($rel));
+
+      $group['items'][$delta] = [
+        '#type' => 'link',
+        '#title' => [
+          '#markup' => Markup::create($title_markup),
+        ],
+        '#url' => $item['url'],
+        '#options' => [
+          'attributes' => [
+            'class' => ['magical-links-formatter__item'],
+          ],
+        ],
+      ];
+      $group['items'][$delta]['#options']['attributes'] = $attributes;
     }
-    if (str_contains($host, 'x.com') || str_contains($host, 'twitter.com')) {
-      return '<span class="magical-links-formatter__icon">' . $this->svgX() . '</span>';
+
+    return $group;
+  }
+
+  /**
+   * Build icon markup with placeholder fallback.
+   */
+  protected function buildIconMarkup(string $icon_url, string $icon_alt, string $label): string {
+    if ($icon_url === '') {
+      return '<span class="magical-links-formatter__icon magical-links-formatter__icon--placeholder" aria-hidden="true"></span>';
     }
 
-    return '<span class="magical-links-formatter__icon">' . $this->svgGlobe() . '</span>';
+    $alt = $icon_alt !== '' ? $icon_alt : $label;
+    return '<span class="magical-links-formatter__icon"><img src="' . Html::escape($icon_url) . '" alt="' . Html::escape($alt) . '" /></span>';
   }
 
-  protected function svgGlobe(): string {
-    return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3a16 16 0 0 0 0 18M12 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+  /**
+   * Match a definition by URL prefix or link title.
+   */
+  protected function matchDefinition(string $url, string $link_title, array $definitions): array {
+    $url_value = trim($url);
+    foreach ($definitions as $definition) {
+      $prefix = $definition['prefill'] ?? '';
+      if ($prefix !== '' && !$this->isGenericPrefix($prefix) && stripos($url_value, $prefix) === 0) {
+        return $definition;
+      }
+    }
+
+    $title_value = mb_strtolower(trim($link_title));
+    foreach ($definitions as $definition) {
+      $match_values = [
+        (string) ($definition['icon_alt'] ?? ''),
+        (string) ($definition['label'] ?? ''),
+      ];
+      foreach ($match_values as $match_value) {
+        $match_value = mb_strtolower(trim($match_value));
+        if ($match_value !== '' && $title_value === $match_value) {
+          return $definition;
+        }
+      }
+    }
+
+    return [];
   }
 
-  protected function svgFacebook(): string {
-    return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 8h3V5h-3c-2.8 0-4.5 1.8-4.5 4.6V12H7v3h2.5v4.5h3V15H15l.5-3h-3v-2c0-1 .4-2 1.5-2z" fill="currentColor"/></svg>';
+  /**
+   * Build ordered group definitions based on taxonomy tree order.
+   */
+  protected function buildGroupDefinitions(array $definitions): array {
+    $groups = [];
+    foreach ($definitions as $definition) {
+      $group_key = $definition['group_key'] ?? '';
+      if ($group_key === '' || isset($groups[$group_key])) {
+        continue;
+      }
+      $groups[$group_key] = [
+        'label' => (string) ($definition['group_label'] ?? ''),
+      ];
+    }
+
+    return $groups;
   }
 
-  protected function svgInstagram(): string {
-    return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="4" y="4" width="16" height="16" rx="4" ry="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17" cy="7" r="1.5" fill="currentColor"/></svg>';
-  }
 
-  protected function svgX(): string {
-    return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 5h3.5l3.2 4.3L17 5h3l-5.4 6.3L20 19h-3.6l-3.5-4.7L9 19H6l5.7-6.7L6 5z" fill="currentColor"/></svg>';
+  /**
+   * Check if a prefix is too generic for matching.
+   */
+  protected function isGenericPrefix(string $prefix): bool {
+    $value = strtolower(trim($prefix));
+    if ($value === '') {
+      return TRUE;
+    }
+
+    foreach (['https://', 'http://', 'www', 'www.', 'https://www.', 'http://www.'] as $generic) {
+      if ($value === $generic) {
+        return TRUE;
+      }
+    }
+
+    return FALSE;
   }
 
 }

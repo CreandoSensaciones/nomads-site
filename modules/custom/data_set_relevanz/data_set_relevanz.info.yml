@@ -1,7 +1,0 @@
-name: 'Data Set Relevanz'
-type: module
-description: 'Fieldsets being controlled by the weight by relevanz fields.'
-package: 'Nomads Site'
-core_version_requirement: '^11'
-dependencies:
-  - nomads_listing

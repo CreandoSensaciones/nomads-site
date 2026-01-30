@@ -1,13 +1,12 @@
 # Nomads Listing
 
-Helpers for listings, including shared field formatters and base styles.
+Helpers for listings, including base styles.
 
 ## Features
-- "Hidden" field formatter (`nomads_hidden`) that renders no output for any field type.
 - Base CSS library with `.small { font-size: 0.8em; }`.
+- Theme-agnostic listing base layout styles (structural only).
 
 ## Files
-- Formatter: `src/Plugin/Field/FieldFormatter/HiddenFormatter.php`
-- Formatter registration: `nomads_listing.module`
 - Styles: `css/nomads_listing.base.css`
+- Listing base layout: `css/listing-base-layout.css` (layout only; themes can override visuals)
 - Library: `nomads_listing.libraries.yml`

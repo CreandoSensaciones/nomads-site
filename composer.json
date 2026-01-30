@@ -30,16 +30,23 @@
         "drupal/currency": "^3.6",
         "drupal/double_field": "^5.0@beta",
         "drupal/feeds": "^3.2",
+        "drupal/field_formatter_class": "^1.8",
         "drupal/geofield": "^1.66",
         "drupal/geolocation": "^3.14",
         "drupal/inline_entity_form": "^3.0@rc",
+        "drupal/jquery_ui_slider": "^2.1",
         "drupal/layout_paragraphs": "^2.1",
         "drupal/leaflet": "^10.3",
         "drupal/manage_display": "^3.0",
         "drupal/masonry": "^4.1",
         "drupal/masonry_views": "^4.1",
         "drupal/optgroup_taxonomy_select": "^1.5",
+        "drupal/paragraphs_class": "^1.0@alpha",
         "drupal/shs": "^2.0",
+        "drupal/smart_date": "*",
+        "drupal/svg_image": "^3.2",
+        "drupal/views_bulk_edit": "^3.0",
+        "drupal/views_bulk_operations": "^4.4",
         "drush/drush": "^13.7"
     },
     "conflict": {
@@ -103,7 +110,7 @@
             ],
             "post-create-project-cmd-message": [
                 "<bg=blue;fg=white>                                                         </>",
-                "<bg=blue;fg=white>  Congratulations, you’ve installed the Drupal codebase  </>",
+                "<bg=blue;fg=white>  Congratulations, you\u2019ve installed the Drupal codebase  </>",
                 "<bg=blue;fg=white>  from the drupal/legacy-project template!               </>",
                 "<bg=blue;fg=white>                                                         </>",
                 "",
@@ -117,5 +124,16 @@
                 "      composer remove drupal/core-project-message"
             ]
         }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^12.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Drupal\\magical_links\\": "modules/custom/magical_links/src/"
+        },
+        "files": [
+            "modules/custom/magical_links/autoload.php"
+        ]
     }
 }

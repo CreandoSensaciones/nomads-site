@@ -1,6 +1,0 @@
-services:
-  nomads_listing_form_progress.redirect_subscriber:
-    class: Drupal\nomads_listing_form_progress\EventSubscriber\ListingFormProgressRedirectSubscriber
-    arguments: ['@entity_type.manager']
-    tags:
-      - { name: event_subscriber }

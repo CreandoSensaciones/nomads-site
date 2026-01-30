@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
 
 /**
  * Implements hook_form_alter().
@@ -33,5 +34,40 @@ function price_range_widget_has_price_range(array $form): bool {
     || isset($form['field_max_price'][0])
     || isset($form['field_max_price']['0']);
 
-  return $has_min && $has_max;
+  if ($has_min && $has_max) {
+    return TRUE;
+  }
+
+  $found = [
+    'min' => FALSE,
+    'max' => FALSE,
+  ];
+  price_range_widget_find_price_fields($form, $found);
+
+  return $found['min'] && $found['max'];
+}
+
+/**
+ * Recursively scans for price range fields.
+ */
+function price_range_widget_find_price_fields(array $element, array &$found): void {
+  if (!empty($found['min']) && !empty($found['max'])) {
+    return;
+  }
+
+  if (isset($element['#field_name']) && is_string($element['#field_name'])) {
+    if ($element['#field_name'] === 'field_min_price') {
+      $found['min'] = TRUE;
+    }
+    if ($element['#field_name'] === 'field_max_price') {
+      $found['max'] = TRUE;
+    }
+  }
+
+  foreach (Element::children($element) as $child_key) {
+    if (!isset($element[$child_key]) || !is_array($element[$child_key])) {
+      continue;
+    }
+    price_range_widget_find_price_fields($element[$child_key], $found);
+  }
 }

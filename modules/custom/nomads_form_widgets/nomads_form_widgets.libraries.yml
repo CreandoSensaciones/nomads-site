@@ -2,3 +2,45 @@ buttons:
   css:
     theme:
       css/buttons.css: {}
+  js:
+    js/buttons.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+double_field_inline:
+  css:
+    theme:
+      css/double_field_inline.css: {}
+geolocation_widget:
+  css:
+    theme:
+      css/geolocation_widget.css: {}
+daterange_inline:
+  css:
+    theme:
+      css/daterange_inline.css: {}
+sliderwidget_default_value:
+  js:
+    js/sliderwidget_default_value_range.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+sliderwidget_bubble_tweaks:
+  css:
+    theme:
+      css/sliderwidget_bubble_tweaks.css: {}
+  js:
+    js/sliderwidget_bubble_tweaks.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+sliderwidget_hosting_period:
+  js:
+    js/sliderwidget_hosting_period.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+    - sliderwidget/element.slider

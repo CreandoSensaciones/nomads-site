@@ -12,6 +12,7 @@ use Drupal\Core\Form\FormStateInterface;
  */
 function selection_tweaks_form_node_form_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
   $form['#attached']['library'][] = 'selection_tweaks/selection_tweaks';
+  selection_tweaks_strip_priority_suffixes($form);
 }
 
 /**
@@ -22,4 +23,50 @@ function selection_tweaks_form_alter(array &$form, FormStateInterface $form_stat
   if (($form['#base_form_id'] ?? '') === 'node_form') {
     selection_tweaks_form_node_form_alter($form, $form_state, $form_id);
   }
+}
+
+/**
+ * Removes trailing priority suffixes (e.g. " *2") from list option labels.
+ */
+function selection_tweaks_strip_priority_suffixes(array &$element): void {
+  if (isset($element['#options']) && is_array($element['#options']) && selection_tweaks_should_strip_options($element)) {
+    foreach ($element['#options'] as $key => $label) {
+      if (!is_string($label) && !($label instanceof \Stringable)) {
+        continue;
+      }
+      $label_text = (string) $label;
+      $stripped = selection_tweaks_strip_priority_suffix($label_text);
+      if ($stripped === $label_text) {
+        continue;
+      }
+      $element['#options'][$key] = $stripped;
+      if (isset($element[$key]['#title'])) {
+        $element[$key]['#title'] = $stripped;
+      }
+    }
+  }
+
+  foreach ($element as &$child) {
+    if (is_array($child)) {
+      selection_tweaks_strip_priority_suffixes($child);
+    }
+  }
+}
+
+/**
+ * Checks whether the element should have its option labels normalized.
+ */
+function selection_tweaks_should_strip_options(array $element): bool {
+  if (!empty($element['#pretty_option'])) {
+    return TRUE;
+  }
+  $type = $element['#type'] ?? '';
+  return in_array($type, ['checkboxes', 'radios', 'select'], TRUE);
+}
+
+/**
+ * Strips trailing numeric priority suffixes like " *2" or "_*3".
+ */
+function selection_tweaks_strip_priority_suffix(string $label): string {
+  return preg_replace('/[_\\s]*\\*\\d+$/', '', $label);
 }

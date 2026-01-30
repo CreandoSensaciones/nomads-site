@@ -25,42 +25,6 @@ For a brief introduction, see [USAGE.txt](/core/USAGE.txt). You can also find
 guides, API references, and more by visiting Drupal's [documentation
 page][documentation].
 
-## Project Notes
-
-Conditional Fields Widgets helper (custom module):
-Tried to override the Conditional Fields "value from widget" UI so it always
-uses radios/checkboxes and ignores widget-specific limits (e.g. Special Category
-Select). Implemented:
-- New custom module `conditional_fields_widgets` (package: Admin helpers).
-- Form alters for `conditional_field_edit_form` and `_tab` to replace the
-  widget with `options_buttons`, then force checkboxes and unlimited selection.
-- Additional recursion to relax `#cardinality`/`#max_delta`.
-
-Status: still not working in the Conditional Fields UI. The widget remains the
-special category select and the selection limit persists. Revisit later.
-
-Conditional Fields not reacting to Special Category Select (and term_reference_tree):
-Goal: have Conditional Fields "value" conditions work when the dependee field
-uses the Special Category Select widget (entity_reference). It currently works
-with native checkboxes widget but not with Special Category Select or
-term_reference_tree. Observed symptoms: target field stays visible on initial
-load and no conditional behavior triggers when selections change.
-
-Tried fixes:
-- Added `_cf_values` hidden input (newline-separated term IDs) for the widget,
-  kept in sync via JS and dispatching `change` events.
-- Preserved `_cf_values` input across sync to avoid losing bound listeners.
-- Added `#name` and explicit `name` attribute on the widget element for
-  selector building.
-- Added a custom Conditional Fields handler
-  `states_handler_special_category_select` that builds selectors pointing to
-  `_cf_values` and maps values for all value-sets.
-- Added selector fallback to derive name prefix from `#field_name`/`#parents`.
-
-Status: still not working; conditional behavior does not trigger for
-Special Category Select (and term_reference_tree). Needs deeper investigation
-of Conditional Fields state/selector mapping for custom widgets.
-
 You can quickly extend Drupal's core feature set by installing any of its
 [thousands of free and open source modules][modules]. With Drupal and its
 module ecosystem, you can often build most or all of what your project needs

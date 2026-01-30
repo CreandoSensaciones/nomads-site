@@ -1,4 +1,0 @@
-services:
-  field_toggler.storage:
-    class: 'Drupal\\field_toggler\\Service\\FieldTogglerStorage'
-    arguments: ['@database']

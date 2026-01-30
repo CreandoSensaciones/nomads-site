@@ -1,7 +1,7 @@
 name: 'Nomads Form Widgets'
 type: module
 description: 'Custom form widgets for Nomads Site.'
-package: 'Nomads Site'
+package: 'Nomads Widgets'
 core_version_requirement: '^11'
 dependencies:
   - drupal:options

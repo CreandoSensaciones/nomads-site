@@ -1,8 +1,0 @@
-name: Masonry Fields
-type: module
-description: 'Provides a Masonry field formatter for media image references.'
-package: Masonry
-core_version_requirement: ^11
-dependencies:
-  - masonry:masonry
-  - drupal:media
