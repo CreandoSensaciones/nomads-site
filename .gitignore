@@ -18,6 +18,7 @@ nomads_site_backup_*.sql
 /sites/*/settings.local.php
 /sites/*/services.yml
 /nomads_site.sql
+/modules/contrib/
 /vendor/
 /web/sites/*/files/
 /web/sites/*/private/
