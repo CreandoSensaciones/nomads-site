@@ -1,0 +1,71 @@
+.nomads-fitted-pills {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap:2px;
+}
+
+.big-pills {
+  font-size: 12px;
+}
+
+.nomads-fitted-pills .field__label {
+  margin: 0;
+  text-align: left;
+}
+
+.nomads-fitted-pills__row {
+  display: block;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.nomads-fitted-pills__pill {
+  display: inline-block;
+  border: 1px solid #2b2b2b;
+  border-radius: 999px;
+  padding: 1px 5px;
+  margin: 0 2px;
+  font-size: 10px;
+  line-height: 1.25;
+  color: #2b2b2b;
+  background: var(--nomads-pill-bg, transparent);
+}
+
+.nomads-fitted-pills__pill.is-unselected {
+  border-color: #c5c5c5;
+  color: #8b8b8b;
+  background: transparent;
+}
+
+.nomads-fitted-pills .field__label {
+  text-align: center;
+}
+
+.nomads-fitted-pills__pill [title] {
+  position: relative;
+  cursor: help;
+}
+
+.nomads-fitted-pills__pill [title]::after {
+  content: attr(title);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  background: #000000;
+  color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 1em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease-in-out;
+  z-index: 5;
+}
+
+.nomads-fitted-pills__pill [title]:hover::after,
+.nomads-fitted-pills__pill [title]:focus::after {
+  opacity: 1;
+}

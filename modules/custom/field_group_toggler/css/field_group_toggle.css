@@ -1,0 +1,25 @@
+details.field-group-toggle > summary::marker {
+  display: none;
+}
+
+details.field-group-toggle > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.field-group-toggle > summary::before {
+  display: none;
+}
+
+details.field-group-toggle > summary {
+  list-style: none;
+}
+
+.field-group-toggle__summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.field-group-toggle__checkbox {
+  margin: 0;
+}

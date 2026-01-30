@@ -1,0 +1,4 @@
+tiles:
+  css:
+    theme:
+      css/nomads_tiles.css: {}

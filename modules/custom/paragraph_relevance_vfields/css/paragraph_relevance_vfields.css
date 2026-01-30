@@ -1,0 +1,38 @@
+.paragraph-relevance-key-aspects {
+  display: grid;
+  gap: 16px;
+}
+
+.paragraph-relevance-key-aspects__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.paragraph-relevance-key-aspects__label {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.paragraph-relevance-key-aspect--icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.paragraph-relevance-key-aspect__icon img {
+  width: 48px;
+  object-fit: contain;
+}
+
+.paragraph-relevance-key-aspect--pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 0.875rem;
+  line-height: 1.2;
+}

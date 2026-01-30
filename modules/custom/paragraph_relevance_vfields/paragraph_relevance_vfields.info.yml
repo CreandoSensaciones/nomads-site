@@ -1,0 +1,10 @@
+name: 'Relevant paragraphs virtual fields'
+type: module
+description: 'Adds virtual fields to render Listing paragraphs filtered by relevance (2/3) in configured order.'
+core_version_requirement: ^10 || ^11
+package: 'Nomads Relevance'
+dependencies:
+  - field_group:field_group
+  - paragraph_relevance:paragraph_relevance
+  - paragraphs:paragraphs
+  - node:node

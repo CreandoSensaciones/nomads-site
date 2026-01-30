@@ -1,0 +1,129 @@
+.paragraph-relevance-hidden {
+  display: none;
+}
+
+[data-paragraph-relevance-form] .vertical-tabs__menu-item {
+  --pr-tab-color: #78d7dc;
+}
+
+[data-paragraph-relevance-form] .vertical-tabs__pane {
+  background-color: #ffffff;
+  background-image: linear-gradient(135deg, var(--pr-tab-color) 0%, var(--pr-tab-color) 3%, #ffffff 40%, #ffffff 100%);
+  background-repeat: no-repeat;
+  background-clip: padding-box;
+}
+
+[data-paragraph-relevance-form] .vertical-tabs__menu-item > .vertical-tabs__menu-link {
+  background-color: #ffffff;
+  background-image: linear-gradient(135deg, var(--pr-tab-color) 0%, var(--pr-tab-color) 12%, #ffffff 120%, #ffffff 100%);
+  background-repeat: no-repeat;
+  background-clip: padding-box;
+}
+
+[data-paragraph-relevance-form] .vertical-tabs__menu-item[data-paragraph-relevance-value="3"] {
+  --pr-tab-color: #8bdfe3;
+}
+
+[data-paragraph-relevance-form] .vertical-tabs__menu-item[data-paragraph-relevance-value="2"] {
+  --pr-tab-color: #a3e8ea;
+}
+
+[data-paragraph-relevance-form] .vertical-tabs__menu-item[data-paragraph-relevance-value="1"] {
+  --pr-tab-color: #bbeff1;
+}
+
+[data-paragraph-relevance-form] .vertical-tabs__pane[data-paragraph-relevance-value="3"] {
+  --pr-tab-color: #8bdfe3;
+}
+
+[data-paragraph-relevance-form] .vertical-tabs__pane[data-paragraph-relevance-value="2"] {
+  --pr-tab-color: #a3e8ea;
+}
+
+[data-paragraph-relevance-form] .vertical-tabs__pane[data-paragraph-relevance-value="1"] {
+  --pr-tab-color: #bbeff1;
+}
+
+[data-paragraph-relevance-form] .vertical-tabs__menu {
+  position: sticky;
+  top: calc(var(--drupal-displace-offset-top, 0px) + var(--space-m, 16px));
+  align-self: flex-start;
+}
+
+[data-paragraph-relevance-form] {
+  padding-bottom: calc(var(--space-xl, 48px) * 2);
+}
+
+[data-paragraph-relevance-form] .layout-region--footer {
+  position: static;
+  inset: auto;
+  background: transparent;
+  box-shadow: none;
+  padding-block: 0;
+}
+
+[data-paragraph-relevance-form] .layout-region--footer .layout-region__content {
+  width: 100%;
+  max-width: var(--layout-region-edit-extended-width, 100%);
+  margin-inline: auto;
+  padding-inline: 0;
+}
+
+[data-paragraph-relevance-form] .layout-region--footer .form-actions {
+  position: static;
+  margin: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+[data-paragraph-relevance-form] .layout-region--footer .form-actions.is-pr-save-fixed {
+  position: fixed;
+  bottom: var(--space-m, 16px);
+  left: var(--pr-vt-left, var(--space-l, 24px));
+  z-index: 15;
+  width: var(--pr-vt-width, var(--vertical-tabs-menu-width, 20em));
+  max-width: calc(100vw - (var(--space-l, 24px) * 2));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.paragraph-relevance-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.paragraph-relevance-modal__panel {
+  position: relative;
+  max-width: 420px;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 18px 44px 18px 18px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+}
+
+.paragraph-relevance-modal__text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #222222;
+}
+
+.paragraph-relevance-modal__close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  border: 0;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: #333333;
+}

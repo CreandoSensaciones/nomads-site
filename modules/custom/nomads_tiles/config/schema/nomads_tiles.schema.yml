@@ -1,0 +1,19 @@
+field.formatter.settings.nomads_tiles_media:
+  type: mapping
+  label: 'Nomads Tiles formatter settings'
+  mapping:
+    pattern_1d:
+      type: string
+      label: 'Pattern for 1 data tile'
+    pattern_2d:
+      type: string
+      label: 'Pattern for 2 data tiles'
+    pattern_3d:
+      type: string
+      label: 'Pattern for 3 data tiles'
+    min_total_tiles:
+      type: integer
+      label: 'Minimum total tiles'
+    max_total_tiles:
+      type: integer
+      label: 'Maximum total tiles'

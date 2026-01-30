@@ -1,0 +1,47 @@
+core.entity_view_display.*.*.*.third_party.paragraph_relevance_vfields:
+  type: mapping
+  label: 'Paragraph relevance virtual field settings'
+  mapping:
+    key_aspects:
+      type: mapping
+      label: 'Key aspects formatter settings'
+      mapping:
+        core_focus:
+          type: mapping
+          label: 'Core focus settings'
+          mapping:
+            label:
+              type: label
+              label: 'Label'
+            output:
+              type: string
+              label: 'Output'
+            anchor:
+              type: boolean
+              label: 'Anchor link'
+        important_aspect:
+          type: mapping
+          label: 'Important Aspect settings'
+          mapping:
+            label:
+              type: label
+              label: 'Label'
+            output:
+              type: string
+              label: 'Output'
+            anchor:
+              type: boolean
+              label: 'Anchor link'
+        minor_relevance:
+          type: mapping
+          label: 'Minor relevance settings'
+          mapping:
+            label:
+              type: label
+              label: 'Label'
+            output:
+              type: string
+              label: 'Output'
+            anchor:
+              type: boolean
+              label: 'Anchor link'

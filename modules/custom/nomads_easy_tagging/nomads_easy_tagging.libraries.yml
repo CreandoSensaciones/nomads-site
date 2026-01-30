@@ -1,0 +1,10 @@
+widget:
+  js:
+    js/nomads_easy_tagging.js: {}
+  css:
+    theme:
+      css/nomads_easy_tagging.css: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - core/drupalSettings

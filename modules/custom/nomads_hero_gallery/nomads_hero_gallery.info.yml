@@ -1,0 +1,8 @@
+name: Hero Gallery
+type: module
+description: Field formatter for rendering media image galleries with per-position image styles.
+package: Nomads Formatter
+core_version_requirement: ^11
+dependencies:
+  - media:media
+  - image:image

@@ -1,0 +1,5 @@
+name: Field Subtitle
+type: module
+description: Adds configurable field subtitles for form widgets.
+package: 'Nomads Widgets'
+core_version_requirement: '^11'

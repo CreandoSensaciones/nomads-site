@@ -1,0 +1,7 @@
+name: Nomads Tiles
+type: module
+description: Field formatter for rendering media image tiles with data tile groups.
+package: Nomads Listings
+core_version_requirement: ^11
+dependencies:
+  - field_group:field_group

@@ -1,0 +1,44 @@
+/*
+ * Hero gallery layout for max_images = 7.
+ * Assumes markup:
+ * .nomads-hero-gallery--max-7
+ *   .nomads-hero-gallery__lead
+ *   .nomads-hero-gallery__grid > .nomads-hero-gallery__cell * 6
+ */
+
+.nomads-hero-gallery--max-7 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: stretch;
+  height: clamp(280px, 38vw, 520px);
+  max-width: 1550px;
+  max-height: 510px;
+}
+
+.nomads-hero-gallery--max-7 .nomads-hero-gallery__lead {
+  grid-column: 1;
+  min-height: 0;
+}
+
+.nomads-hero-gallery--max-7 .nomads-hero-gallery__grid {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  min-height: 0;
+}
+
+.nomads-hero-gallery--max-7 .nomads-hero-gallery__lead,
+.nomads-hero-gallery--max-7 .nomads-hero-gallery__cell {
+  position: relative;
+  overflow: hidden;
+}
+
+.nomads-hero-gallery--max-7 img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

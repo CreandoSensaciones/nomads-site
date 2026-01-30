@@ -1,0 +1,7 @@
+name: Nomads Easy Listing
+type: module
+description: 'Modal listing creation flow with step-by-step saves.'
+package: 'Nomads Listings'
+core_version_requirement: ^11
+dependencies:
+  - node

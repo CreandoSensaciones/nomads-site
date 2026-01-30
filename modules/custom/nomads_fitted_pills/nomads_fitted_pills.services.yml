@@ -1,0 +1,3 @@
+services:
+  nomads_fitted_pills.packer:
+    class: Drupal\nomads_fitted_pills\Packer\FittedPillsPacker

@@ -1,0 +1,9 @@
+services:
+  nomads_easy_tagging.constraint_resolver:
+    class: Drupal\nomads_easy_tagging\Service\NomadsEasyTaggingConstraintResolver
+    arguments:
+      - '@entity_type.manager'
+      - '@entity_field.manager'
+      - '@cache.default'
+      - '@language_manager'
+      - '@file_url_generator'

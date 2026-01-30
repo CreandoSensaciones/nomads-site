@@ -1,0 +1,727 @@
+<?php
+
+/**
+ * @file
+ * Adds virtual fields for rendering Listing paragraphs filtered by relevance.
+ */
+
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Drupal\paragraphs\ParagraphInterface;
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function paragraph_relevance_vfields_entity_extra_field_info(): array {
+  $t = \Drupal::translation();
+
+  return [
+    'node' => [
+      'listing' => [
+        'display' => [
+          'key_aspects' => [
+            'label' => $t->translate('Key aspects'),
+            'description' => $t->translate('Lists Listing paragraphs grouped by relevance (3/2/1) from the "Relevance" form tab.'),
+            'weight' => -1,
+            'visible' => FALSE,
+          ],
+          'core_focus_paragraphs_3' => [
+            'label' => $t->translate('Core Focus Paragraphs (3)'),
+            'description' => $t->translate('Renders all Listing paragraphs whose relevance slider value is 3, using Paragraph view mode "3".'),
+            'weight' => 0,
+            'visible' => FALSE,
+          ],
+          'relevant_paragraphs_2' => [
+            'label' => $t->translate('Relevant Paragraphs (2)'),
+            'description' => $t->translate('Renders all Listing paragraphs whose relevance slider value is 2, using Paragraph view mode "2".'),
+            'weight' => 1,
+            'visible' => FALSE,
+          ],
+        ],
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_entity_view().
+ */
+function paragraph_relevance_vfields_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, string $view_mode): void {
+  if ($entity->getEntityTypeId() !== 'node' || !method_exists($entity, 'bundle') || $entity->bundle() !== 'listing') {
+    return;
+  }
+
+  if ($display->getComponent('key_aspects') !== NULL) {
+    $build['key_aspects'] = paragraph_relevance_vfields_build_key_aspects($entity, $display);
+  }
+
+  if ($display->getComponent('core_focus_paragraphs_3') !== NULL) {
+    $build['core_focus_paragraphs_3'] = paragraph_relevance_vfields_build($entity, 3);
+  }
+
+  if ($display->getComponent('relevant_paragraphs_2') !== NULL) {
+    $build['relevant_paragraphs_2'] = paragraph_relevance_vfields_build($entity, 2);
+  }
+}
+
+/**
+ * Build render array for relevance-filtered paragraphs.
+ */
+function paragraph_relevance_vfields_build(EntityInterface $listing, int $target_relevance): array {
+  $terms = paragraph_relevance_vfields_ordered_terms();
+
+  $paragraph_builds = [];
+  $cacheability = (new CacheableMetadata())
+    ->addCacheableDependency($listing);
+
+  /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $etm */
+  $etm = \Drupal::entityTypeManager();
+  $paragraph_view_builder = $etm->getViewBuilder('paragraph');
+
+  foreach ($terms as $term) {
+    $relevance_field = 'field_' . $term . '_relevance';
+    $paragraph_field = 'field_' . $term;
+
+    if (!$listing->hasField($relevance_field) || !$listing->hasField($paragraph_field)) {
+      continue;
+    }
+
+    $relevance_value = (int) ($listing->get($relevance_field)->value ?? 0);
+    if ($relevance_value !== $target_relevance) {
+      continue;
+    }
+
+    if ($listing->get($paragraph_field)->isEmpty()) {
+      continue;
+    }
+
+    /** @var \Drupal\paragraphs\ParagraphInterface[] $paragraphs */
+    $paragraphs = $listing->get($paragraph_field)->referencedEntities();
+    foreach ($paragraphs as $paragraph) {
+      // Render each paragraph with view mode "2" or "3".
+      $paragraph_builds[] = $paragraph_view_builder->view($paragraph, (string) $target_relevance);
+      $cacheability->addCacheableDependency($paragraph);
+    }
+  }
+
+  $build = [
+    '#type' => 'container',
+    '#attributes' => [
+      'class' => [
+        'paragraph-relevance-virtual-field',
+        'paragraph-relevance-virtual-field-' . $target_relevance,
+      ],
+    ],
+    'items' => [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => [
+          'paragraph-relevance-virtual-field-items',
+        ],
+      ],
+    ],
+  ];
+
+  foreach ($paragraph_builds as $delta => $paragraph_build) {
+    $build['items'][$delta] = $paragraph_build;
+  }
+
+  $cacheability->applyTo($build);
+  return $build;
+}
+
+/**
+ * Get ordered term keys based on the relevance field weights in the combined tab.
+ *
+ * The ordering is derived from the node listing form display (default form mode):
+ * the weights of fields matching field_{term}_relevance.
+ */
+function paragraph_relevance_vfields_ordered_terms(): array {
+  static $terms;
+  if (isset($terms)) {
+    return $terms;
+  }
+
+  $terms = [];
+
+  $repo = \Drupal::service('entity_display.repository');
+  $form_display = $repo->getFormDisplay('node', 'listing', 'default');
+  $components = $form_display ? $form_display->getComponents() : [];
+
+  $weighted = [];
+  foreach ($components as $name => $component) {
+    if (!is_string($name)) {
+      continue;
+    }
+    if (preg_match('/^field_(.+)_relevance$/', $name, $m)) {
+      $weighted[] = [
+        'term' => $m[1],
+        'weight' => (int) ($component['weight'] ?? 0),
+      ];
+    }
+  }
+
+  // Stable ordering by weight then term.
+  usort($weighted, static function (array $a, array $b): int {
+    if ($a['weight'] === $b['weight']) {
+      return strcmp((string) $a['term'], (string) $b['term']);
+    }
+    return $a['weight'] <=> $b['weight'];
+  });
+
+  foreach ($weighted as $row) {
+    $terms[] = $row['term'];
+  }
+
+  return $terms;
+}
+
+/**
+ * Alter the node listing display form to store key aspect settings.
+ */
+function paragraph_relevance_vfields_form_entity_view_display_edit_form_alter(array &$form, FormStateInterface $form_state): void {
+  $form_object = $form_state->getFormObject();
+  $display = $form_object && method_exists($form_object, 'getEntity')
+    ? $form_object->getEntity()
+    : NULL;
+  if (!$display instanceof EntityViewDisplayInterface) {
+    return;
+  }
+  if ($display->getTargetEntityTypeId() !== 'node' || $display->getTargetBundle() !== 'listing') {
+    return;
+  }
+
+  if (!isset($form['fields']['key_aspects']) || !is_array($form['fields']['key_aspects'])) {
+    return;
+  }
+
+  $defaults = paragraph_relevance_vfields_key_aspects_default_settings();
+  $settings = paragraph_relevance_vfields_key_aspects_settings($display);
+  $options = paragraph_relevance_vfields_key_aspects_output_options();
+
+  $base_button = [
+    '#submit' => ['paragraph_relevance_vfields_key_aspects_settings_update_submit', '::multistepSubmit'],
+    '#ajax' => [
+      'callback' => '::multistepAjax',
+      'wrapper' => 'field-display-overview-wrapper',
+      'effect' => 'fade',
+    ],
+    '#field_name' => 'key_aspects',
+  ];
+
+  if ($form_state->get('plugin_settings_edit') === 'key_aspects') {
+    $form['fields']['key_aspects']['plugin']['#cell_attributes'] = ['colspan' => 3];
+    $form['fields']['key_aspects']['plugin']['settings_edit_form'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['field-plugin-settings-edit-form']],
+      '#parents' => ['fields', 'key_aspects', 'settings_edit_form'],
+      'label' => [
+        '#markup' => t('Plugin settings'),
+      ],
+      'settings' => [
+        '#type' => 'details',
+        '#title' => t('Default formatter settings'),
+        '#open' => TRUE,
+      ],
+    ];
+
+    foreach (paragraph_relevance_vfields_key_aspects_groups() as $group) {
+      $key = $group['key'];
+      $form['fields']['key_aspects']['plugin']['settings_edit_form']['settings']['key_aspects'][$key] = [
+        '#type' => 'details',
+        '#title' => $group['label'],
+        '#open' => TRUE,
+        '#tree' => TRUE,
+        '#parents' => ['fields', 'key_aspects', 'settings_edit_form', 'settings', 'key_aspects', $key],
+      ];
+      $form['fields']['key_aspects']['plugin']['settings_edit_form']['settings']['key_aspects'][$key]['label'] = [
+        '#type' => 'textfield',
+        '#title' => t('Label'),
+        '#default_value' => (string) ($settings[$key]['label'] ?? $defaults[$key]['label']),
+      ];
+      $form['fields']['key_aspects']['plugin']['settings_edit_form']['settings']['key_aspects'][$key]['output'] = [
+        '#type' => 'select',
+        '#title' => t('Output'),
+        '#options' => $options,
+        '#default_value' => (string) ($settings[$key]['output'] ?? $defaults[$key]['output']),
+      ];
+      $form['fields']['key_aspects']['plugin']['settings_edit_form']['settings']['key_aspects'][$key]['anchor'] = [
+        '#type' => 'checkbox',
+        '#title' => t('Anchor Link'),
+        '#default_value' => (bool) ($settings[$key]['anchor'] ?? $defaults[$key]['anchor']),
+      ];
+    }
+
+    $form['fields']['key_aspects']['plugin']['settings_edit_form']['actions'] = [
+      '#type' => 'actions',
+      'save_settings' => $base_button + [
+        '#type' => 'submit',
+        '#button_type' => 'primary',
+        '#name' => 'key_aspects_plugin_settings_update',
+        '#value' => t('Update'),
+        '#op' => 'update',
+      ],
+      'cancel_settings' => $base_button + [
+        '#type' => 'submit',
+        '#name' => 'key_aspects_plugin_settings_cancel',
+        '#value' => t('Cancel'),
+        '#op' => 'cancel',
+        '#submit' => ['::multistepSubmit'],
+        '#limit_validation_errors' => [['fields', 'key_aspects', 'type']],
+      ],
+    ];
+
+    $form['fields']['key_aspects']['#attributes']['class'][] = 'field-plugin-settings-editing';
+  }
+  else {
+    $summary = paragraph_relevance_vfields_key_aspects_settings_summary($settings, $options);
+    if (!empty($summary)) {
+      $form['fields']['key_aspects']['settings_summary'] = [
+        '#type' => 'inline_template',
+        '#template' => '<div class="field-plugin-summary">{{ summary|safe_join("<br />") }}</div>',
+        '#context' => ['summary' => $summary],
+        '#cell_attributes' => ['class' => ['field-plugin-summary-cell']],
+      ];
+    }
+    $form['fields']['key_aspects']['settings_edit'] = $base_button + [
+      '#type' => 'image_button',
+      '#name' => 'key_aspects_settings_edit',
+      '#src' => 'core/misc/icons/787878/cog.svg',
+      '#attributes' => ['class' => ['field-plugin-settings-edit'], 'alt' => t('Edit')],
+      '#op' => 'edit',
+      '#limit_validation_errors' => [['fields', 'key_aspects', 'type']],
+      '#prefix' => '<div class="field-plugin-settings-edit-wrapper">',
+      '#suffix' => '</div>',
+    ];
+  }
+
+  if (!isset($form['#submit']) || !is_array($form['#submit'])) {
+    $form['#submit'] = [];
+  }
+  if (!in_array('paragraph_relevance_vfields_key_aspects_settings_update_submit', $form['#submit'], TRUE)) {
+    array_unshift($form['#submit'], 'paragraph_relevance_vfields_key_aspects_settings_update_submit');
+  }
+}
+
+/**
+ * Submit handler to store key aspects settings.
+ */
+function paragraph_relevance_vfields_key_aspects_settings_update_submit(array &$form, FormStateInterface $form_state): void {
+  $trigger = $form_state->getTriggeringElement();
+  if (is_array($trigger) && ($trigger['#op'] ?? '') === 'cancel') {
+    return;
+  }
+
+  $form_object = $form_state->getFormObject();
+  $display = $form_object && method_exists($form_object, 'getEntity')
+    ? $form_object->getEntity()
+    : NULL;
+  if (!$display instanceof EntityViewDisplayInterface) {
+    return;
+  }
+  if ($display->getTargetEntityTypeId() !== 'node' || $display->getTargetBundle() !== 'listing') {
+    return;
+  }
+
+  paragraph_relevance_vfields_apply_key_aspects_settings($display, $form_state);
+}
+
+/**
+ * Build render array for key aspects grouped by relevance.
+ */
+function paragraph_relevance_vfields_build_key_aspects(EntityInterface $listing, EntityViewDisplayInterface $display): array {
+  $terms = paragraph_relevance_vfields_relevance_group_terms();
+  $settings = paragraph_relevance_vfields_key_aspects_settings($display);
+  $groups = paragraph_relevance_vfields_key_aspects_groups();
+
+  $cacheability = (new CacheableMetadata())
+    ->addCacheableDependency($listing);
+
+  $group_items = [];
+  foreach ($groups as $group) {
+    $group_items[$group['key']] = [];
+  }
+
+  foreach ($terms as $term) {
+    $relevance_field = 'field_' . $term . '_relevance';
+    $paragraph_field = 'field_' . $term;
+
+    if (!$listing->hasField($relevance_field) || !$listing->hasField($paragraph_field)) {
+      continue;
+    }
+
+    $relevance_value = (int) ($listing->get($relevance_field)->value ?? 0);
+    if (!isset($groups[$relevance_value])) {
+      continue;
+    }
+
+    $group_key = $groups[$relevance_value]['key'];
+    $output = (string) ($settings[$group_key]['output'] ?? 'icon');
+    $anchor = (bool) ($settings[$group_key]['anchor'] ?? FALSE);
+    if ($output === 'none') {
+      continue;
+    }
+
+    if ($listing->get($paragraph_field)->isEmpty()) {
+      continue;
+    }
+
+    /** @var \Drupal\paragraphs\ParagraphInterface[] $paragraphs */
+    $paragraphs = $listing->get($paragraph_field)->referencedEntities();
+    foreach ($paragraphs as $paragraph) {
+      if (paragraph_relevance_vfields_is_ignored_paragraph($paragraph)) {
+        continue;
+      }
+      $item = paragraph_relevance_vfields_build_key_aspect_item($paragraph, $output, $anchor, $cacheability);
+      if ($item) {
+        $group_items[$group_key][] = $item;
+      }
+    }
+  }
+
+  $build = [
+    '#type' => 'container',
+    '#attributes' => [
+      'class' => [
+        'paragraph-relevance-key-aspects',
+      ],
+    ],
+    '#attached' => [
+      'library' => [
+        'paragraph_relevance_vfields/key_aspects',
+      ],
+    ],
+  ];
+
+  foreach ($groups as $group) {
+    $key = $group['key'];
+    $output = (string) ($settings[$key]['output'] ?? 'icon');
+    $anchor = (bool) ($settings[$key]['anchor'] ?? FALSE);
+    if ($output === 'none') {
+      continue;
+    }
+    if (empty($group_items[$key])) {
+      continue;
+    }
+
+    $label = (string) ($settings[$key]['label'] ?? $group['label']);
+    $group_build = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => [
+          'paragraph-relevance-key-aspects__group',
+          'paragraph-relevance-key-aspects__group--' . $key,
+        ],
+      ],
+    ];
+
+    if ($label !== '') {
+      $group_build['label'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'h3',
+        '#value' => $label,
+        '#attributes' => [
+          'class' => [
+            'paragraph-relevance-key-aspects__label',
+          ],
+        ],
+      ];
+    }
+
+    $group_build['items'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => [
+          'paragraph-relevance-key-aspects__items',
+        ],
+      ],
+    ];
+    foreach ($group_items[$key] as $delta => $item) {
+      $group_build['items'][$delta] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => [
+            'paragraph-relevance-key-aspects__item',
+          ],
+        ],
+        'content' => $item,
+      ];
+    }
+
+    $build[$key] = $group_build;
+  }
+
+  $cacheability->applyTo($build);
+  return $build;
+}
+
+/**
+ * Build a render array for a single key aspect item.
+ */
+function paragraph_relevance_vfields_build_key_aspect_item(ParagraphInterface $paragraph, string $output, bool $anchor, CacheableMetadata $cacheability): array {
+  $cacheability->addCacheableDependency($paragraph);
+  $paragraph_type = $paragraph->getParagraphType();
+  if ($paragraph_type) {
+    $cacheability->addCacheableDependency($paragraph_type);
+  }
+
+  $label = $paragraph_type ? (string) $paragraph_type->label() : (string) $paragraph->bundle();
+  $icon_url = '';
+  if ($paragraph_type && method_exists($paragraph_type, 'getIconFile')) {
+    $icon = $paragraph_type->getIconFile();
+    if ($icon) {
+      $cacheability->addCacheableDependency($icon);
+      $icon_url = \Drupal::service('file_url_generator')->generateString($icon->getFileUri());
+    }
+  }
+
+  if ($output === 'icon' && $icon_url !== '') {
+    $item = [
+      '#type' => 'inline_template',
+      '#template' => '<span class="paragraph-relevance-key-aspect paragraph-relevance-key-aspect--icon"><span class="paragraph-relevance-key-aspect__icon"><img src="{{ url }}" alt="" aria-hidden="true" /></span><span class="paragraph-relevance-key-aspect__label">{{ label }}</span></span>',
+      '#context' => [
+        'url' => $icon_url,
+        'label' => $label,
+      ],
+    ];
+    return paragraph_relevance_vfields_wrap_anchor($item, $paragraph, $anchor);
+  }
+
+  if ($output === 'pill') {
+    $item = [
+      '#type' => 'inline_template',
+      '#template' => '<span class="paragraph-relevance-key-aspect paragraph-relevance-key-aspect--pill">{{ label }}</span>',
+      '#context' => [
+        'label' => $label,
+      ],
+    ];
+    return paragraph_relevance_vfields_wrap_anchor($item, $paragraph, $anchor);
+  }
+
+  $item = [
+    '#type' => 'inline_template',
+    '#template' => '<span class="paragraph-relevance-key-aspect paragraph-relevance-key-aspect--label">{{ label }}</span>',
+    '#context' => [
+      'label' => $label,
+    ],
+  ];
+  return paragraph_relevance_vfields_wrap_anchor($item, $paragraph, $anchor);
+}
+
+/**
+ * Get key aspect group configuration definitions.
+ */
+function paragraph_relevance_vfields_key_aspects_groups(): array {
+  return [
+    3 => [
+      'key' => 'core_focus',
+      'label' => t('Core focus'),
+    ],
+    2 => [
+      'key' => 'important_aspect',
+      'label' => t('Important Aspect'),
+    ],
+    1 => [
+      'key' => 'minor_relevance',
+      'label' => t('Minor relevance'),
+    ],
+  ];
+}
+
+/**
+ * Default key aspects settings.
+ */
+function paragraph_relevance_vfields_key_aspects_default_settings(): array {
+  return [
+    'core_focus' => [
+      'output' => 'icon',
+      'label' => 'Core focus',
+      'anchor' => FALSE,
+    ],
+    'important_aspect' => [
+      'output' => 'icon',
+      'label' => 'Important Aspect',
+      'anchor' => FALSE,
+    ],
+    'minor_relevance' => [
+      'output' => 'icon',
+      'label' => 'Minor relevance',
+      'anchor' => FALSE,
+    ],
+  ];
+}
+
+/**
+ * Load key aspects settings from the display.
+ */
+function paragraph_relevance_vfields_key_aspects_settings(EntityViewDisplayInterface $display): array {
+  $defaults = paragraph_relevance_vfields_key_aspects_default_settings();
+  $settings = $display->getThirdPartySetting('paragraph_relevance_vfields', 'key_aspects', []);
+  if (!is_array($settings)) {
+    $settings = [];
+  }
+  return array_replace_recursive($defaults, $settings);
+}
+
+/**
+ * Output option labels for the key aspects formatter.
+ */
+function paragraph_relevance_vfields_key_aspects_output_options(): array {
+  return [
+    'icon' => t('Icon'),
+    'pill' => t('Pill'),
+    'label' => t('Label'),
+    'none' => t('None'),
+  ];
+}
+
+/**
+ * Build a settings summary for the key aspects formatter.
+ */
+function paragraph_relevance_vfields_key_aspects_settings_summary(array $settings, array $options): array {
+  $summary = [];
+  $defaults = paragraph_relevance_vfields_key_aspects_default_settings();
+  foreach (paragraph_relevance_vfields_key_aspects_groups() as $group) {
+    $key = $group['key'];
+    $label = (string) ($settings[$key]['label'] ?? $defaults[$key]['label']);
+    $output_key = (string) ($settings[$key]['output'] ?? $defaults[$key]['output']);
+    $output_label = (string) ($options[$output_key] ?? $output_key);
+    $anchor = !empty($settings[$key]['anchor']) ? t('with anchor') : t('no anchor');
+    $summary[] = t('@group: @output (@label)', [
+      '@group' => $group['label'],
+      '@output' => $output_label . ' / ' . $anchor,
+      '@label' => $label,
+    ]);
+  }
+  return $summary;
+}
+
+/**
+ * Apply key aspects settings to the display from form state.
+ */
+function paragraph_relevance_vfields_apply_key_aspects_settings(EntityViewDisplayInterface $display, FormStateInterface $form_state): void {
+  $values = $form_state->getValue(['fields', 'key_aspects', 'settings_edit_form', 'settings', 'key_aspects']);
+  if (!is_array($values)) {
+    return;
+  }
+
+  $defaults = paragraph_relevance_vfields_key_aspects_default_settings();
+  $options = paragraph_relevance_vfields_key_aspects_output_options();
+  $normalized = [];
+
+  foreach ($defaults as $key => $default) {
+    $group_values = $values[$key] ?? [];
+    $label = isset($group_values['label']) ? trim((string) $group_values['label']) : $default['label'];
+    $output = isset($group_values['output']) ? (string) $group_values['output'] : $default['output'];
+    $anchor = isset($group_values['anchor']) ? (bool) $group_values['anchor'] : (bool) $default['anchor'];
+    if (!isset($options[$output])) {
+      $output = $default['output'];
+    }
+    $normalized[$key] = [
+      'label' => $label,
+      'output' => $output,
+      'anchor' => $anchor,
+    ];
+  }
+
+  $display->setThirdPartySetting('paragraph_relevance_vfields', 'key_aspects', $normalized);
+}
+
+/**
+ * Wrap a key aspect item in an anchor link when enabled.
+ */
+function paragraph_relevance_vfields_wrap_anchor(array $item, ParagraphInterface $paragraph, bool $anchor): array {
+  if (!$anchor) {
+    return $item;
+  }
+
+  $bundle = (string) $paragraph->bundle();
+  if ($bundle === '') {
+    return $item;
+  }
+
+  return [
+    '#type' => 'link',
+    '#title' => $item,
+    '#url' => Url::fromUri('internal:#' . $bundle),
+    '#attributes' => [
+      'class' => ['paragraph-relevance-key-aspect__link'],
+    ],
+  ];
+}
+
+/**
+ * Determine whether a paragraph should be ignored for key aspects output.
+ */
+function paragraph_relevance_vfields_is_ignored_paragraph(ParagraphInterface $paragraph): bool {
+  $bundle = (string) $paragraph->bundle();
+  if ($bundle === '') {
+    return FALSE;
+  }
+  return in_array($bundle, paragraph_relevance_vfields_ignored_paragraph_bundles(), TRUE);
+}
+
+/**
+ * Paragraph bundles to ignore in key aspects output.
+ */
+function paragraph_relevance_vfields_ignored_paragraph_bundles(): array {
+  return [
+    'reference',
+    'paragraph_type_reference',
+  ];
+}
+
+/**
+ * Collect term keys from the "Relevance" form tab group.
+ */
+function paragraph_relevance_vfields_relevance_group_terms(): array {
+  $group_terms = paragraph_relevance_vfields_relevance_group_term_fields();
+  if ($group_terms) {
+    return $group_terms;
+  }
+
+  return paragraph_relevance_vfields_ordered_terms();
+}
+
+/**
+ * Collect term keys based on fields in the "Relevance" form group.
+ */
+function paragraph_relevance_vfields_relevance_group_term_fields(): array {
+  if (!function_exists('field_group_info_groups')) {
+    return [];
+  }
+
+  $groups = field_group_info_groups('node', 'listing', 'form', 'default');
+  if (!$groups) {
+    return [];
+  }
+
+  $target = NULL;
+  foreach ($groups as $group) {
+    $name = strtolower((string) ($group->group_name ?? ''));
+    $label = strtolower((string) ($group->label ?? ''));
+    if ($name === 'group_relevance' || $name === 'relevance' || $label === 'relevance') {
+      $target = $group;
+      break;
+    }
+  }
+
+  if (!$target || empty($target->children) || !is_array($target->children)) {
+    return [];
+  }
+
+  $terms = [];
+  foreach ($target->children as $child) {
+    if (!is_string($child)) {
+      continue;
+    }
+    if (preg_match('/^field_(.+)_relevance$/', $child, $matches)) {
+      $terms[] = $matches[1];
+    }
+  }
+
+  return $terms;
+}

@@ -1,0 +1,16 @@
+progress-bar-circle:
+  css:
+    theme:
+      css/progress.bar-circle.css: {}
+progress-bar-bar:
+  css:
+    theme:
+      css/progress.bar-bar.css: {}
+progress-bar-colorbar:
+  css:
+    theme:
+      css/progress.bar-colorbar.css: {}
+progress-bar-circular:
+  css:
+    theme:
+      css/progress.bar-circular.css: {}

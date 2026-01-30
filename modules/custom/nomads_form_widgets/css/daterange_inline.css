@@ -1,0 +1,17 @@
+.nomads-daterange-inline .fieldset-wrapper,
+.nomads-daterange-inline .fieldset__wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.nomads-daterange-inline .fieldset-wrapper > .form-item,
+.nomads-daterange-inline .fieldset__wrapper > .form-item {
+  flex: 1 1 180px;
+  margin-bottom: 0;
+}
+
+.nomads-daterange-inline .fieldset-wrapper > :not(.form-item),
+.nomads-daterange-inline .fieldset__wrapper > :not(.form-item) {
+  flex-basis: 100%;
+}

@@ -1,0 +1,10 @@
+select_tooltip:
+  css:
+    theme:
+      css/select_tooltip.css: {}
+  js:
+    js/select_tooltip.js: {}
+    js/pretty_radio_toggle.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

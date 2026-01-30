@@ -1,0 +1,16 @@
+relevance:
+  js:
+    js/paragraph_relevance.js: {}
+    js/paragraph_relevance_sticky_actions.js: {}
+  css:
+    theme:
+      css/paragraph_relevance.css: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/once
+
+relevance_paragraph_base_layout:
+  css:
+    theme:
+      css/relevance_paragraph_base_layout.css: {}

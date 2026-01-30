@@ -1,0 +1,338 @@
+<?php
+
+/**
+ * @file
+ * Nomads Form Widgets module.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_form_alter().
+ */
+function nomads_form_widgets_form_alter(array &$form, FormStateInterface $form_state, $form_id): void {
+  if (nomads_form_widgets_has_double_field($form)) {
+    $form['#attached']['library'][] = 'nomads_form_widgets/double_field_inline';
+  }
+
+  if (nomads_form_widgets_has_geolocation_widget($form)) {
+    $form['#attached']['library'][] = 'nomads_form_widgets/geolocation_widget';
+  }
+
+  if (nomads_form_widgets_has_sliderwidget($form)) {
+    $form['#attached']['library'][] = 'nomads_form_widgets/sliderwidget_bubble_tweaks';
+    $form['#attached']['library'][] = 'nomads_form_widgets/sliderwidget_hosting_period';
+  }
+
+  if ($form_id === 'field_config_edit_form') {
+    nomads_form_widgets_fix_allowed_values_zero($form);
+    nomads_form_widgets_fix_sliderwidget_default_value_range($form);
+    $form['#attached']['library'][] = 'nomads_form_widgets/sliderwidget_default_value';
+  }
+
+  nomads_form_widgets_mark_daterange_inline($form);
+}
+
+/**
+ * Implements hook_field_widget_form_alter().
+ */
+function nomads_form_widgets_field_widget_form_alter(array &$element, FormStateInterface $form_state, array $context): void {
+  $items = $context['items'] ?? NULL;
+  if (!$items) {
+    return;
+  }
+
+  $definition = $items->getFieldDefinition();
+  $field_type = $definition->getType();
+  if ($field_type === 'daterange') {
+    $element['#attributes']['class'][] = 'nomads-daterange-inline';
+    $element['#wrapper_attributes']['class'][] = 'nomads-daterange-inline';
+    $element['#attached']['library'][] = 'nomads_form_widgets/daterange_inline';
+  }
+
+  if ($field_type !== 'list_integer') {
+    return;
+  }
+
+  $allowed_values = $definition->getSetting('allowed_values') ?? [];
+  if (function_exists('options_allowed_values')) {
+    $allowed_values = options_allowed_values($definition->getFieldStorageDefinition(), $items->getEntity());
+  }
+  if (!array_key_exists(0, $allowed_values) && !array_key_exists('0', $allowed_values)) {
+    return;
+  }
+
+  $element['#nomads_allow_zero'] = TRUE;
+  if (!empty($element['#required'])) {
+    $element['#nomads_required'] = TRUE;
+    $element['#required'] = FALSE;
+  }
+
+  if (!isset($element['#element_validate']) || !is_array($element['#element_validate'])) {
+    $element['#element_validate'] = [];
+  }
+  $element['#element_validate'][] = 'nomads_form_widgets_validate_list_integer_zero';
+
+  if (isset($element['value']) && is_array($element['value'])) {
+    $element['value']['#nomads_allow_zero'] = TRUE;
+    if (!empty($element['value']['#required'])) {
+      $element['value']['#nomads_required'] = TRUE;
+      $element['value']['#required'] = FALSE;
+    }
+    if (!isset($element['value']['#element_validate']) || !is_array($element['value']['#element_validate'])) {
+      $element['value']['#element_validate'] = [];
+    }
+    $element['value']['#element_validate'][] = 'nomads_form_widgets_validate_list_integer_zero';
+  }
+}
+
+
+/**
+ * Validation handler that treats 0 as a non-empty value.
+ */
+function nomads_form_widgets_validate_list_integer_zero(array &$element, FormStateInterface $form_state, array &$complete_form): void {
+  if (empty($element['#nomads_allow_zero'])) {
+    return;
+  }
+
+  if (empty($element['#nomads_required'])) {
+    return;
+  }
+
+  $value = $element['#value'] ?? $form_state->getValue($element['#parents']);
+  $is_empty = TRUE;
+
+  if (is_array($value)) {
+    foreach ($value as $item) {
+      if ($item !== '' && $item !== NULL) {
+        $is_empty = FALSE;
+        break;
+      }
+    }
+  }
+  else {
+    $is_empty = ($value === '' || $value === NULL);
+  }
+
+  if ($is_empty) {
+    $title = $element['#title'] ?? $element['#parents'][0] ?? t('This field');
+    $form_state->setError($element, t('@name is required.', ['@name' => $title]));
+  }
+}
+
+/**
+ * Detects double_field widget elements in the form.
+ */
+function nomads_form_widgets_has_double_field(array $element): bool {
+  if (isset($element['#attributes']['class']) && is_array($element['#attributes']['class'])) {
+    if (in_array('double-field-elements', $element['#attributes']['class'], TRUE)) {
+      return TRUE;
+    }
+  }
+  if (isset($element['#wrapper_attributes']['class']) && is_array($element['#wrapper_attributes']['class'])) {
+    if (in_array('double-field-elements', $element['#wrapper_attributes']['class'], TRUE)) {
+      return TRUE;
+    }
+  }
+
+  foreach ($element as $key => $child) {
+    if (is_string($key) && str_starts_with($key, '#')) {
+      continue;
+    }
+    if (is_array($child) && nomads_form_widgets_has_double_field($child)) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Detects geolocation map widget elements in the form.
+ */
+function nomads_form_widgets_has_geolocation_widget(array $element): bool {
+  $class_targets = [
+    'geolocation-map-widget',
+    'field--type-geolocation',
+  ];
+
+  if (isset($element['#attributes']['class']) && is_array($element['#attributes']['class'])) {
+    foreach ($class_targets as $target) {
+      if (in_array($target, $element['#attributes']['class'], TRUE)) {
+        return TRUE;
+      }
+    }
+  }
+  if (isset($element['#wrapper_attributes']['class']) && is_array($element['#wrapper_attributes']['class'])) {
+    foreach ($class_targets as $target) {
+      if (in_array($target, $element['#wrapper_attributes']['class'], TRUE)) {
+        return TRUE;
+      }
+    }
+  }
+
+  foreach ($element as $key => $child) {
+    if (is_string($key) && str_starts_with($key, '#')) {
+      continue;
+    }
+    if (is_array($child) && nomads_form_widgets_has_geolocation_widget($child)) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Detects sliderwidget elements in the form.
+ */
+function nomads_form_widgets_has_sliderwidget(array $element): bool {
+  if (!empty($element['#type']) && $element['#type'] === 'slider') {
+    return TRUE;
+  }
+  if (isset($element['#attributes']['class']) && is_array($element['#attributes']['class'])) {
+    if (in_array('sliderwidget', $element['#attributes']['class'], TRUE)) {
+      return TRUE;
+    }
+  }
+  if (isset($element['#wrapper_attributes']['class']) && is_array($element['#wrapper_attributes']['class'])) {
+    if (in_array('sliderwidget', $element['#wrapper_attributes']['class'], TRUE)) {
+      return TRUE;
+    }
+  }
+
+  foreach ($element as $key => $child) {
+    if (is_string($key) && str_starts_with($key, '#')) {
+      continue;
+    }
+    if (is_array($child) && nomads_form_widgets_has_sliderwidget($child)) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Prevent required validation errors for allowed value key 0.
+ */
+function nomads_form_widgets_fix_allowed_values_zero(array &$form): void {
+  if (!isset($form['field_storage']['subform']['settings']['allowed_values']['table'])) {
+    return;
+  }
+
+  $table = &$form['field_storage']['subform']['settings']['allowed_values']['table'];
+  foreach ($table as $delta => &$row) {
+    if (!is_array($row) || !isset($row['item']['key'])) {
+      continue;
+    }
+    $key_element = &$row['item']['key'];
+    $current_value = $key_element['#value'] ?? $key_element['#default_value'] ?? NULL;
+    if ((string) $current_value === '0') {
+      $key_element['#required'] = FALSE;
+      if (!isset($key_element['#value']) || $key_element['#value'] === NULL || $key_element['#value'] === '') {
+        $key_element['#value'] = '0';
+      }
+    }
+  }
+  unset($row, $key_element);
+}
+
+/**
+ * Ensure sliderwidget range defaults sync to the correct hidden inputs.
+ */
+function nomads_form_widgets_fix_sliderwidget_default_value_range(array &$form): void {
+  if (empty($form['default_value_input']) || !is_array($form['default_value_input'])) {
+    return;
+  }
+
+  nomads_form_widgets_adjust_sliderwidget_default_value_range($form['default_value_input']);
+}
+
+/**
+ * Recursively adjust sliderwidget range elements inside default value input.
+ */
+function nomads_form_widgets_adjust_sliderwidget_default_value_range(array &$element): void {
+  foreach ($element as $key => &$child) {
+    if (is_string($key) && str_starts_with($key, '#')) {
+      continue;
+    }
+    if (!is_array($child)) {
+      continue;
+    }
+
+    if (($child['#type'] ?? NULL) === 'slider' && !empty($child['#multi_value'])) {
+      $parents = $child['#parents'] ?? [];
+      if (!empty($parents) && $parents[0] === 'default_value_input') {
+        $base_parents = $parents;
+        array_pop($base_parents);
+        $from_name = nomads_form_widgets_name_from_parents(array_merge($base_parents, ['from']));
+        $to_name = nomads_form_widgets_name_from_parents(array_merge($base_parents, ['to']));
+        $child['#fields_to_sync_css_selector'] = [
+          '[name="' . $from_name . '"]',
+          '[name="' . $to_name . '"]',
+        ];
+      }
+    }
+
+    nomads_form_widgets_adjust_sliderwidget_default_value_range($child);
+  }
+  unset($child);
+}
+
+/**
+ * Build a form element name attribute from parents.
+ */
+function nomads_form_widgets_name_from_parents(array $parents): string {
+  if (empty($parents)) {
+    return '';
+  }
+  $name = (string) array_shift($parents);
+  foreach ($parents as $parent) {
+    $name .= '[' . $parent . ']';
+  }
+  return $name;
+}
+
+/**
+ * Adds inline layout classes to daterange widgets across form structures.
+ */
+function nomads_form_widgets_mark_daterange_inline(array &$element): void {
+  if (nomads_form_widgets_is_daterange_element($element)) {
+    $element['#attributes']['class'][] = 'nomads-daterange-inline';
+    $element['#wrapper_attributes']['class'][] = 'nomads-daterange-inline';
+    $element['#attached']['library'][] = 'nomads_form_widgets/daterange_inline';
+  }
+
+  foreach ($element as $key => &$child) {
+    if (is_string($key) && str_starts_with($key, '#')) {
+      continue;
+    }
+    if (!is_array($child)) {
+      continue;
+    }
+    nomads_form_widgets_mark_daterange_inline($child);
+  }
+  unset($child);
+}
+
+/**
+ * Determines whether a render element represents a daterange widget.
+ */
+function nomads_form_widgets_is_daterange_element(array $element): bool {
+  if (!isset($element['value'], $element['end_value'])) {
+    return FALSE;
+  }
+
+  if (!empty($element['#field_type']) && $element['#field_type'] === 'daterange') {
+    return TRUE;
+  }
+
+  $value_type = $element['value']['#type'] ?? '';
+  $end_type = $element['end_value']['#type'] ?? '';
+  if ($value_type && $end_type && $value_type === $end_type) {
+    return TRUE;
+  }
+
+  return FALSE;
+}

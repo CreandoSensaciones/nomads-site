@@ -1,0 +1,18 @@
+nomads_easy_tagging.children:
+  path: '/nomads-easy-tagging/children/{parent_tid}'
+  defaults:
+    _controller: '\Drupal\nomads_easy_tagging\Controller\NomadsEasyTaggingController::children'
+    _title: 'Easy tagging children'
+  requirements:
+    _permission: 'administer taxonomy'
+    parent_tid: '\d+'
+  methods: [GET]
+
+nomads_easy_tagging.constraints:
+  path: '/nomads-easy-tagging/constraints'
+  defaults:
+    _controller: '\Drupal\nomads_easy_tagging\Controller\NomadsEasyTaggingController::constraints'
+    _title: 'Easy tagging constraints'
+  requirements:
+    _permission: 'administer taxonomy'
+  methods: [POST]

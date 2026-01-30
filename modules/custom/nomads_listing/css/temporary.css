@@ -1,0 +1,52 @@
+/* Temporary Claro overrides for Nomads listings. */
+
+/* Move admin vertical tabs below the main form and use full-width layout. */
+.layout-node-form,
+.layout-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.layout-node-form .layout-region--main,
+.layout-node-form .layout-region--footer,
+.layout-node-form .layout-region--secondary,
+.layout-form .layout-region--main,
+.layout-form .layout-region--footer,
+.layout-form .layout-region--secondary {
+  flex: 0 0 100%;
+  width: 100%;
+  max-width: 100%;
+  float: none;
+  clear: both;
+}
+
+@media (min-width: 61rem) {
+  .layout-node-form,
+  .layout-form {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-rows: none !important;
+    grid-template-columns: none !important;
+    gap: 0 !important;
+  }
+
+  .layout-node-form .layout-region--main,
+  .layout-node-form .layout-region--footer,
+  .layout-form .layout-region--main,
+  .layout-form .layout-region--footer {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+  }
+
+  .layout-node-form .layout-region--secondary,
+  .layout-form .layout-region--secondary {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 24px !important;
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    order: 3 !important;
+  }
+}

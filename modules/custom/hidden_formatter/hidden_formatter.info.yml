@@ -1,0 +1,5 @@
+name: Hidden formatter
+type: module
+description: 'Provides a hidden field formatter that renders no output.'
+package: 'Nomads Formatter'
+core_version_requirement: '^11'

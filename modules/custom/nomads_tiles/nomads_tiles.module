@@ -1,0 +1,115 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @file
+ * Nomads Tiles module hooks.
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+
+/**
+ * Implements hook_entity_view_alter().
+ */
+function nomads_tiles_entity_view_alter(array &$build, EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display): void {
+  $child_fields = [];
+
+  if (!empty($build['#fieldgroups']) && is_array($build['#fieldgroups'])) {
+    foreach ($build['#fieldgroups'] as $group) {
+      if (!nomads_tiles_is_data_tile_group($group)) {
+        continue;
+      }
+      if (empty($group->children) || !is_array($group->children)) {
+        continue;
+      }
+      foreach ($group->children as $child) {
+        if (is_string($child)) {
+          $child_fields[$child] = TRUE;
+        }
+      }
+    }
+  }
+  else {
+    $settings = $display->getThirdPartySettings('field_group');
+    if (!empty($settings) && is_array($settings)) {
+      foreach ($settings as $group) {
+        if (!nomads_tiles_is_data_tile_group($group)) {
+          continue;
+        }
+        if (empty($group['children']) || !is_array($group['children'])) {
+          continue;
+        }
+        foreach ($group['children'] as $child) {
+          if (is_string($child)) {
+            $child_fields[$child] = TRUE;
+          }
+        }
+      }
+    }
+  }
+
+  if (empty($child_fields)) {
+    return;
+  }
+
+  $build['#nomads_tiles_suppress_fields'] = array_keys($child_fields);
+  $build['#pre_render'][] = 'nomads_tiles_prerender_suppress_fields';
+}
+
+/**
+ * Check if a field group is a Nomads data tile group.
+ *
+ * @param mixed $group
+ *   Group definition array or object.
+ */
+function nomads_tiles_is_data_tile_group($group): bool {
+  if (is_object($group)) {
+    $format_type = $group->format_type ?? '';
+    if ($format_type === 'nomads_data_tile') {
+      return TRUE;
+    }
+    return !empty($group->format_settings['formatter']) && $group->format_settings['formatter'] === 'nomads_data_tile';
+  }
+
+  if (!is_array($group)) {
+    return FALSE;
+  }
+
+  if (($group['format_type'] ?? '') === 'nomads_data_tile') {
+    return TRUE;
+  }
+
+  return !empty($group['format_settings']['formatter']) && $group['format_settings']['formatter'] === 'nomads_data_tile';
+}
+
+/**
+ * Pre-render callback to suppress data tile child fields.
+ */
+function nomads_tiles_prerender_suppress_fields(array $build): array {
+  $fields = $build['#nomads_tiles_suppress_fields'] ?? [];
+  if (empty($fields) || !is_array($fields)) {
+    return $build;
+  }
+
+  return nomads_tiles_recursive_unset($build, $fields);
+}
+
+/**
+ * Recursively remove fields from a render array.
+ */
+function nomads_tiles_recursive_unset(array $build, array $fields): array {
+  foreach ($fields as $field_name) {
+    if (isset($build[$field_name])) {
+      unset($build[$field_name]);
+    }
+  }
+
+  foreach ($build as $key => $value) {
+    if (is_array($value)) {
+      $build[$key] = nomads_tiles_recursive_unset($value, $fields);
+    }
+  }
+
+  return $build;
+}

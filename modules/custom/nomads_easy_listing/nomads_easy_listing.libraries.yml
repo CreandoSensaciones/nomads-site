@@ -1,0 +1,11 @@
+base:
+  css:
+    theme:
+      css/nomads_easy_listing.css: {}
+  js:
+    js/nomads_easy_listing.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupal.ajax
+    - core/drupal.dialog.ajax
+    - core/once

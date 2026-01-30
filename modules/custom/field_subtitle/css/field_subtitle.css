@@ -1,0 +1,39 @@
+.field-subtitle-enabled {
+  container-type: inline-size;
+}
+
+.field-subtitle-enabled > .field-prefix,
+.field-subtitle-enabled > .form-item__prefix {
+  display: block;
+  margin: 0.2rem 0 0.4rem;
+}
+
+.field-subtitle-enabled .field-subtitle-text {
+  display: inline-block;
+  font-size: 0.9em;
+  color: #5f5f5f;
+}
+
+.field-subtitle-enabled.special-category-select__title .form-item__prefix {
+  display: block;
+  margin: 0.2rem 0 0.4rem;
+}
+
+@container (min-width: 400px) {
+  .field-subtitle-enabled > label,
+  .field-subtitle-enabled > .field-prefix,
+  .field-subtitle-enabled > .form-item__prefix {
+    display: inline-block;
+    vertical-align: baseline;
+  }
+
+  .field-subtitle-enabled > .field-prefix,
+  .field-subtitle-enabled > .form-item__prefix {
+    margin: 0 0 0 0.5rem;
+  }
+
+  .field-subtitle-enabled.special-category-select__title .form-item__prefix {
+    display: inline-block;
+    margin: 0 0 0 0.5rem;
+  }
+}

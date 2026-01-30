@@ -1,0 +1,30 @@
+{#
+/**
+ * @file
+ * Template for the progress bar.
+ *
+ * Available variables:
+ * - state: Array which contain name, color, percentage.
+ *
+ * @ingroup themeable
+ */
+#}
+<style>
+  .box .percent svg circle:nth-child(2)
+  {
+    stroke-dashoffset:calc(440 - (440 *{{ state.state }}) / 100);
+    stroke:#03a9f4;
+  }
+</style>
+
+<div class="box">
+  <div class="percent">
+    <svg>
+      <circle cx="70" cy="70" r="70"></circle>
+      <circle cx="70" cy="70" r="70"></circle>
+    </svg>
+    <div class="num">
+      <h2>{{ state.state }}<span>%</span></h2>
+    </div>
+  </div>
+</div>

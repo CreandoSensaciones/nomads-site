@@ -1,0 +1,8 @@
+name: 'Paragraph Relevance'
+type: module
+description: 'Toggles listing vertical tab labels and prevents paragraph creation when relevance is 0.'
+package: 'Nomads Relevance'
+core_version_requirement: '^11'
+dependencies:
+  - field_group:field_group
+  - paragraphs:paragraphs

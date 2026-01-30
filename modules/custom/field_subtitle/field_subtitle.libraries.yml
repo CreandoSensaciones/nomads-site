@@ -1,0 +1,4 @@
+field_subtitle:
+  css:
+    theme:
+      css/field_subtitle.css: {}

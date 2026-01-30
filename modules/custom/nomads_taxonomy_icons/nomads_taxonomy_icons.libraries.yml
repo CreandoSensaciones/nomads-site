@@ -1,0 +1,4 @@
+taxonomy-icons:
+  css:
+    base:
+      css/nomads_taxonomy_icons.css: {}

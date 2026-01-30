@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * @file
+ * Numeric Bar Formatter module.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function numeric_bar_formatter_theme(): array {
+  return [
+    'numeric_bar_format_circle' => [
+      'variables' => [
+        'state' => NULL,
+      ],
+      'template' => 'numeric-bar-format-circle',
+    ],
+    'numeric_bar_format_bar' => [
+      'variables' => [
+        'state' => NULL,
+      ],
+      'template' => 'numeric-bar-format-bar',
+    ],
+    'numeric_bar_format_colorbar' => [
+      'variables' => [
+        'state' => NULL,
+      ],
+      'template' => 'numeric-bar-format-colorbar',
+    ],
+    'numeric_bar_format_circular' => [
+      'variables' => [
+        'state' => NULL,
+      ],
+      'template' => 'numeric-bar-format-circular',
+    ],
+  ];
+}

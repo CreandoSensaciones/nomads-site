@@ -1,0 +1,49 @@
+.relevance-paragraph .layout__region--content > .field--name-field-title {
+  width: 100%;
+}
+
+.relevance-paragraph.col2 .layout__region--content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    "title title"
+    "left right";
+  gap: 16px;
+}
+
+.relevance-paragraph.col2 .layout__region--content > .field--name-field-title {
+  grid-area: title;
+}
+
+.relevance-paragraph.col2 .layout__region--content > .paragraph-right-column {
+  grid-area: right;
+}
+
+.relevance-paragraph.col2 .layout__region--content > .paragraph-left-column {
+  grid-area: left;
+}
+
+.relevance-paragraph.col3 .layout__region--content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    "title title title"
+    "left center right";
+  gap: 16px;
+}
+
+.relevance-paragraph.col3 .layout__region--content > .field--name-field-title {
+  grid-area: title;
+}
+
+.relevance-paragraph.col3 .layout__region--content > .paragraph-left-column {
+  grid-area: left;
+}
+
+.relevance-paragraph.col3 .layout__region--content > .paragraph-center-column {
+  grid-area: center;
+}
+
+.relevance-paragraph.col3 .layout__region--content > .paragraph-right-column {
+  grid-area: right;
+}

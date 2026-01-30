@@ -1,0 +1,47 @@
+.geolocation-map-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.geolocation-map-widget .geolocation-widget-input {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.geolocation-map-widget .geolocation-widget-input .fieldset__legend {
+  display: none;
+}
+
+.geolocation-map-widget .geolocation-widget-input .fieldset__wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 5px;
+}
+
+.geolocation-map-widget .geolocation-widget-input .form-item {
+  margin: 0;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.geolocation-map-widget .geolocation-widget-input .form-item__label {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1;
+  text-transform: lowercase;
+}
+
+.geolocation-map-widget .geolocation-widget-input .form-text {
+  width: 6rem;
+  min-width: 0;
+  box-sizing: border-box;
+  height: 18px !important;
+  min-height: 18px !important;
+  padding: 1px 6px;
+  font-size: 0.85rem;
+  line-height: 1;
+}

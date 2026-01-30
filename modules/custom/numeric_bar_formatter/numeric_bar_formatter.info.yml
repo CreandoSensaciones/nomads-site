@@ -1,0 +1,5 @@
+name: Numeric Bar Formatter
+type: module
+description: 'Provides progress bar field formatters for numeric and list fields.'
+core_version_requirement: ^11
+package: Field types

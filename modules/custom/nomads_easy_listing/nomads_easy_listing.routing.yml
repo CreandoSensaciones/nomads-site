@@ -1,0 +1,7 @@
+nomads_easy_listing.start:
+  path: '/nomads-easy-listing/start'
+  defaults:
+    _form: '\Drupal\nomads_easy_listing\Form\EasyListingStartForm'
+    _title: 'Add listing'
+  requirements:
+    _permission: 'create listing content'

@@ -1,0 +1,5 @@
+name: Nomads Pills
+type: module
+description: 'Provides a fitted pills field formatter for list and taxonomy term reference fields.'
+core_version_requirement: ^11
+package: Nomads Formatter

@@ -1,0 +1,23 @@
+nomads_listing.node_text_edit:
+  path: '/node/{node}/edit-texts'
+  defaults:
+    _entity_form: 'node.text'
+    _title: 'Edit texts'
+  requirements:
+    _custom_access: '\Drupal\nomads_listing\Access\ListingTextFormAccess::access'
+  options:
+    parameters:
+      node:
+        type: entity:node
+
+nomads_listing.node_images_edit:
+  path: '/node/{node}/manage-images'
+  defaults:
+    _entity_form: 'node.images'
+    _title: 'Manage images'
+  requirements:
+    _custom_access: '\Drupal\nomads_listing\Access\ListingTextFormAccess::access'
+  options:
+    parameters:
+      node:
+        type: entity:node

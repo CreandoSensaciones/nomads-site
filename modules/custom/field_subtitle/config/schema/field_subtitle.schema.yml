@@ -1,0 +1,7 @@
+field.field.*.*.*.third_party.field_subtitle:
+  type: mapping
+  label: 'Field subtitle'
+  mapping:
+    subtitle:
+      type: string
+      label: 'Subtitle'

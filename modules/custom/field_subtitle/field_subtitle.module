@@ -1,0 +1,234 @@
+<?php
+
+/**
+ * @file
+ * Adds configurable subtitles to field widgets.
+ */
+
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Render\Markup;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\FieldConfigInterface;
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function field_subtitle_form_field_config_edit_form_alter(array &$form, FormStateInterface $form_state, $form_id): void {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object || !method_exists($form_object, 'getEntity')) {
+    return;
+  }
+
+  $field_config = $form_object->getEntity();
+  if (!$field_config instanceof FieldConfigInterface) {
+    return;
+  }
+
+  if (!isset($form['third_party_settings']) || !is_array($form['third_party_settings'])) {
+    return;
+  }
+
+  $form['third_party_settings']['field_subtitle'] = [
+    '#type' => 'details',
+    '#title' => t('Field subtitle'),
+    '#tree' => TRUE,
+    '#open' => TRUE,
+  ];
+
+  $form['third_party_settings']['field_subtitle']['subtitle'] = [
+    '#type' => 'textfield',
+    '#title' => t('Subtitle'),
+    '#default_value' => $field_config->getThirdPartySetting('field_subtitle', 'subtitle', ''),
+    '#maxlength' => 255,
+    '#description' => t('Shown below the label and above the widget on forms.'),
+    '#element_validate' => ['field_subtitle_normalize_subtitle'],
+  ];
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function field_subtitle_form_alter(array &$form, FormStateInterface $form_state, $form_id): void {
+  // Intentionally empty: keeps hook implementation stable after cache rebuilds.
+}
+
+/**
+ * Implements hook_field_widget_single_element_form_alter().
+ */
+function field_subtitle_field_widget_single_element_form_alter(array &$element, FormStateInterface $form_state, array $context): void {
+  $subtitle = field_subtitle_get_field_subtitle($context);
+  if ($subtitle === NULL) {
+    return;
+  }
+
+  $widget = $context['widget'] ?? NULL;
+  if ($widget && method_exists($widget, 'getPluginId') && $widget->getPluginId() === 'special_category_select') {
+    field_subtitle_apply_to_special_category_select($element, $subtitle);
+    return;
+  }
+
+  field_subtitle_apply_to_element($element, $subtitle);
+}
+
+/**
+ * Implements hook_field_widget_complete_form_alter().
+ */
+function field_subtitle_field_widget_complete_form_alter(array &$field_widget_complete_form, FormStateInterface $form_state, $context): void {
+  $subtitle = field_subtitle_get_field_subtitle($context);
+  if ($subtitle === NULL) {
+    return;
+  }
+
+  if (isset($field_widget_complete_form['widget']) && is_array($field_widget_complete_form['widget'])) {
+    field_subtitle_apply_to_element($field_widget_complete_form['widget'], $subtitle);
+  }
+}
+
+/**
+ * Normalizes empty subtitles so the setting is removed.
+ */
+function field_subtitle_normalize_subtitle(array &$element, FormStateInterface $form_state, array &$complete_form): void {
+  $value = is_string($element['#value']) ? trim($element['#value']) : $element['#value'];
+  if ($value === '' || $value === NULL) {
+    $form_state->setValueForElement($element, NULL);
+  }
+}
+
+/**
+ * Gets the configured subtitle for a field widget.
+ */
+function field_subtitle_get_field_subtitle(array $context): ?string {
+  $items = $context['items'] ?? NULL;
+  $field_definition = $context['field_definition'] ?? NULL;
+
+  if ($items && method_exists($items, 'getFieldDefinition')) {
+    $field_definition = $items->getFieldDefinition();
+  }
+
+  if (!$field_definition instanceof FieldDefinitionInterface) {
+    return NULL;
+  }
+
+  if (method_exists($field_definition, 'getThirdPartySetting')) {
+    $subtitle = $field_definition->getThirdPartySetting('field_subtitle', 'subtitle', '');
+    if (is_string($subtitle) && trim($subtitle) !== '') {
+      return trim($subtitle);
+    }
+  }
+
+  $field_name = $field_definition->getName();
+  $entity = $items && method_exists($items, 'getEntity') ? $items->getEntity() : NULL;
+  $entity_type_id = $entity ? $entity->getEntityTypeId() : $field_definition->getTargetEntityTypeId();
+  $bundle = $entity ? $entity->bundle() : ($field_definition->getTargetBundle() ?? NULL);
+  if (!$entity_type_id || !$bundle) {
+    return NULL;
+  }
+
+  $field_config = FieldConfig::loadByName($entity_type_id, $bundle, $field_name);
+  if (!$field_config) {
+    return NULL;
+  }
+
+  $subtitle = $field_config->getThirdPartySetting('field_subtitle', 'subtitle', '');
+  if (!is_string($subtitle)) {
+    return NULL;
+  }
+
+  $subtitle = trim($subtitle);
+  return $subtitle !== '' ? $subtitle : NULL;
+}
+
+/**
+ * Enables debug messages for a specific field.
+ */
+/**
+ * Applies subtitle markup and classes to a field element.
+ */
+function field_subtitle_apply_to_element(array &$element, string $subtitle): void {
+  $target = &$element;
+  if (isset($element['value']) && is_array($element['value'])) {
+    $target = &$element['value'];
+  }
+  elseif (!isset($target['#type']) || !isset($target['#title'])) {
+    foreach (Element::children($element) as $child_key) {
+      if (isset($element[$child_key]['#type'], $element[$child_key]['#title'])) {
+        $target = &$element[$child_key];
+        break;
+      }
+    }
+  }
+
+  if (!isset($target['#title'])) {
+    return;
+  }
+
+  if (!isset($target['#wrapper_attributes']['class']) || !is_array($target['#wrapper_attributes']['class'])) {
+    $target['#wrapper_attributes']['class'] = [];
+  }
+  $target['#wrapper_attributes']['class'][] = 'field-subtitle-enabled';
+
+  if (!isset($target['#attributes']['class']) || !is_array($target['#attributes']['class'])) {
+    $target['#attributes']['class'] = [];
+  }
+  $target['#attributes']['class'][] = 'field-subtitle-enabled';
+
+  $target['#attached']['library'][] = 'field_subtitle/field_subtitle';
+
+  $existing_prefix = $target['#field_prefix'] ?? '';
+  if (is_string($existing_prefix) && str_contains($existing_prefix, 'field-subtitle-text')) {
+    return;
+  }
+  if ($existing_prefix instanceof Markup && str_contains($existing_prefix->__toString(), 'field-subtitle-text')) {
+    return;
+  }
+  $subtitle_markup = '<span class="form-item__prefix"><span class="field-subtitle-text">'
+    . Html::escape($subtitle) . '</span></span>';
+  if (is_string($existing_prefix) && $existing_prefix !== '') {
+    $subtitle_markup = $existing_prefix . $subtitle_markup;
+  }
+  elseif ($existing_prefix instanceof Markup) {
+    $subtitle_markup = $existing_prefix->__toString() . $subtitle_markup;
+  }
+  $target['#field_prefix'] = Markup::create($subtitle_markup);
+
+  if ($target !== $element) {
+    if (!isset($element['#attached']['library']) || !in_array('field_subtitle/field_subtitle', $element['#attached']['library'], TRUE)) {
+      $element['#attached']['library'][] = 'field_subtitle/field_subtitle';
+    }
+  }
+}
+
+/**
+ * Applies subtitle markup to the Special Category Select widget.
+ */
+function field_subtitle_apply_to_special_category_select(array &$element, string $subtitle): void {
+  if (!isset($element['ui_title']['#value'])) {
+    field_subtitle_apply_to_element($element, $subtitle);
+    return;
+  }
+
+  $title_text = (string) $element['ui_title']['#value'];
+  if (str_contains($title_text, 'field-subtitle-text')) {
+    return;
+  }
+
+  $element['ui_title']['#value'] = Markup::create(
+    Html::escape($title_text)
+    . '<span class="form-item__prefix"><span class="field-subtitle-text">'
+    . Html::escape($subtitle) . '</span></span>'
+  );
+
+  if (!isset($element['#attributes']['class']) || !is_array($element['#attributes']['class'])) {
+    $element['#attributes']['class'] = [];
+  }
+  $element['#attributes']['class'][] = 'field-subtitle-enabled';
+  $element['#attached']['library'][] = 'field_subtitle/field_subtitle';
+
+  if (!isset($element['ui_title']['#attributes']['class']) || !is_array($element['ui_title']['#attributes']['class'])) {
+    $element['ui_title']['#attributes']['class'] = [];
+  }
+  $element['ui_title']['#attributes']['class'][] = 'field-subtitle-enabled';
+}

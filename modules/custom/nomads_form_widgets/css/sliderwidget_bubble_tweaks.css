@@ -1,0 +1,16 @@
+.sliderwidget .ui-slider-handle {
+  position: absolute;
+}
+
+.sliderwidget .sliderwidget-bubble-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: none;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.sliderwidget.nomads-sliderwidget-range-empty .ui-slider-range {
+  opacity: 0;
+}

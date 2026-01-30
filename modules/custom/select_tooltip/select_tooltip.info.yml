@@ -1,0 +1,5 @@
+name: Select Tooltip
+type: module
+description: Adds tooltips for select options using double minus labels.
+package: Nomads Widgets
+core_version_requirement: ^10 || ^11

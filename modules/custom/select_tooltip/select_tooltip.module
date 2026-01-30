@@ -1,0 +1,80 @@
+<?php
+
+/**
+ * @file
+ * Select Tooltip module.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_form_alter().
+ */
+function select_tooltip_form_alter(array &$form, FormStateInterface $form_state, $form_id): void {
+  if (!select_tooltip_form_has_tooltips($form) && !select_tooltip_form_has_pretty_elements($form)) {
+    return;
+  }
+
+  $form['#attached']['library'][] = 'select_tooltip/select_tooltip';
+}
+
+/**
+ * Checks if any select options include tooltips.
+ */
+function select_tooltip_form_has_tooltips(array $element): bool {
+  if (isset($element['#options']) && is_array($element['#options'])) {
+    if (select_tooltip_options_have_tooltips($element['#options'])) {
+      return TRUE;
+    }
+  }
+
+  foreach ($element as $key => $child) {
+    if (!is_string($key) || $key[0] === '#') {
+      continue;
+    }
+    if (is_array($child) && select_tooltip_form_has_tooltips($child)) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Checks if the form includes Pretty checkboxes/radios widgets.
+ */
+function select_tooltip_form_has_pretty_elements(array $element): bool {
+  if (!empty($element['#pretty_option'])) {
+    return TRUE;
+  }
+
+  foreach ($element as $key => $child) {
+    if (!is_string($key) || $key[0] === '#') {
+      continue;
+    }
+    if (is_array($child) && select_tooltip_form_has_pretty_elements($child)) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Checks select options (including optgroups) for tooltip markers.
+ */
+function select_tooltip_options_have_tooltips(array $options): bool {
+  foreach ($options as $value => $label) {
+    if (is_array($label)) {
+      if (select_tooltip_options_have_tooltips($label)) {
+        return TRUE;
+      }
+      continue;
+    }
+    if (is_string($label) && str_contains($label, '--')) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}

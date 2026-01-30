@@ -1,0 +1,4 @@
+fitted-pills:
+  css:
+    theme:
+      css/nomads_fitted_pills.css: {}

@@ -1,0 +1,15 @@
+paragraphs.paragraphs_type.*.third_party.paragraph_relevance:
+  type: mapping
+  label: 'Paragraph relevance settings'
+  mapping:
+    css_classes:
+      type: string
+      label: 'CSS Classes'
+
+field.field.*.*.third_party.paragraph_relevance:
+  type: mapping
+  label: 'Paragraph relevance field settings'
+  mapping:
+    open_default:
+      type: boolean
+      label: 'Open empty paragraph by default'

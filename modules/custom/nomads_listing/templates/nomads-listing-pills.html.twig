@@ -1,0 +1,16 @@
+{#
+/**
+ * @file
+ * Default theme implementation for list text pill display.
+ *
+ * Available variables:
+ * - items: List of items with label and selected flags.
+ */
+#}
+<div class="nomads-listing-pills"{% if pill_background %} style="--nomads-pill-bg: {{ pill_background }};"{% endif %}>
+  {% for item in items %}
+    <span class="nomads-listing-pill{% if not item.selected %} is-unselected{% endif %}"{% if item.tooltip %} data-tooltip="{{ item.tooltip }}"{% endif %}{% if pill_background and item.selected %} style="background: {{ pill_background }};"{% endif %}>
+      {{ item.label }}
+    </span>
+  {% endfor %}
+</div>

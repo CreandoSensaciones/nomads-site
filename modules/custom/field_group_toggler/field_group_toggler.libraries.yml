@@ -1,0 +1,9 @@
+field_group_toggler:
+  js:
+    js/field_group_toggle.js: {}
+  css:
+    theme:
+      css/field_group_toggle.css: {}
+  dependencies:
+    - core/drupal
+    - core/once

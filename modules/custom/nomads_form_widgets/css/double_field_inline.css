@@ -1,0 +1,11 @@
+.double-field-elements > .fieldset__wrapper {
+  display: flex;
+  gap: var(--space-m, 1rem);
+  align-items: flex-start;
+}
+
+.double-field-elements > .fieldset__wrapper > div {
+  margin-block: 0;
+  flex: 1 1 0;
+  min-width: 0;
+}
