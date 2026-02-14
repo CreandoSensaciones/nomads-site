@@ -144,6 +144,75 @@
     return form.querySelector('.vertical-tabs__menu-item a[href="#' + id + '"]');
   }
 
+  function filterPaneClasses(pane) {
+    var ignore = {
+      'vertical-tabs__item': true,
+      'vertical-tabs__item--first': true,
+      'vertical-tabs__item--last': true,
+      'vertical-tabs__pane': true,
+      'claro-details': true,
+      'claro-details--vertical-tabs-item': true,
+      'js-form-wrapper': true,
+      'form-wrapper': true,
+      'field-group-tab': true
+    };
+    var classes = [];
+    pane.classList.forEach(function (className) {
+      if (ignore[className]) {
+        return;
+      }
+      if (
+        className.indexOf('vertical-tabs__') === 0 ||
+        className.indexOf('claro-') === 0 ||
+        className.indexOf('js-') === 0 ||
+        className.indexOf('form-') === 0 ||
+        className.indexOf('field-group-') === 0
+      ) {
+        return;
+      }
+      classes.push(className);
+    });
+    return classes;
+  }
+
+  function syncMenuItemClasses(form) {
+    var panes = form.querySelectorAll('.vertical-tabs__pane');
+    if (!panes.length) {
+      return;
+    }
+    if (!form.querySelector('.vertical-tabs__menu-item')) {
+      var retryCount = parseValue(form.getAttribute('data-paragraph-relevance-tab-retries')) || 0;
+      if (retryCount < 5) {
+        form.setAttribute('data-paragraph-relevance-tab-retries', String(retryCount + 1));
+        window.setTimeout(function () {
+          syncMenuItemClasses(form);
+        }, 0);
+      }
+      return;
+    }
+    panes.forEach(function (pane) {
+      var id = pane.getAttribute('id');
+      if (!id) {
+        return;
+      }
+      var menuLink = form.querySelector('.vertical-tabs__menu-item a[href="#' + id + '"]');
+      if (!menuLink) {
+        return;
+      }
+      var menuItem = menuLink.closest('.vertical-tabs__menu-item');
+      if (!menuItem) {
+        return;
+      }
+      var classes = filterPaneClasses(pane);
+      if (!classes.length) {
+        return;
+      }
+      classes.forEach(function (className) {
+        menuItem.classList.add(className);
+      });
+    });
+  }
+
   function updateMenuItemColor(term, value, root) {
     var groups = root.querySelectorAll('[data-paragraph-relevance-group="' + term + '"]');
     groups.forEach(function (group) {
@@ -238,8 +307,8 @@
     });
   }
 
-  function ensureParagraphItem(group, term, value) {
-    if (!group || value === null || value === 0) {
+  function ensureParagraphItem(group, term, value, force) {
+    if (!group || (!force && (value === null || value === 0))) {
       return;
     }
     if (group.tagName && group.tagName.toLowerCase() === 'details') {
@@ -432,6 +501,20 @@
 
   function bindMenuAutoAdd(context) {
     once('paragraph-relevance-menu-autoadd', '[data-paragraph-relevance-form]', context).forEach(function (form) {
+      var ensureGroupAutoAdd = function (group) {
+        if (!group || !group.hasAttribute('data-paragraph-relevance-group')) {
+          return;
+        }
+      var term = group.getAttribute('data-paragraph-relevance-group');
+      var value = parseValue(group.getAttribute('data-paragraph-relevance-value'));
+      var wrapper = term ? form.querySelector('[data-paragraph-relevance-term="' + term + '"]') : null;
+      if (value === null && wrapper) {
+        value = resolveValue(wrapper);
+      }
+      var force = !wrapper && value === null;
+      ensureParagraphItem(group, term, value, force);
+    };
+
       form.addEventListener('click', function (event) {
         if (!event.target || !event.target.closest) {
           return;
@@ -445,12 +528,20 @@
           return;
         }
         var group = document.getElementById(href.slice(1));
-        if (!group || !group.hasAttribute('data-paragraph-relevance-group')) {
-          return;
-        }
-        var value = parseValue(group.getAttribute('data-paragraph-relevance-value'));
-        ensureParagraphItem(group, group.getAttribute('data-paragraph-relevance-group'), value);
+        ensureGroupAutoAdd(group);
       });
+
+      form.addEventListener(
+        'toggle',
+        function (event) {
+          var group = event.target;
+          if (!group || !group.open || group.tagName.toLowerCase() !== 'details') {
+            return;
+          }
+          ensureGroupAutoAdd(group);
+        },
+        true
+      );
     });
   }
 
@@ -458,6 +549,9 @@
     attach: function (context) {
       once('paragraph-relevance-source', '[data-paragraph-relevance-source="field_type"]', context).forEach(function (source) {
         bindSourceField(source, context);
+      });
+      once('paragraph-relevance-tab-classes', '[data-paragraph-relevance-form]', context).forEach(function (form) {
+        syncMenuItemClasses(form);
       });
       bindMenuAutoAdd(context);
     }

@@ -1,0 +1,8 @@
+name: 'Nomads Prices Virtual Fields'
+type: module
+description: 'Provides reusable price virtual fields for combined price display.'
+package: Custom
+core_version_requirement: ^11
+
+dependencies:
+  - commerce_price:commerce_price

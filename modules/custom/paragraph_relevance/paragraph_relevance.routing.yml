@@ -1,0 +1,11 @@
+paragraph_relevance.paragraph_modal:
+  path: '/paragraph/{paragraph}/modal'
+  defaults:
+    _controller: '\Drupal\paragraph_relevance\Controller\ParagraphModalController::view'
+    _title: 'Paragraph details'
+  requirements:
+    _entity_access: 'paragraph.view'
+  options:
+    parameters:
+      paragraph:
+        type: entity:paragraph

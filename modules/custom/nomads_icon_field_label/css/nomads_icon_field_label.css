@@ -1,0 +1,12 @@
+.nomads-icon-field-label__icon {
+  max-width: 36px;
+  max-height: 36px;
+  display: inline-block;
+}
+
+.nomads-icon-field-label__icon svg {
+  max-width: 36px;
+  height: 36px;
+  
+  display: block;
+}

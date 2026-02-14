@@ -9,8 +9,11 @@ use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Template\Attribute;
+use Drupal\Core\Url;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Component\Serialization\Json;
 use Drupal\field\FieldConfigInterface;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
  * Implements hook_form_alter().
@@ -266,6 +269,9 @@ function paragraph_relevance_preprocess_paragraph(array &$variables): void {
   }
 
   $bundle = (string) $variables['paragraph']->bundle();
+  if ($bundle !== '' && !$variables['attributes']->hasAttribute('id')) {
+    $variables['attributes']->setAttribute('id', $bundle);
+  }
   $bundle_token = $sanitize($bundle);
   if ($bundle_token !== '') {
     $variables['attributes']->addClass('paragraph--bundle-' . $bundle_token);
@@ -286,6 +292,31 @@ function paragraph_relevance_preprocess_paragraph(array &$variables): void {
       $variables['attributes']->addClass($classes);
     }
   }
+
+  if ($view_mode !== 'modal') {
+    try {
+      $modal_url = Url::fromRoute('paragraph_relevance.paragraph_modal', [
+        'paragraph' => $variables['paragraph']->id(),
+      ]);
+    }
+    catch (RouteNotFoundException $exception) {
+      return;
+    }
+    $modal_link_attributes = [
+      'class' => ['use-ajax', 'paragraph-relevance-modal-link'],
+      'data-dialog-type' => 'modal',
+      'data-dialog-options' => Json::encode(['width' => '80%']),
+    ];
+
+    $variables['paragraph_relevance_modal_url'] = $modal_url;
+    $variables['paragraph_relevance_modal_link_attributes'] = $modal_link_attributes;
+
+    if (!isset($variables['elements']['#attached']) || !is_array($variables['elements']['#attached'])) {
+      $variables['elements']['#attached'] = [];
+    }
+    $variables['elements']['#attached']['library'][] = 'core/drupal.dialog.ajax';
+
+  }
 }
 
 /**
@@ -296,13 +327,26 @@ function paragraph_relevance_after_build(array $form, FormStateInterface $form_s
     return $form;
   }
 
+  // TODO: Replace relevance-slider-driven group tagging with field_tags/default-tab logic.
   $form_object = $form_state->getFormObject();
   $entity = $form_object && method_exists($form_object, 'getEntity')
     ? $form_object->getEntity()
     : NULL;
 
   $relevance_fields = paragraph_relevance_collect_relevance_fields($form);
+  $group_paths = paragraph_relevance_collect_group_paths($form);
   if (!$relevance_fields) {
+    foreach ($group_paths as $group_key => $path) {
+      if (!str_starts_with($group_key, 'group_')) {
+        continue;
+      }
+      $term = substr($group_key, strlen('group_'));
+      if ($term === '') {
+        continue;
+      }
+      $group = &paragraph_relevance_form_get_ref($form, $path);
+      $group['#attributes']['data-paragraph-relevance-group'] = $term;
+    }
     return $form;
   }
 
@@ -316,8 +360,6 @@ function paragraph_relevance_after_build(array $form, FormStateInterface $form_s
       $form['#attached']['drupalSettings']['paragraphRelevance']['termRelevance'] = $term_map;
     }
   }
-
-  $group_paths = paragraph_relevance_collect_group_paths($form);
 
   foreach ($relevance_fields as $field_name => $info) {
     $field = &paragraph_relevance_form_get_ref($form, $info['path']);

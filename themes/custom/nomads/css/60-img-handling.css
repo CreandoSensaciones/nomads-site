@@ -1,0 +1,200 @@
+
+/* ========= Image Widget ========== */
+
+/* ========= field_images: Media Library widget grid (BOTH WIDGETS, no !important) ========= */
+/* Applies to:
+   - #field_images-media-library-wrapper
+   - #field_images-media-library-wrapper-field_audience-0-subform
+   and any other variations that start with field_images-media-library-wrapper
+*/
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"] {
+  --ml-gap: 12px;
+  --ml-min: 170px;
+  --ml-add-h: 170px;
+}
+
+/* Hide "Show media item weights" toggle */
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"]
+  .js-media-library-widget-toggle-weight {
+  display: none;
+}
+
+/* The grid wrapper */
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"]
+  .nomads-media-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--ml-min), 1fr));
+  gap: var(--ml-gap);
+  align-items: start;
+}
+
+/* IMPORTANT: flatten wrappers so .js-media-library-item becomes a grid child */
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"]
+  .nomads-media-selection-grid__items {
+  display: contents;
+}
+
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"]
+  .nomads-media-selection-grid__items > .js-media-library-selection {
+  display: contents;
+}
+
+/* Ensure random form wrappers inside selection don't add spacing */
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"]
+  .js-media-library-selection.form-wrapper {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+/* Each selected item tile */
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"]
+  .js-media-library-item {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  align-self: start;
+}
+
+/* Preview wrapper */
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"]
+  .js-media-library-item-preview {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+/* Thumbnail */
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"]
+  .js-media-library-item-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+  transition: filter 140ms ease;
+}
+
+/* Hide filename line inside <article> */
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"]
+  article.contextual-region > div.js-media-library-item-preview + div {
+  display: none;
+}
+
+/* Keep weights + helper elements hidden */
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"]
+  .js-form-type-number,
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"]
+  .js-media-library-item-weight {
+  display: none;
+}
+
+/* Remove button: force red */
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"]
+  .js-media-library-item > input[type="submit"][value="Remove"] {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  margin: 0;
+
+  border: 0;
+  border-radius: 999px;
+
+  background-color: #d60000;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M18.3 5.71a1 1 0 0 0-1.41 0L12 10.59L7.11 5.7A1 1 0 1 0 5.7 7.11L10.59 12L5.7 16.89a1 1 0 1 0 1.41 1.41L12 13.41l4.89 4.89a1 1 0 0 0 1.41-1.41L13.41 12l4.89-4.89a1 1 0 0 0 0-1.4Z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 14px 14px;
+
+  color: transparent;
+  text-indent: -9999px;
+  overflow: hidden;
+
+  cursor: pointer;
+  z-index: 5;
+
+  box-shadow: 0 1px 6px rgba(0,0,0,.22);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* Hover hint: move icon overlay */
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"]
+  .js-media-library-item-preview::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 140ms ease;
+
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 44px 44px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='rgba(255,255,255,0.80)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v18'/%3E%3Cpath d='M3 12h18'/%3E%3Cpath d='M12 3l-2 2m2-2l2 2'/%3E%3Cpath d='M12 21l-2-2m2 2l2-2'/%3E%3Cpath d='M3 12l2-2m-2 2l2 2'/%3E%3Cpath d='M21 12l-2-2m2 2l-2 2'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"]
+  .js-media-library-item:hover .js-media-library-item-preview::after {
+  opacity: 1;
+}
+
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"]
+  .js-media-library-item:hover .js-media-library-item-preview img {
+  filter: brightness(0.82);
+}
+
+/* Hide "Update widget" submit (always) */
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"]
+  input[data-media-library-widget-update] {
+  display: none;
+}
+
+/* Add tile: dashed frame, upload icon as background (works on <input>) */
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"]
+  .nomads-media-selection-grid__add {
+  min-width: 0;
+}
+
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"]
+  .nomads-media-selection-grid__add .js-media-library-open-button {
+  display: block;
+  width: 100%;
+  height: var(--ml-add-h);
+
+  padding: 0;
+  margin: 0;
+
+  border: 2px dashed rgba(0,0,0,.22);
+  border-radius: 14px;
+
+  background-color: transparent;
+
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='rgba(0,0,0,0.58)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 16V4'/%3E%3Cpath d='M7 9l5-5l5 5'/%3E%3Cpath d='M4 20h16'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 46px 46px;
+
+  color: transparent;
+  text-indent: -9999px;
+  overflow: hidden;
+
+  box-shadow: none;
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+fieldset.media-library-widget[id^="field_images-media-library-wrapper"]
+  .nomads-media-selection-grid__add .js-media-library-open-button:hover {
+  border-color: rgba(0,0,0,.38);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='rgba(0,0,0,0.72)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 16V4'/%3E%3Cpath d='M7 9l5-5l5 5'/%3E%3Cpath d='M4 20h16'/%3E%3C/g%3E%3C/svg%3E");
+}

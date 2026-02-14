@@ -149,7 +149,9 @@
           $(setting.fields_to_sync_css_selector[i]).val(ui.values[i]);
         }
       }
-      $(setting.fields_to_sync_css_selector).val(ui.value);
+      else {
+        $(setting.fields_to_sync_css_selector).val(ui.value);
+      }
     }
 
     for (i = 0; i < $values.length; i++) {

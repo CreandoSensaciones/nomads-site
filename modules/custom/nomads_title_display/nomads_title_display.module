@@ -1,0 +1,49 @@
+<?php
+
+declare(strict_types=1);
+
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function nomads_title_display_entity_extra_field_info(): array {
+  return [];
+}
+
+/**
+ * Implements hook_entity_view().
+ */
+function nomads_title_display_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode): void {
+  if ($entity->getEntityTypeId() !== 'node') {
+    return;
+  }
+
+  $component = $display->getComponent('title');
+  if ($component === NULL) {
+    return;
+  }
+
+  // Prevent the default node title rendering to avoid duplicates.
+  unset($build['title']);
+  if (isset($build['#title'])) {
+    $build['#title'] = '';
+  }
+
+  $build['content']['title'] = [
+    '#type' => 'html_tag',
+    '#tag' => 'h1',
+    '#value' => Html::escape($entity->label()),
+    '#attributes' => [
+      'class' => ['nomads-title'],
+    ],
+    '#weight' => $component['weight'] ?? -100,
+    '#cache' => [
+      'tags' => $entity->getCacheTags(),
+      'contexts' => $entity->getCacheContexts(),
+      'max-age' => $entity->getCacheMaxAge(),
+    ],
+  ];
+}

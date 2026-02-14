@@ -1,0 +1,72 @@
+<?php
+
+/**
+ * @file
+ * Nomads hosting period virtual field module.
+ */
+
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function nomads_hosting_period_virtual_field_entity_extra_field_info() {
+  $extra = [];
+  $extra['paragraph']['hosting']['display']['nomads_hosting_period_virtual_field'] = [
+    'label' => t('Nomads hosting period virtual field'),
+    'description' => t('Combined output of minimum hosting and typical hosting period.'),
+    'weight' => 0,
+    'visible' => TRUE,
+  ];
+
+  return $extra;
+}
+
+/**
+ * Implements hook_entity_view().
+ */
+function nomads_hosting_period_virtual_field_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  if ($entity->getEntityTypeId() !== 'paragraph' || $entity->bundle() !== 'hosting') {
+    return;
+  }
+
+  $view_display = \Drupal::service('entity_display.repository')->getViewDisplay('paragraph', 'hosting', $view_mode);
+  $component = $view_display->getComponent('nomads_hosting_period_virtual_field');
+  if (empty($component) || ($component['region'] ?? 'hidden') === 'hidden') {
+    return;
+  }
+
+  /** @var \Drupal\nomads_hosting_period_virtual_field\HostingPeriodExtraFieldBuilder $builder */
+  $builder = \Drupal::service('nomads_hosting_period_virtual_field.builder');
+  $render_array = $builder->build($entity, $view_display, $entity->language()->getId());
+  if (empty($render_array)) {
+    return;
+  }
+
+  $render_array['#weight'] = $component['weight'] ?? 0;
+  $render_array['#region'] = $component['region'] ?? 'content';
+  $build['nomads_hosting_period_virtual_field'] = $render_array;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function nomads_hosting_period_virtual_field_theme() {
+  return [
+    'nomads_hosting_period_extra_field' => [
+      'template' => 'nomads-hosting-period-extra-field',
+      'variables' => [
+        'label' => NULL,
+        'label_display' => NULL,
+        'output_style' => NULL,
+        'min_value' => NULL,
+        'typical_labels' => [],
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */

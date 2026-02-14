@@ -1,0 +1,8 @@
+name: 'Nomads Icon Field Label'
+type: module
+description: 'Adds an Icon label display that renders an inline SVG before field content.'
+core_version_requirement: ^11.2
+package: Nomads
+
+dependencies:
+  - field_ui

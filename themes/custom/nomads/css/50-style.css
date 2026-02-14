@@ -1,0 +1,16 @@
+.paragraph--viewmode-vm-2.relevance-paragraph {
+    background: #fff;
+    border-radius: 20px;
+    border: 3px solid #0DAFC5
+}
+.paragraph--viewmode-vm-2.relevance-paragraph .nomads-paragraph-icon-wrapper {
+    position: relative;
+    60px;
+}
+
+.paragraph--viewmode-vm-2.relevance-paragraph .nomads-paragraph-icon {
+    position: absolute;
+    top: -20px;
+    left: -10px;
+    background: #fff;
+}

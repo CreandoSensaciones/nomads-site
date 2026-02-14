@@ -23,6 +23,44 @@ class NomadsDataTile extends FieldGroupFormatterBase {
   /**
    * {@inheritdoc}
    */
+  public static function defaultContextSettings($context) {
+    return [
+      'show_label' => FALSE,
+    ] + parent::defaultContextSettings($context);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsForm() {
+    $form = parent::settingsForm();
+
+    $form['show_label'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Show label'),
+      '#default_value' => $this->getSetting('show_label'),
+      '#weight' => 1,
+    ];
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsSummary() {
+    $summary = parent::settingsSummary();
+
+    if ($this->getSetting('show_label')) {
+      $summary[] = $this->t('Show label');
+    }
+
+    return $summary;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function preRender(&$element, $rendering_object) {
     $element = [];
   }

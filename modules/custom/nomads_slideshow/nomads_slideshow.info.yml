@@ -1,0 +1,5 @@
+name: 'Nomads Slideshow'
+type: module
+description: 'Splide-based slideshow field formatter for listing teasers.'
+core_version_requirement: ^11
+package: Nomads

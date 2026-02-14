@@ -16,6 +16,7 @@
       return;
     }
     input.value = ids.join("\n");
+    input.dispatchEvent(new Event('change', { bubbles: true }));
   };
 
   const buildChildrenUrl = (baseUrl, parentTid) => {
@@ -152,6 +153,19 @@
         }
       });
     });
+
+    const maxSelections = parseInt(widget.dataset.cardinality || '0', 10);
+    if (maxSelections && selectedIds.length >= maxSelections) {
+      widget.querySelectorAll('.nomads-easy-tagging__card').forEach((card) => {
+        if (selectedLookup.has(card.dataset.tid)) {
+          return;
+        }
+        if (!card.classList.contains('is-disabled')) {
+          card.classList.add('is-disabled');
+          card.setAttribute('title', 'Maximale Auswahl erreicht');
+        }
+      });
+    }
   };
 
   const syncSelectedClasses = (widget, selectedIds) => {
@@ -252,6 +266,35 @@
 
     const selectedIds = parseSelected(selectedInput);
     const index = selectedIds.indexOf(termId);
+    const maxSelections = parseInt(root.dataset.cardinality || '0', 10);
+
+    if (maxSelections === 1) {
+      if (index !== -1) {
+        selectedIds.splice(index, 1);
+      }
+      else {
+        selectedIds.splice(0, selectedIds.length, termId);
+      }
+      setSelected(selectedInput, selectedIds);
+      refreshConstraints(root, selectedInput, typeFieldName);
+      return;
+    }
+
+    if (maxSelections && index === -1 && selectedIds.length >= maxSelections) {
+      return;
+    }
+    if (cardsContainer) {
+      const limitValue = parseInt(cardsContainer.dataset.parentLimit || '0', 10);
+      if (limitValue && index === -1) {
+        const selectedLookup = new Set(selectedIds.map((id) => String(id)));
+        const selectedCount = Array.from(cardsContainer.querySelectorAll('.nomads-easy-tagging__card'))
+          .filter((item) => selectedLookup.has(item.dataset.tid))
+          .length;
+        if (selectedCount >= limitValue) {
+          return;
+        }
+      }
+    }
     if (index !== -1) {
       selectedIds.splice(index, 1);
     }

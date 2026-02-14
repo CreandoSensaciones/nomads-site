@@ -31,6 +31,9 @@ class FittedPillsTermRefFormatter extends FittedPillsFormatterBase {
    * {@inheritdoc}
    */
   public function viewElements(FieldItemListInterface $items, $langcode): array {
+    if ($items->isEmpty()) {
+      return [];
+    }
     $pill_items = [];
     $show_tooltip = (bool) $this->getSetting('show_tooltip');
     $fit_pills = (bool) $this->getSetting('fit_pills');
@@ -62,6 +65,9 @@ class FittedPillsTermRefFormatter extends FittedPillsFormatterBase {
         'tooltip' => $tooltip,
       ];
     }
+    if ($pill_items === []) {
+      return [];
+    }
 
     $pill_builder = static function (array $pill_item): array {
       if (!isset($pill_item['entity'])) {
@@ -75,6 +81,9 @@ class FittedPillsTermRefFormatter extends FittedPillsFormatterBase {
         '#type' => 'link',
         '#title' => $pill_item['label'],
         '#url' => $term->toUrl(),
+        '#attributes' => [
+          'class' => ['nomads-pill__link'],
+        ],
       ];
 
       if ($tooltip !== '') {
@@ -98,7 +107,7 @@ class FittedPillsTermRefFormatter extends FittedPillsFormatterBase {
       $inline_build = [
         '#type' => 'container',
         '#attributes' => [
-          'class' => ['nomads-fitted-pills'],
+          'class' => ['nomads-fitted-pills', 'nomads-pills', 'nomads-pills--fitted-pills'],
         ],
         '#attached' => [
           'library' => [
@@ -111,7 +120,7 @@ class FittedPillsTermRefFormatter extends FittedPillsFormatterBase {
         $inline_build['pill_' . $pill_index] = [
           '#type' => 'container',
           '#attributes' => [
-            'class' => ['nomads-fitted-pills__pill'],
+            'class' => ['nomads-fitted-pills__pill', 'nomads-pill'],
           ],
           0 => $pill_builder($pill_item),
         ];

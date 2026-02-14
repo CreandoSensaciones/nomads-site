@@ -1,0 +1,84 @@
+{#
+/**
+ * @file
+ * Theme override for the media library widget.
+ *
+ * Available variables:
+ * - attributes: HTML attributes for the <fieldset> element.
+ * - errors: (optional) Any errors for this <fieldset> element, may not be set.
+ * - required: Boolean indicating whether the <fieldset> element is required.
+ * - legend: The <legend> element containing the following properties:
+ *   - title: Title of the <fieldset>, intended for use as the text
+ *     of the <legend>.
+ *   - attributes: HTML attributes to apply to the <legend> element.
+ * - description: The description element containing the following properties:
+ *   - content: The description content of the <fieldset>.
+ *   - attributes: HTML attributes to apply to the description container.
+ * - description_display: Description display setting. It can have these values:
+ *   - before: The description is output before the element.
+ *   - after: The description is output after the element (default).
+ *   - invisible: The description is output after the element, hidden visually
+ *     but available to screen readers.
+ * - children: The rendered child elements of the <fieldset>.
+ * - prefix: The content to add before the <fieldset> children.
+ * - suffix: The content to add after the <fieldset> children.
+ *
+ * @see template_preprocess_fieldset()
+ */
+#}
+{% macro media_library_prefix(prefix) %}
+  {% if prefix.empty_selection %}
+    <p class="media-library-widget-empty-text">{{ prefix }}</p>
+  {% else %}
+    {{ prefix }}
+  {% endif %}
+{% endmacro %}
+{%
+  set classes = [
+    'js-form-item',
+    'form-item',
+    'js-form-wrapper',
+    'form-wrapper',
+    'media-library-widget',
+  ]
+%}
+{%
+  set prefix = _self.media_library_prefix(prefix)
+%}
+<fieldset{{ attributes.addClass(classes) }}>
+  {%
+    set legend_span_classes = [
+      'fieldset-legend',
+      required ? 'js-form-required',
+      required ? 'form-required',
+    ]
+  %}
+  {# Always wrap fieldset legends in a <span> for CSS positioning. #}
+  <legend{{ legend.attributes }}>
+    <span{{ legend_span.attributes.addClass(legend_span_classes) }}>{{ legend.title }}</span>
+  </legend>
+  <div class="fieldset-wrapper">
+    {% if description_display == 'before' and description.content %}
+      <div{{ description.attributes.addClass('description') }}>{{ description.content }}</div>
+    {% endif %}
+    {% if errors %}
+      <div class="form-item--error-message">
+        <strong>{{ errors }}</strong>
+      </div>
+    {% endif %}
+    {% if prefix %}
+      <span class="field-prefix">{{ prefix }}</span>
+    {% endif %}
+    <div class="nomads-media-selection-grid">
+      <div class="nomads-media-selection-grid__items">
+        {{ children }}
+      </div>
+      <div class="nomads-media-selection-grid__add">
+        {{ suffix }}
+      </div>
+    </div>
+    {% if description_display in ['after', 'invisible'] and description.content %}
+      <div{{ description.attributes.addClass('description') }}>{{ description.content }}</div>
+    {% endif %}
+  </div>
+</fieldset>

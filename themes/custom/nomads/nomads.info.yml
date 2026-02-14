@@ -3,22 +3,14 @@ type: theme
 'base theme': stable9
 version: 1.0.0
 libraries:
-  - nomads/base
-  - nomads/messages
-  - core/normalize
-libraries-extend:
-  user/drupal.user:
-    - nomads/user
-  core/drupal.dropbutton:
-    - nomads/dropbutton
-  core/drupal.dialog:
-    - nomads/dialog
-  file/drupal.file:
-    - nomads/file
-  core/drupal.progress:
-    - nomads/progress
-  core/drupal.tablesort:
-    - nomads/drupal.tablesort
+  - nomads/global
+  - nomads/tooltips
 description: ''
 core_version_requirement: ^11
 generator: 'starterkit_theme:11.2.8'
+regions:
+  hero: Hero
+  title: Title
+  content: Content
+  bottom: Bottom
+  footer: Footer

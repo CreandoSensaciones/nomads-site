@@ -1,0 +1,14 @@
+{% for subfield, subitem in item %}
+  {% if subitem -%}
+    {% set subitem_markup = subitem|render %}
+    {% set subitem_markup = subitem_markup|replace({' Mb/s': ' <span class="double-field-unit">Mb/s</span>'}) %}
+    {% set subitem_markup = subitem_markup|replace({'Mb/s': '<span class="double-field-unit">Mb/s</span>'}) %}
+    <div class="double-field-{{ subfield }}">
+      {%- if field_settings.storage[subfield].type == 'text' -%}
+        {{- subitem_markup|nl2br|raw -}}
+      {%- else -%}
+        {{- subitem_markup|raw -}}
+      {%- endif -%}
+    </div>
+  {% endif %}
+{% endfor %}

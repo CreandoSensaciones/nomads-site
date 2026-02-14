@@ -5,12 +5,14 @@
  * Adds virtual fields for rendering Listing paragraphs filtered by relevance.
  */
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\paragraphs\ParagraphInterface;
+use Drupal\taxonomy\TermInterface;
 
 /**
  * Implements hook_entity_extra_field_info().
@@ -24,19 +26,19 @@ function paragraph_relevance_vfields_entity_extra_field_info(): array {
         'display' => [
           'key_aspects' => [
             'label' => $t->translate('Key aspects'),
-            'description' => $t->translate('Lists Listing paragraphs grouped by relevance (3/2/1) from the "Relevance" form tab.'),
+            'description' => $t->translate('Lists Listing paragraphs grouped by relevance (3/2/1) using subsite key aspect ordering.'),
             'weight' => -1,
             'visible' => FALSE,
           ],
           'core_focus_paragraphs_3' => [
             'label' => $t->translate('Core Focus Paragraphs (3)'),
-            'description' => $t->translate('Renders all Listing paragraphs whose relevance slider value is 3, using Paragraph view mode "3".'),
+            'description' => $t->translate('Renders all Listing paragraphs whose field_relevance2 value is 3, using Paragraph view mode "3".'),
             'weight' => 0,
             'visible' => FALSE,
           ],
           'relevant_paragraphs_2' => [
             'label' => $t->translate('Relevant Paragraphs (2)'),
-            'description' => $t->translate('Renders all Listing paragraphs whose relevance slider value is 2, using Paragraph view mode "2".'),
+            'description' => $t->translate('Renders all Listing paragraphs whose field_relevance2 value is 2, using Paragraph view mode "2".'),
             'weight' => 1,
             'visible' => FALSE,
           ],
@@ -68,65 +70,127 @@ function paragraph_relevance_vfields_entity_view(array &$build, EntityInterface 
 }
 
 /**
+ * Implements hook_entity_presave().
+ */
+function paragraph_relevance_vfields_entity_presave(EntityInterface $entity): void {
+  if ($entity->getEntityTypeId() !== 'node' || !method_exists($entity, 'bundle') || $entity->bundle() !== 'listing') {
+    return;
+  }
+
+  \Drupal::logger('paragraph_relevance')->notice('PR DEBUG: presave listing nid=@nid', ['@nid' => $entity->id() ?? 'new']);
+
+  $paragraphs = paragraph_relevance_vfields_collect_paragraphs($entity);
+  \Drupal::logger('paragraph_relevance')->notice('PR DEBUG: found @n paragraphs', ['@n' => count($paragraphs)]);
+  if (!$paragraphs) {
+    return;
+  }
+
+  $max_by_bundle = [];
+  foreach ($paragraphs as $paragraph) {
+    $loaded = $paragraph->id()
+      ? \Drupal::entityTypeManager()->getStorage('paragraph')->load($paragraph->id())
+      : NULL;
+    $src_entity = $loaded ?: $paragraph;
+    $dst_entity = $paragraph;
+    $src = $src_entity->hasField('field_relevance') ? $src_entity->get('field_relevance')->value : 'MISSING';
+    $dst = $dst_entity->hasField('field_relevance2') ? $dst_entity->get('field_relevance2')->value : 'MISSING';
+    \Drupal::logger('paragraph_relevance')->notice('PR DEBUG: p=@pid bundle=@b src=@src dst_before=@dst', [
+      '@pid' => $src_entity->id() ?? 'new',
+      '@b' => $src_entity->bundle(),
+      '@src' => (string) $src,
+      '@dst' => (string) $dst,
+    ]);
+    if (!$src_entity->hasField('field_relevance')) {
+      continue;
+    }
+    $value = (int) ($src_entity->get('field_relevance')->value ?? 0);
+    if ($dst_entity->hasField('field_relevance2')) {
+      $dst_entity->set('field_relevance2', $value);
+    }
+
+    $bundle = (string) $dst_entity->bundle();
+    if ($bundle === '') {
+      continue;
+    }
+    $max_by_bundle[$bundle] = isset($max_by_bundle[$bundle])
+      ? max($max_by_bundle[$bundle], $value)
+      : $value;
+  }
+
+  foreach ($max_by_bundle as $bundle => $max_value) {
+    $field_name = 'field_' . $bundle . '_relevance';
+    if (!$entity->hasField($field_name)) {
+      continue;
+    }
+    $entity->set($field_name, $max_value);
+  }
+}
+
+/**
  * Build render array for relevance-filtered paragraphs.
  */
 function paragraph_relevance_vfields_build(EntityInterface $listing, int $target_relevance): array {
-  $terms = paragraph_relevance_vfields_ordered_terms();
-
-  $paragraph_builds = [];
   $cacheability = (new CacheableMetadata())
-    ->addCacheableDependency($listing);
+    ->addCacheableDependency($listing)
+    ->addCacheContexts(['url.site']);
+
+  $key_aspect_terms = paragraph_relevance_vfields_key_aspect_terms($cacheability);
+  if (!$key_aspect_terms) {
+    $build = ['#access' => FALSE];
+    $cacheability->applyTo($build);
+    return $build;
+  }
+
+  $sections = paragraph_relevance_vfields_collect_key_aspect_sections($listing, $key_aspect_terms, $target_relevance, $cacheability);
+  if (!$sections) {
+    $build = ['#access' => FALSE];
+    $cacheability->applyTo($build);
+    return $build;
+  }
 
   /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $etm */
   $etm = \Drupal::entityTypeManager();
   $paragraph_view_builder = $etm->getViewBuilder('paragraph');
 
-  foreach ($terms as $term) {
-    $relevance_field = 'field_' . $term . '_relevance';
-    $paragraph_field = 'field_' . $term;
-
-    if (!$listing->hasField($relevance_field) || !$listing->hasField($paragraph_field)) {
-      continue;
-    }
-
-    $relevance_value = (int) ($listing->get($relevance_field)->value ?? 0);
-    if ($relevance_value !== $target_relevance) {
-      continue;
-    }
-
-    if ($listing->get($paragraph_field)->isEmpty()) {
-      continue;
-    }
-
-    /** @var \Drupal\paragraphs\ParagraphInterface[] $paragraphs */
-    $paragraphs = $listing->get($paragraph_field)->referencedEntities();
-    foreach ($paragraphs as $paragraph) {
-      // Render each paragraph with view mode "2" or "3".
-      $paragraph_builds[] = $paragraph_view_builder->view($paragraph, (string) $target_relevance);
-      $cacheability->addCacheableDependency($paragraph);
-    }
-  }
-
+  $wrapper_suffix = $target_relevance === 3 ? 'core' : 'relevant';
   $build = [
     '#type' => 'container',
     '#attributes' => [
       'class' => [
-        'paragraph-relevance-virtual-field',
-        'paragraph-relevance-virtual-field-' . $target_relevance,
-      ],
-    ],
-    'items' => [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => [
-          'paragraph-relevance-virtual-field-items',
-        ],
+        'paragraph-relevance-vfield',
+        'paragraph-relevance-vfield--' . $wrapper_suffix,
       ],
     ],
   ];
 
-  foreach ($paragraph_builds as $delta => $paragraph_build) {
-    $build['items'][$delta] = $paragraph_build;
+  foreach ($sections as $delta => $section) {
+    $term = $section['term'];
+    $bundle = $section['bundle'];
+    $view_mode = paragraph_relevance_vfields_paragraph_view_mode($bundle, (string) $target_relevance);
+
+    $section_build = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => [
+          'paragraph-relevance-vfield__section',
+          'paragraph-relevance-vfield__section--term-' . $term->id(),
+          'paragraph-relevance-vfield__section--bundle-' . Html::getClass($bundle),
+        ],
+        'data-key-aspect' => $term->label(),
+      ],
+      'items' => [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['paragraph-relevance-vfield__items'],
+        ],
+      ],
+    ];
+
+    foreach ($section['paragraphs'] as $paragraph_delta => $paragraph) {
+      $section_build['items'][$paragraph_delta] = $paragraph_view_builder->view($paragraph, $view_mode);
+    }
+
+    $build[$delta] = $section_build;
   }
 
   $cacheability->applyTo($build);
@@ -134,49 +198,205 @@ function paragraph_relevance_vfields_build(EntityInterface $listing, int $target
 }
 
 /**
- * Get ordered term keys based on the relevance field weights in the combined tab.
- *
- * The ordering is derived from the node listing form display (default form mode):
- * the weights of fields matching field_{term}_relevance.
+ * Load ordered key aspect terms for the current hostname.
  */
-function paragraph_relevance_vfields_ordered_terms(): array {
-  static $terms;
-  if (isset($terms)) {
-    return $terms;
+function paragraph_relevance_vfields_key_aspect_terms(CacheableMetadata $cacheability): array {
+  // Replaces the old form-display ordering with subsites -> key aspects ordering.
+  $subsite = paragraph_relevance_vfields_load_subsite_term($cacheability);
+  if (!$subsite || !$subsite->hasField('field_key_aspects') || $subsite->get('field_key_aspects')->isEmpty()) {
+    return [];
   }
 
-  $terms = [];
-
-  $repo = \Drupal::service('entity_display.repository');
-  $form_display = $repo->getFormDisplay('node', 'listing', 'default');
-  $components = $form_display ? $form_display->getComponents() : [];
-
-  $weighted = [];
-  foreach ($components as $name => $component) {
-    if (!is_string($name)) {
-      continue;
+  $terms = $subsite->get('field_key_aspects')->referencedEntities();
+  foreach ($terms as $term) {
+    if ($term instanceof TermInterface) {
+      $cacheability->addCacheableDependency($term);
     }
-    if (preg_match('/^field_(.+)_relevance$/', $name, $m)) {
-      $weighted[] = [
-        'term' => $m[1],
-        'weight' => (int) ($component['weight'] ?? 0),
-      ];
-    }
-  }
-
-  // Stable ordering by weight then term.
-  usort($weighted, static function (array $a, array $b): int {
-    if ($a['weight'] === $b['weight']) {
-      return strcmp((string) $a['term'], (string) $b['term']);
-    }
-    return $a['weight'] <=> $b['weight'];
-  });
-
-  foreach ($weighted as $row) {
-    $terms[] = $row['term'];
   }
 
   return $terms;
+}
+
+/**
+ * Load the subsite term for the current hostname (or default).
+ */
+function paragraph_relevance_vfields_load_subsite_term(CacheableMetadata $cacheability): ?TermInterface {
+  $hostname = paragraph_relevance_vfields_get_hostname();
+  if ($hostname === '') {
+    $hostname = 'default';
+  }
+
+  /** @var \Drupal\taxonomy\TermStorageInterface $storage */
+  $storage = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
+  $query = $storage->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('vid', 'subsites')
+    ->condition('field_hostname', $hostname)
+    ->range(0, 1);
+  $ids = $query->execute();
+  $term = $ids ? $storage->load(reset($ids)) : NULL;
+
+  if (!$term && $hostname !== 'default') {
+    $query = $storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('vid', 'subsites')
+      ->condition('field_hostname', 'default')
+      ->range(0, 1);
+    $ids = $query->execute();
+    $term = $ids ? $storage->load(reset($ids)) : NULL;
+  }
+
+  if ($term instanceof TermInterface) {
+    $cacheability->addCacheableDependency($term);
+    return $term;
+  }
+
+  return NULL;
+}
+
+/**
+ * Get the current request hostname normalized for lookup.
+ */
+function paragraph_relevance_vfields_get_hostname(): string {
+  $request = \Drupal::requestStack()->getCurrentRequest();
+  $hostname = $request ? (string) $request->getHost() : '';
+  $hostname = strtolower($hostname);
+  if ($hostname === '') {
+    return '';
+  }
+  $parts = explode(':', $hostname);
+  return $parts[0];
+}
+
+/**
+ * Collect paragraphs from all paragraph reference fields on the listing.
+ *
+ * @return \Drupal\paragraphs\ParagraphInterface[]
+ *   Paragraph entities in stable field order.
+ */
+function paragraph_relevance_vfields_collect_paragraphs(EntityInterface $listing, ?CacheableMetadata $cacheability = NULL): array {
+  $paragraphs = [];
+  if (!method_exists($listing, 'getFieldDefinitions')) {
+    return $paragraphs;
+  }
+
+  foreach ($listing->getFieldDefinitions() as $field_name => $definition) {
+    if ($definition->getType() !== 'entity_reference_revisions') {
+      continue;
+    }
+    if ($definition->getSetting('target_type') !== 'paragraph') {
+      continue;
+    }
+    if (!$listing->hasField($field_name)) {
+      continue;
+    }
+
+    $field = $listing->get($field_name);
+    if ($field->isEmpty()) {
+      continue;
+    }
+
+    foreach ($field->referencedEntities() as $paragraph) {
+      if (!$paragraph instanceof ParagraphInterface) {
+        continue;
+      }
+      $paragraphs[] = $paragraph;
+      if ($cacheability) {
+        $cacheability->addCacheableDependency($paragraph);
+      }
+    }
+  }
+
+  return $paragraphs;
+}
+
+/**
+ * Group paragraphs by bundle.
+ *
+ * @param \Drupal\paragraphs\ParagraphInterface[] $paragraphs
+ *   Paragraph entities to group.
+ *
+ * @return array
+ *   Paragraphs keyed by bundle.
+ */
+function paragraph_relevance_vfields_group_paragraphs_by_bundle(array $paragraphs): array {
+  $grouped = [];
+  foreach ($paragraphs as $paragraph) {
+    $bundle = (string) $paragraph->bundle();
+    if ($bundle === '') {
+      continue;
+    }
+    $grouped[$bundle][] = $paragraph;
+  }
+  return $grouped;
+}
+
+/**
+ * Collect ordered sections of paragraphs for the given key aspect terms.
+ */
+function paragraph_relevance_vfields_collect_key_aspect_sections(EntityInterface $listing, array $key_aspect_terms, int $target_relevance, CacheableMetadata $cacheability): array {
+  $paragraphs = paragraph_relevance_vfields_collect_paragraphs($listing, $cacheability);
+  $all_paragraphs_by_bundle = paragraph_relevance_vfields_group_paragraphs_by_bundle($paragraphs);
+  $paragraphs_by_bundle = [];
+  $seen = [];
+
+  foreach ($paragraphs as $paragraph) {
+    $bundle = (string) $paragraph->bundle();
+    if ($bundle === '') {
+      continue;
+    }
+    if (!$paragraph->hasField('field_relevance2')) {
+      continue;
+    }
+    $relevance_value = (int) ($paragraph->get('field_relevance2')->value ?? 0);
+    if ($relevance_value !== $target_relevance) {
+      continue;
+    }
+    $id = $paragraph->id();
+    if ($id !== NULL && isset($seen[$bundle][$id])) {
+      continue;
+    }
+    if ($id !== NULL) {
+      $seen[$bundle][$id] = TRUE;
+    }
+    $paragraphs_by_bundle[$bundle][] = $paragraph;
+  }
+
+  $sections = [];
+  foreach ($key_aspect_terms as $term) {
+    if (!$term instanceof TermInterface) {
+      continue;
+    }
+    $bundle = trim((string) ($term->get('field_paragraph_bundle')->value ?? ''));
+    if ($bundle === '' || empty($paragraphs_by_bundle[$bundle])) {
+      continue;
+    }
+    $sections[] = [
+      'term' => $term,
+      'bundle' => $bundle,
+      'paragraphs' => $paragraphs_by_bundle[$bundle],
+    ];
+  }
+
+  return $sections;
+}
+
+/**
+ * Determine the paragraph view mode with a safe fallback.
+ */
+function paragraph_relevance_vfields_paragraph_view_mode(string $bundle, string $view_mode): string {
+  static $resolved = [];
+  $cache_key = $bundle . ':' . $view_mode;
+  if (isset($resolved[$cache_key])) {
+    return $resolved[$cache_key];
+  }
+
+  /** @var \Drupal\Core\Entity\EntityStorageInterface $storage */
+  $storage = \Drupal::entityTypeManager()->getStorage('entity_view_display');
+  $display = $storage->load('paragraph.' . $bundle . '.' . $view_mode);
+  $resolved[$cache_key] = $display ? $view_mode : 'default';
+
+  return $resolved[$cache_key];
 }
 
 /**
@@ -333,48 +553,53 @@ function paragraph_relevance_vfields_key_aspects_settings_update_submit(array &$
  * Build render array for key aspects grouped by relevance.
  */
 function paragraph_relevance_vfields_build_key_aspects(EntityInterface $listing, EntityViewDisplayInterface $display): array {
-  $terms = paragraph_relevance_vfields_relevance_group_terms();
+  $cacheability = (new CacheableMetadata())
+    ->addCacheableDependency($listing)
+    ->addCacheContexts(['url.site']);
+
+  $key_aspect_terms = paragraph_relevance_vfields_key_aspect_terms($cacheability);
+  if (!$key_aspect_terms) {
+    $build = ['#access' => FALSE];
+    $cacheability->applyTo($build);
+    return $build;
+  }
+
   $settings = paragraph_relevance_vfields_key_aspects_settings($display);
   $groups = paragraph_relevance_vfields_key_aspects_groups();
-
-  $cacheability = (new CacheableMetadata())
-    ->addCacheableDependency($listing);
 
   $group_items = [];
   foreach ($groups as $group) {
     $group_items[$group['key']] = [];
   }
 
-  foreach ($terms as $term) {
-    $relevance_field = 'field_' . $term . '_relevance';
-    $paragraph_field = 'field_' . $term;
+  $paragraphs = paragraph_relevance_vfields_collect_paragraphs($listing, $cacheability);
+  $paragraphs_by_bundle = paragraph_relevance_vfields_group_paragraphs_by_bundle($paragraphs);
 
-    if (!$listing->hasField($relevance_field) || !$listing->hasField($paragraph_field)) {
+  foreach ($key_aspect_terms as $term) {
+    $bundle = trim((string) ($term->get('field_paragraph_bundle')->value ?? ''));
+    if ($bundle === '' || empty($paragraphs_by_bundle[$bundle])) {
       continue;
     }
 
-    $relevance_value = (int) ($listing->get($relevance_field)->value ?? 0);
-    if (!isset($groups[$relevance_value])) {
-      continue;
-    }
-
-    $group_key = $groups[$relevance_value]['key'];
-    $output = (string) ($settings[$group_key]['output'] ?? 'icon');
-    $anchor = (bool) ($settings[$group_key]['anchor'] ?? FALSE);
-    if ($output === 'none') {
-      continue;
-    }
-
-    if ($listing->get($paragraph_field)->isEmpty()) {
-      continue;
-    }
-
-    /** @var \Drupal\paragraphs\ParagraphInterface[] $paragraphs */
-    $paragraphs = $listing->get($paragraph_field)->referencedEntities();
-    foreach ($paragraphs as $paragraph) {
+    foreach ($paragraphs_by_bundle[$bundle] as $paragraph) {
       if (paragraph_relevance_vfields_is_ignored_paragraph($paragraph)) {
         continue;
       }
+      if (!$paragraph->hasField('field_relevance2')) {
+        continue;
+      }
+      $relevance_value = (int) ($paragraph->get('field_relevance2')->value ?? 0);
+      if (!isset($groups[$relevance_value])) {
+        continue;
+      }
+
+      $group_key = $groups[$relevance_value]['key'];
+      $output = (string) ($settings[$group_key]['output'] ?? 'icon');
+      $anchor = (bool) ($settings[$group_key]['anchor'] ?? FALSE);
+      if ($output === 'none') {
+        continue;
+      }
+
       $item = paragraph_relevance_vfields_build_key_aspect_item($paragraph, $output, $anchor, $cacheability);
       if ($item) {
         $group_items[$group_key][] = $item;
@@ -386,6 +611,8 @@ function paragraph_relevance_vfields_build_key_aspects(EntityInterface $listing,
     '#type' => 'container',
     '#attributes' => [
       'class' => [
+        'nomads-icon-formatter',
+        'nomads-icon-formatter--paragraph-relevance',
         'paragraph-relevance-key-aspects',
       ],
     ],
@@ -396,6 +623,7 @@ function paragraph_relevance_vfields_build_key_aspects(EntityInterface $listing,
     ],
   ];
 
+  $has_output = FALSE;
   foreach ($groups as $group) {
     $key = $group['key'];
     $output = (string) ($settings[$key]['output'] ?? 'icon');
@@ -425,18 +653,24 @@ function paragraph_relevance_vfields_build_key_aspects(EntityInterface $listing,
         '#value' => $label,
         '#attributes' => [
           'class' => [
+            'nomads-icon-formatter__title',
             'paragraph-relevance-key-aspects__label',
           ],
         ],
       ];
     }
 
+    $items_classes = [
+      'paragraph-relevance-key-aspects__items',
+    ];
+    if ($output === 'pill') {
+      $items_classes[] = 'nomads-pills';
+      $items_classes[] = 'nomads-pills--paragraph-relevance';
+    }
     $group_build['items'] = [
       '#type' => 'container',
       '#attributes' => [
-        'class' => [
-          'paragraph-relevance-key-aspects__items',
-        ],
+        'class' => $items_classes,
       ],
     ];
     foreach ($group_items[$key] as $delta => $item) {
@@ -445,6 +679,7 @@ function paragraph_relevance_vfields_build_key_aspects(EntityInterface $listing,
         '#attributes' => [
           'class' => [
             'paragraph-relevance-key-aspects__item',
+            'nomads-icon-formatter__item',
           ],
         ],
         'content' => $item,
@@ -452,6 +687,13 @@ function paragraph_relevance_vfields_build_key_aspects(EntityInterface $listing,
     }
 
     $build[$key] = $group_build;
+    $has_output = TRUE;
+  }
+
+  if (!$has_output) {
+    $build = ['#access' => FALSE];
+    $cacheability->applyTo($build);
+    return $build;
   }
 
   $cacheability->applyTo($build);
@@ -481,7 +723,7 @@ function paragraph_relevance_vfields_build_key_aspect_item(ParagraphInterface $p
   if ($output === 'icon' && $icon_url !== '') {
     $item = [
       '#type' => 'inline_template',
-      '#template' => '<span class="paragraph-relevance-key-aspect paragraph-relevance-key-aspect--icon"><span class="paragraph-relevance-key-aspect__icon"><img src="{{ url }}" alt="" aria-hidden="true" /></span><span class="paragraph-relevance-key-aspect__label">{{ label }}</span></span>',
+      '#template' => '<span class="paragraph-relevance-key-aspect paragraph-relevance-key-aspect--icon"><span class="paragraph-relevance-key-aspect__icon nomads-icon-formatter__icon"><img src="{{ url }}" alt="" aria-hidden="true" /></span><span class="paragraph-relevance-key-aspect__label nomads-icon-formatter__label">{{ label }}</span></span>',
       '#context' => [
         'url' => $icon_url,
         'label' => $label,
@@ -493,7 +735,7 @@ function paragraph_relevance_vfields_build_key_aspect_item(ParagraphInterface $p
   if ($output === 'pill') {
     $item = [
       '#type' => 'inline_template',
-      '#template' => '<span class="paragraph-relevance-key-aspect paragraph-relevance-key-aspect--pill">{{ label }}</span>',
+      '#template' => '<span class="paragraph-relevance-key-aspect paragraph-relevance-key-aspect--pill nomads-pill nomads-pill__label">{{ label }}</span>',
       '#context' => [
         'label' => $label,
       ],
@@ -503,7 +745,7 @@ function paragraph_relevance_vfields_build_key_aspect_item(ParagraphInterface $p
 
   $item = [
     '#type' => 'inline_template',
-    '#template' => '<span class="paragraph-relevance-key-aspect paragraph-relevance-key-aspect--label">{{ label }}</span>',
+    '#template' => '<span class="paragraph-relevance-key-aspect paragraph-relevance-key-aspect--label nomads-icon-formatter__label">{{ label }}</span>',
     '#context' => [
       'label' => $label,
     ],
@@ -648,7 +890,7 @@ function paragraph_relevance_vfields_wrap_anchor(array $item, ParagraphInterface
     '#title' => $item,
     '#url' => Url::fromUri('internal:#' . $bundle),
     '#attributes' => [
-      'class' => ['paragraph-relevance-key-aspect__link'],
+      'class' => ['paragraph-relevance-key-aspect__link', 'nomads-pill__link'],
     ],
   ];
 }
@@ -672,56 +914,4 @@ function paragraph_relevance_vfields_ignored_paragraph_bundles(): array {
     'reference',
     'paragraph_type_reference',
   ];
-}
-
-/**
- * Collect term keys from the "Relevance" form tab group.
- */
-function paragraph_relevance_vfields_relevance_group_terms(): array {
-  $group_terms = paragraph_relevance_vfields_relevance_group_term_fields();
-  if ($group_terms) {
-    return $group_terms;
-  }
-
-  return paragraph_relevance_vfields_ordered_terms();
-}
-
-/**
- * Collect term keys based on fields in the "Relevance" form group.
- */
-function paragraph_relevance_vfields_relevance_group_term_fields(): array {
-  if (!function_exists('field_group_info_groups')) {
-    return [];
-  }
-
-  $groups = field_group_info_groups('node', 'listing', 'form', 'default');
-  if (!$groups) {
-    return [];
-  }
-
-  $target = NULL;
-  foreach ($groups as $group) {
-    $name = strtolower((string) ($group->group_name ?? ''));
-    $label = strtolower((string) ($group->label ?? ''));
-    if ($name === 'group_relevance' || $name === 'relevance' || $label === 'relevance') {
-      $target = $group;
-      break;
-    }
-  }
-
-  if (!$target || empty($target->children) || !is_array($target->children)) {
-    return [];
-  }
-
-  $terms = [];
-  foreach ($target->children as $child) {
-    if (!is_string($child)) {
-      continue;
-    }
-    if (preg_match('/^field_(.+)_relevance$/', $child, $matches)) {
-      $terms[] = $matches[1];
-    }
-  }
-
-  return $terms;
 }

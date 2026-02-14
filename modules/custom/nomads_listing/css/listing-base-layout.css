@@ -1,19 +1,19 @@
 /*
  * Listing base layout (theme-agnostic, structural only).
  * Assumes these IDs render as siblings inside
- * .node__content .layout .layout__region--content.
+ * .node__content.
  * IDs: #hero-gallery, #title-container, #left-sidebar, #right-sidebar,
  * #content-container, #connectbar, #paragraphs-container.
  */
 
-:where(.node--type-listing) > .node__content > .layout > .layout__region--content {
+:where(.node--type-listing) > .node__content {
   --nomads-listing-gap: 16px;
   --nomads-left-width: 25%;
   --nomads-right-width: 25%;
   --nomads-breakpoint: 900px;
 }
 
-:where(.node--type-listing) > .node__content > .layout > .layout__region--content {
+:where(.node--type-listing) > .node__content {
   display: grid;
   gap: var(--nomads-listing-gap);
   grid-template-columns:
@@ -29,36 +29,36 @@
   align-items: stretch;
 }
 
-:where(.node--type-listing) > .node__content > .layout > .layout__region--content > #hero-gallery {
+:where(.node--type-listing) > .node__content > #hero-gallery {
   grid-area: hero;
 }
 
-:where(.node--type-listing) > .node__content > .layout > .layout__region--content > #title-container {
+:where(.node--type-listing) > .node__content > #title-container {
   grid-area: title;
 }
 
-:where(.node--type-listing) > .node__content > .layout > .layout__region--content > #left-sidebar {
+:where(.node--type-listing) > .node__content > #left-sidebar {
   grid-area: left;
 }
 
-:where(.node--type-listing) > .node__content > .layout > .layout__region--content > #content-container {
+:where(.node--type-listing) > .node__content > #content-container {
   grid-area: content;
 }
 
-:where(.node--type-listing) > .node__content > .layout > .layout__region--content > #right-sidebar {
+:where(.node--type-listing) > .node__content > #right-sidebar {
   grid-area: right;
 }
 
-:where(.node--type-listing) > .node__content > .layout > .layout__region--content > #connectbar {
+:where(.node--type-listing) > .node__content > #connectbar {
   grid-area: connect;
 }
 
-:where(.node--type-listing) > .node__content > .layout > .layout__region--content > #paragraphs-container {
+:where(.node--type-listing) > .node__content > #paragraphs-container {
   grid-area: paragraphs;
 }
 
 @media (max-width: 900px) {
-  :where(.node--type-listing) > .node__content > .layout > .layout__region--content {
+  :where(.node--type-listing) > .node__content {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "hero"

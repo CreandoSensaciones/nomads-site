@@ -1,166 +1,17 @@
 <?php
 
 /**
- * @file
- * Nomads Listings module.
+ * Implements hook_form_alter().
  */
-
-/**
- * Implements hook_page_attachments().
- */
-function nomads_listing_page_attachments(array &$attachments): void {
-  $attachments['#attached']['library'][] = 'nomads_listing/base';
-}
-
-/**
- * Implements hook_entity_view().
- */
-function nomads_listing_entity_view(array &$build, \Drupal\Core\Entity\EntityInterface $entity, $display, $view_mode): void {
-  if ($entity->getEntityTypeId() !== 'node' || $entity->bundle() !== 'listing') {
-    return;
-  }
-
-  $build['#attached']['library'][] = 'nomads_listing/listing_base_layout';
-}
-
-/**
- * Implements hook_theme().
- */
-function nomads_listing_theme(): array {
-  return [
-    'nomads_listing_pills' => [
-      'variables' => [
-        'items' => NULL,
-        'pill_background' => NULL,
-      ],
-      'template' => 'nomads-listing-pills',
-    ],
-  ];
-}
-
-/**
- * Implements hook_field_widget_form_alter().
- */
-function nomads_listing_field_widget_form_alter(array &$element, \Drupal\Core\Form\FormStateInterface $form_state, array $context): void {
-  $items = $context['items'] ?? NULL;
-  if (!$items) {
-    return;
-  }
-
-  $entity = $items->getEntity();
-  if (!$entity || $entity->getEntityTypeId() !== 'node' || $entity->bundle() !== 'listing') {
-    return;
-  }
-
-  $form_mode = $context['form_mode'] ?? ($element['#form_mode'] ?? 'default');
-  if ($form_mode !== 'text') {
-    return;
-  }
-
-  $definition = $items->getFieldDefinition();
-  if ($definition->getType() !== 'entity_reference_revisions') {
-    return;
-  }
-  $settings = $definition->getSettings();
-  if (($settings['target_type'] ?? '') !== 'paragraph') {
-    return;
-  }
-
-  if ($items->isEmpty()) {
-    $element['#access'] = FALSE;
-  }
-}
-
-/**
- * Implements hook_form_FORM_ID_alter() for listing text form.
- */
-function nomads_listing_form_node_listing_text_form_alter(array &$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id): void {
-  $form_object = $form_state->getFormObject();
-  if (!$form_object || !method_exists($form_object, 'getEntity')) {
-    return;
-  }
-
-  $entity = $form_object->getEntity();
-  if (!$entity || $entity->getEntityTypeId() !== 'node' || $entity->bundle() !== 'listing') {
-    return;
-  }
-
-  nomads_listing_hide_empty_paragraph_widgets($form, $entity);
-}
-
-/**
- * Implements hook_form_FORM_ID_alter() for listing images form.
- */
-function nomads_listing_form_node_listing_images_form_alter(array &$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id): void {
-  $form_object = $form_state->getFormObject();
-  if (!$form_object || !method_exists($form_object, 'getEntity')) {
-    return;
-  }
-
-  $entity = $form_object->getEntity();
-  if (!$entity || $entity->getEntityTypeId() !== 'node' || $entity->bundle() !== 'listing') {
-    return;
-  }
-
-  nomads_listing_hide_empty_paragraph_widgets($form, $entity);
-}
-
-/**
- * Hide empty paragraph reference widgets in the listing text form.
- */
-function nomads_listing_hide_empty_paragraph_widgets(array &$element, \Drupal\Core\Entity\FieldableEntityInterface $entity): void {
-  if (isset($element['#field_name']) && is_string($element['#field_name'])) {
-    $field_name = $element['#field_name'];
-    if ($entity->hasField($field_name) && $entity->get($field_name)->isEmpty()) {
-      $definition = $entity->getFieldDefinition($field_name);
-      if ($definition && $definition->getType() === 'entity_reference_revisions') {
-        $settings = $definition->getSettings();
-        if (($settings['target_type'] ?? '') === 'paragraph') {
-          $element['#access'] = FALSE;
-          return;
-        }
-      }
-    }
-  }
-
-  $visible_children = 0;
-  foreach (\Drupal\Core\Render\Element::children($element) as $child_key) {
-    if (!isset($element[$child_key]) || !is_array($element[$child_key])) {
-      continue;
-    }
-
-    if ($entity->hasField($child_key) && $entity->get($child_key)->isEmpty()) {
-      $definition = $entity->getFieldDefinition($child_key);
-      if ($definition && $definition->getType() === 'entity_reference_revisions') {
-        $settings = $definition->getSettings();
-        if (($settings['target_type'] ?? '') === 'paragraph') {
-          $element[$child_key]['#access'] = FALSE;
-        }
-      }
-    }
-
-    nomads_listing_hide_empty_paragraph_widgets($element[$child_key], $entity);
-    $access = $element[$child_key]['#access'] ?? TRUE;
-    if ($access) {
-      $visible_children++;
-    }
-  }
-
-  if ($visible_children === 0 && ($element['#type'] ?? NULL) === 'details') {
-    $element['#access'] = FALSE;
-  }
+function nomads_listing_form_alter(array &$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id): void {
+  \Drupal::logger('nomads_listing')->notice('form_alter fired for @id', ['@id' => $form_id]);
 }
 
 /**
  * Implements hook_entity_type_alter().
+ *
+ * Temporary no-op stub to prevent fatal error if Drupal expects this hook.
  */
 function nomads_listing_entity_type_alter(array &$entity_types): void {
-  if (!isset($entity_types['node'])) {
-    return;
-  }
-
-  // Allow using the "text" form mode via _entity_form: 'node.text'.
-  $entity_types['node']->setFormClass('text', \Drupal\node\NodeForm::class);
-  // Allow using the "images" form mode via _entity_form: 'node.images'.
-  $entity_types['node']->setFormClass('images', \Drupal\node\NodeForm::class);
+  // Intentionally empty.
 }

@@ -1,0 +1,27 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a paragraph.
+ *
+ * Available variables:
+ * - paragraph: The paragraph entity.
+ * - content: All paragraph items.
+ * - attributes: HTML attributes for the containing element.
+ * - view_mode: View mode; e.g., "default", "teaser".
+ *
+ * @see template_preprocess_paragraph()
+ *
+ * @ingroup themeable
+ */
+#}
+{%
+  set classes = [
+    'paragraph',
+    'paragraph--type--' ~ paragraph.bundle|clean_class,
+    view_mode ? 'paragraph--view-mode--' ~ view_mode|clean_class,
+    not paragraph.isPublished() ? 'paragraph--unpublished'
+  ]
+%}
+<div{{ attributes.addClass(classes) }}>
+  {{ content }}
+</div>

@@ -1,0 +1,4 @@
+icon-label:
+  css:
+    component:
+      css/nomads_icon_field_label.css: {}

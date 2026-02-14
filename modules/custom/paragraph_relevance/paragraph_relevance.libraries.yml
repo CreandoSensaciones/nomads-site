@@ -2,6 +2,7 @@ relevance:
   js:
     js/paragraph_relevance.js: {}
     js/paragraph_relevance_sticky_actions.js: {}
+    js/nomads-leaflet-fix.js: {}
   css:
     theme:
       css/paragraph_relevance.css: {}

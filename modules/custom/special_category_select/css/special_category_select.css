@@ -14,9 +14,7 @@
 .special-category-select__tree,
 .special-category-select__selected {
   border: 1px solid #d8dbe0;
-  border-radius: 6px;
   padding: 10px 12px;
-  background: #fff;
 }
 
 .special-category-select__tree-title,

@@ -17,3 +17,11 @@ field.formatter.settings.nomads_tiles_media:
     max_total_tiles:
       type: integer
       label: 'Maximum total tiles'
+
+field_group.field_group_formatter_plugin.nomads_data_tile:
+  type: field_group.field_group_formatter_plugin.base
+  label: 'Mapping for the Nomads data tile formatter settings'
+  mapping:
+    show_label:
+      type: boolean
+      label: 'Show label'

@@ -115,12 +115,23 @@ class EasyListingStartForm extends FormBase {
       $edit_url = Url::fromRoute('entity.node.edit_form', ['node' => $listing_id]);
       $view_url = Url::fromRoute('entity.node.canonical', ['node' => $listing_id]);
 
+      $raw_items = [
+        Link::fromTextAndUrl($this->t('Edit listing'), $edit_url)->toRenderable(),
+        Link::fromTextAndUrl($this->t('View listing'), $view_url)->toRenderable(),
+      ];
+      $render_items = [];
+      foreach ($raw_items as $delta => $item) {
+        if (is_array($item)) {
+          $render_items[$delta] = $item;
+        }
+        else {
+          $render_items[$delta] = ['#markup' => (string) $item];
+        }
+      }
+
       $form['links'] = [
         '#theme' => 'item_list',
-        '#items' => [
-          Link::fromTextAndUrl($this->t('Edit listing'), $edit_url)->toRenderable(),
-          Link::fromTextAndUrl($this->t('View listing'), $view_url)->toRenderable(),
-        ],
+        '#items' => $render_items,
       ];
     }
 

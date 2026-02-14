@@ -124,11 +124,13 @@
   function buildToggle(details) {
     var summary = details.querySelector('summary');
     if (!summary) {
-      return;
+      return null;
     }
 
-    if (summary.querySelector('.field-group-toggle__checkbox')) {
-      return;
+    var existingCheckbox = summary.querySelector('.field-group-toggle__checkbox');
+    if (existingCheckbox) {
+      updateToggle(details, existingCheckbox, { forceEmpty: true });
+      return existingCheckbox;
     }
 
     var originalNodes = Array.from(summary.childNodes).map(function (node) {
@@ -154,37 +156,42 @@
     wrapper.appendChild(label);
     summary.appendChild(wrapper);
 
+    return checkbox;
+  }
+
+  function bindToggle(details, checkbox) {
+    if (!checkbox) {
+      return;
+    }
+    if (!once('field-group-toggle-bind', details).length) {
+      return;
+    }
+
     checkbox.addEventListener('click', function (event) {
       event.stopPropagation();
     });
-    if (details.dataset.fieldGroupToggleBound !== '1') {
-      checkbox.addEventListener('change', function () {
-        details.open = checkbox.checked;
-      });
-      details.addEventListener('toggle', function () {
-        checkbox.checked = details.open;
-      });
-      details.addEventListener('change', function (event) {
-        if (!event.target || !event.target.matches('input, select, textarea')) {
-          return;
-        }
-        if (event.target.classList.contains('field-group-toggle__checkbox')) {
-          return;
-        }
-        updateToggle(details, checkbox);
-      });
-      details.dataset.fieldGroupToggleBound = '1';
-    }
+    checkbox.addEventListener('change', function () {
+      details.open = checkbox.checked;
+    });
+    details.addEventListener('toggle', function () {
+      checkbox.checked = details.open;
+    });
+    details.addEventListener('change', function (event) {
+      if (!event.target || !event.target.matches('input, select, textarea')) {
+        return;
+      }
+      if (event.target.classList.contains('field-group-toggle__checkbox')) {
+        return;
+      }
+      updateToggle(details, checkbox);
+    });
   }
 
   Drupal.behaviors.fieldGroupToggle = {
     attach: function (context) {
-      var targets = once('field-group-toggle', 'details.field-group-toggle', context);
-      targets.forEach(buildToggle);
       context.querySelectorAll('details.field-group-toggle').forEach(function (details) {
-        if (!details.querySelector('.field-group-toggle__checkbox')) {
-          buildToggle(details);
-        }
+        var checkbox = buildToggle(details);
+        bindToggle(details, checkbox);
       });
     }
   };

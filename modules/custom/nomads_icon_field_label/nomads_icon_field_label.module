@@ -1,0 +1,141 @@
+<?php
+
+/**
+ * @file
+ * Nomads Icon Field Label module.
+ */
+
+use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Component\Utility\Html;
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function nomads_icon_field_label_form_entity_view_display_edit_form_alter(array &$form, FormStateInterface $form_state): void {
+  if (empty($form['fields']) || !is_array($form['fields'])) {
+    return;
+  }
+
+  foreach ($form['fields'] as $field_name => &$field_row) {
+    if (!is_array($field_row) || empty($field_row['label']['#options'])) {
+      continue;
+    }
+
+    $field_row['label']['#options']['icon'] = t('Icon');
+  }
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ */
+function nomads_icon_field_label_theme_registry_alter(array &$registry): void {
+  if (!isset($registry['field']['preprocess functions']) || !is_array($registry['field']['preprocess functions'])) {
+    $registry['field']['preprocess functions'] = [];
+  }
+
+  if (!in_array('nomads_icon_field_label_preprocess_field', $registry['field']['preprocess functions'], TRUE)) {
+    $registry['field']['preprocess functions'][] = 'nomads_icon_field_label_preprocess_field';
+  }
+}
+
+/**
+ * Implements hook_entity_view().
+ */
+function nomads_icon_field_label_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode): void {
+  nomads_icon_field_label_apply_icon_label($build);
+}
+
+/**
+ * Implements hook_preprocess_field().
+ */
+function nomads_icon_field_label_preprocess_field(array &$variables, $hook = NULL, array $info = NULL): void {
+  if (($variables['label_display'] ?? NULL) !== 'icon') {
+    return;
+  }
+
+  $element = $variables['element'] ?? [];
+  $entity_type = $element['#entity_type'] ?? '';
+  $bundle = $element['#bundle'] ?? '';
+  $field_name = $element['#field_name'] ?? '';
+
+  $icon_markup = nomads_icon_field_label_get_icon_markup($entity_type, $bundle, $field_name, (string) ($variables['label'] ?? ''));
+  $variables['label_hidden'] = TRUE;
+  $variables['label'] = '';
+  $variables['#attached']['library'][] = 'nomads_icon_field_label/icon-label';
+
+  if (empty($variables['items'][0]['content'])) {
+    return;
+  }
+
+  $item_content = $variables['items'][0]['content'];
+  $variables['items'][0]['content'] = [
+    '#type' => 'container',
+    '#attributes' => ['class' => ['nomads-icon-field-label__wrapper']],
+    'icon' => ['#markup' => $icon_markup],
+    'content' => is_array($item_content) ? $item_content : ['#markup' => $item_content],
+  ];
+}
+
+/**
+ * Recursively applies the icon label behavior to field render arrays.
+ */
+function nomads_icon_field_label_apply_icon_label(array &$element): void {
+  foreach ($element as &$child) {
+    if (!is_array($child)) {
+      continue;
+    }
+
+    if (($child['#theme'] ?? NULL) === 'field' && ($child['#label_display'] ?? NULL) === 'icon') {
+      $child['#pre_render'][] = [\Drupal\nomads_icon_field_label\TrustedCallbacks::class, 'preRenderField'];
+    }
+
+    nomads_icon_field_label_apply_icon_label($child);
+  }
+}
+
+/**
+ * Builds icon markup for a field label.
+ */
+function nomads_icon_field_label_get_icon_markup(string $entity_type, string $bundle, string $field_name, string $label = ''): MarkupInterface {
+  if ($entity_type === '' || $bundle === '' || $field_name === '') {
+    return nomads_icon_field_label_placeholder_markup($label);
+  }
+
+  static $cache = [];
+  $cache_key = $entity_type . ':' . $bundle . ':' . $field_name;
+  if (array_key_exists($cache_key, $cache)) {
+    return $cache[$cache_key];
+  }
+
+  $entity_type_slug = str_replace('_', '-', $entity_type);
+  $bundle_slug = str_replace('_', '-', $bundle);
+  $field_slug = str_replace('_', '-', $field_name);
+  $icon_uri = 'public://data-icons/' . $entity_type_slug . '-' . $bundle_slug . '-' . $field_slug . '.svg';
+  $icon_path = \Drupal::service('file_system')->realpath($icon_uri);
+  if ($icon_path === FALSE || !is_file($icon_path)) {
+    $cache[$cache_key] = nomads_icon_field_label_placeholder_markup($label);
+    return $cache[$cache_key];
+  }
+
+  $svg = file_get_contents($icon_path);
+  if ($svg === FALSE || $svg === '') {
+    $cache[$cache_key] = nomads_icon_field_label_placeholder_markup($label);
+    return $cache[$cache_key];
+  }
+
+  $title_attribute = $label !== '' ? ' title="' . Html::escape($label) . '"' : '';
+  $cache[$cache_key] = Markup::create('<span class="nomads-icon-field-label__icon"' . $title_attribute . '>' . $svg . '</span>');
+  return $cache[$cache_key];
+}
+
+/**
+ * Returns a grey circle placeholder icon.
+ */
+function nomads_icon_field_label_placeholder_markup(string $label = ''): MarkupInterface {
+  $title_attribute = $label !== '' ? ' title="' . Html::escape($label) . '"' : '';
+  return Markup::create('<span class="nomads-icon-field-label__icon nomads-icon-field-label__icon--placeholder"' . $title_attribute . '><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" focusable="false"><circle cx="7" cy="7" r="6" fill="#c4c4c4"/></svg></span>');
+}

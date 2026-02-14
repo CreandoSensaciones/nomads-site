@@ -63,16 +63,16 @@
 }
 
 .magical-links-formatter__icon {
-  width: 64px;
-  height: 64px;
+  width: 42px;
+  height: 42px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
 .magical-links-formatter__icon img {
-  width: 64px;
-  height: 64px;
+  width: 42px;
+  height: 42px;
   object-fit: contain;
   display: block;
 }
@@ -80,13 +80,14 @@
 .magical-links-formatter__icon--placeholder {
   background: #e3e7ee;
   border-radius: 12px;
-  width: 64px;
-  height: 64px;
+  width: 42px;
+  height: 42px;
 }
 
 .magical-links-formatter__item-label {
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 6pt;
   text-align: center;
   display: block;
+  text-transform: uppercase;
 }

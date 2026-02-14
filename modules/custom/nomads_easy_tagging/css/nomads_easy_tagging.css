@@ -25,23 +25,34 @@
   padding: 0;
 }
 
-.nomads-easy-tagging__cards {
+.nomads-easy-tagging__cards{
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: stretch;     /* equal height per row */
+  justify-items: stretch;   /* items take full cell width */
+}
+
+/* the card element itself (adjust selector if your card class differs) */
+.nomads-easy-tagging__cards > *{
+  height: 100%;
+  width: 100%;
+}
+
+/* force top alignment of card contents (common fix if cards use flex centering) */
+.nomads-easy-tagging__cards > *{
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* top */
 }
 
 .nomads-easy-tagging__card,
 .nomads-easy-tagging__cards > button.nomads-easy-tagging__card {
-  display: block;
-  text-align: left;
-  width: 100%;
   border: 1px solid #ddd;
   border-radius: 10px;
   padding: 12px;
   background: #fff;
   cursor: pointer;
-  box-sizing: border-box;
 }
 
 .nomads-easy-tagging__card:hover {
@@ -53,10 +64,9 @@
   outline-offset: 2px;
 }
 
-.nomads-easy-tagging__card.is-selected {
-  border-color: #2d5a8c;
-  box-shadow: 0 0 0 2px rgba(45, 90, 140, 0.15);
-  background: #f4f7fb;
+.nomads-easy-tagging__cards > button.nomads-easy-tagging__card.is-selected {
+  background-color: #2d5a8c;
+  color: #fff;
 }
 
 .nomads-easy-tagging__card.is-disabled {
@@ -76,14 +86,12 @@
 .nomads-easy-tagging__card-label {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #111827;
 }
 
 .nomads-easy-tagging__explainer,
 .nomads-easy-tagging__card-explainer {
   font-size: 0.9rem;
   line-height: 1.35;
-  color: #4b5563;
 }
 
 @media (max-width: 960px) {

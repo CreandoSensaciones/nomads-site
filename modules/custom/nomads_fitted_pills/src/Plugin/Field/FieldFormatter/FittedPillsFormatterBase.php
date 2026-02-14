@@ -201,7 +201,7 @@ abstract class FittedPillsFormatterBase extends FormatterBase implements Contain
     $build = [
       '#type' => 'container',
       '#attributes' => [
-        'class' => array_merge(['nomads-fitted-pills'], $extra_classes),
+        'class' => array_merge(['nomads-fitted-pills', 'nomads-pills', 'nomads-pills--fitted-pills'], $extra_classes),
       ],
       '#attached' => [
         'library' => [
@@ -222,7 +222,7 @@ abstract class FittedPillsFormatterBase extends FormatterBase implements Contain
         $row_build['pill_' . $pill_index] = [
           '#type' => 'container',
           '#attributes' => [
-            'class' => ['nomads-fitted-pills__pill'],
+            'class' => ['nomads-fitted-pills__pill', 'nomads-pill'],
           ],
           0 => $pill_builder($pill_item),
         ];

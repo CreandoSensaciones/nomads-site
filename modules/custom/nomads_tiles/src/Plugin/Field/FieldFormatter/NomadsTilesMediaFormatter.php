@@ -16,6 +16,7 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\TranslatableInterface as TranslatableDataInterface;
@@ -257,6 +258,8 @@ class NomadsTilesMediaFormatter extends FormatterBase implements ContainerFactor
         $tile_groups[$group_name] = [
           'children' => $group->children ?? [],
           'weight' => $group->weight ?? 0,
+          'label' => $group->label ?? '',
+          'format_settings' => $group->format_settings ?? [],
         ];
       }
     }
@@ -326,6 +329,7 @@ class NomadsTilesMediaFormatter extends FormatterBase implements ContainerFactor
    */
   protected function buildDataTiles(EntityViewDisplayInterface $display, FieldableEntityInterface $entity, array $tile_groups, ?string $view_langcode, CacheableMetadata $cacheability, string $image_field_name): array {
     $data_tiles = [];
+    $extra_field_builds = NULL;
 
     if (empty($tile_groups)) {
       return $data_tiles;
@@ -337,6 +341,8 @@ class NomadsTilesMediaFormatter extends FormatterBase implements ContainerFactor
         continue;
       }
 
+      $format_settings = $group['format_settings'] ?? [];
+      $group_classes = $this->extractGroupClasses($format_settings);
       $tile_build = [
         '#type' => 'container',
         '#attributes' => [
@@ -346,42 +352,76 @@ class NomadsTilesMediaFormatter extends FormatterBase implements ContainerFactor
           ],
         ],
       ];
+      if (!empty($group_classes)) {
+        $tile_build['#attributes']['class'] = array_merge($tile_build['#attributes']['class'], $group_classes);
+      }
+
+      $label = $group['label'] ?? '';
+      if (!empty($format_settings['show_label']) && $label !== '') {
+        $label_value = $label;
+        if (empty($format_settings['label_as_html'])) {
+          $label_value = Markup::create(Html::escape($label));
+        }
+        $tile_build['group_label'] = [
+          '#type' => 'html_tag',
+          '#tag' => 'h3',
+          '#value' => $label_value,
+          '#weight' => -10,
+        ];
+      }
 
       $has_content = FALSE;
 
+      $child_weight = 0;
       foreach ($children as $child) {
         if (!is_string($child) || $child === $image_field_name) {
           continue;
         }
-        if (!$entity->hasField($child)) {
-          continue;
-        }
-        if (!$display->getComponent($child)) {
-          continue;
-        }
-
-        $field_items = $entity->get($child);
-        $field_items->filterEmptyItems();
-        if ($field_items->isEmpty()) {
+        $component = $display->getComponent($child);
+        if (!$component) {
           continue;
         }
 
-        $formatter = $display->getRenderer($child);
-        if (!$formatter) {
-          continue;
-        }
+        if ($entity->hasField($child)) {
+          $field_items = $entity->get($child);
+          $field_items->filterEmptyItems();
+          if ($field_items->isEmpty()) {
+            continue;
+          }
 
-        $entity_id = $entity->id() ?? 0;
-        $formatter->prepareView([$entity_id => $field_items]);
-        $access = $field_items->access('view', NULL, TRUE);
-        $field_build = $access->isAllowed() ? $formatter->view($field_items, $view_langcode) : [];
-        $this->renderer->addCacheableDependency($field_build, $access);
-        $cacheability->addCacheableDependency($field_build);
+          $formatter = $display->getRenderer($child);
+          if (!$formatter) {
+            continue;
+          }
+
+          $entity_id = $entity->id() ?? 0;
+          $formatter->prepareView([$entity_id => $field_items]);
+          $access = $field_items->access('view', NULL, TRUE);
+          $field_build = $access->isAllowed() ? $formatter->view($field_items, $view_langcode) : [];
+          $this->renderer->addCacheableDependency($field_build, $access);
+          $cacheability->addCacheableDependency($field_build);
+        }
+        else {
+          if ($extra_field_builds === NULL) {
+            $extra_field_builds = $this->buildExtraFieldComponents($entity, $display, (string) $this->viewMode);
+          }
+          if (empty($extra_field_builds[$child])) {
+            continue;
+          }
+          $field_build = $extra_field_builds[$child];
+          if (isset($component['weight'])) {
+            $field_build['#weight'] = $component['weight'];
+          }
+          $cacheability->addCacheableDependency($field_build);
+        }
 
         if (!empty($field_build)) {
           $has_content = TRUE;
+          $field_build['#weight'] = $child_weight;
           $tile_build[$child] = $field_build;
         }
+
+        $child_weight++;
       }
 
       if ($has_content) {
@@ -606,6 +646,41 @@ class NomadsTilesMediaFormatter extends FormatterBase implements ContainerFactor
     }
 
     return $this->fileUrlGenerator->generateAbsoluteString($uri);
+  }
+
+  /**
+   * Extract class names from field group format settings.
+   */
+  protected function extractGroupClasses(array $format_settings): array {
+    $raw_classes = '';
+
+    if (!empty($format_settings['classes']) && is_string($format_settings['classes'])) {
+      $raw_classes = $format_settings['classes'];
+    }
+    elseif (!empty($format_settings['instance_settings']['classes']) && is_string($format_settings['instance_settings']['classes'])) {
+      $raw_classes = $format_settings['instance_settings']['classes'];
+    }
+
+    if ($raw_classes === '') {
+      return [];
+    }
+
+    $parts = preg_split('/\s+/', trim($raw_classes)) ?: [];
+    return array_values(array_filter($parts, static fn(string $class): bool => $class !== ''));
+  }
+
+  /**
+   * Build extra field components via entity view hooks.
+   */
+  protected function buildExtraFieldComponents(FieldableEntityInterface $entity, EntityViewDisplayInterface $display, string $view_mode): array {
+    $build = [];
+    $view_hook = $entity->getEntityTypeId() . '_view';
+    $module_handler = \Drupal::moduleHandler();
+
+    $module_handler->invokeAll($view_hook, [&$build, $entity, $display, $view_mode]);
+    $module_handler->invokeAll('entity_view', [&$build, $entity, $display, $view_mode]);
+
+    return $build;
   }
 
   /**

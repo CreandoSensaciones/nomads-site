@@ -6,3 +6,11 @@ listing_base_layout:
   css:
     theme:
       css/listing-base-layout.css: {}
+nomads_leaflet_fix:
+  header: true
+  js:
+    js/nomads-leaflet-fix.js:
+      weight: -100
+  dependencies:
+    - core/drupal
+    - core/once

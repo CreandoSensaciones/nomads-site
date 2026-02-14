@@ -302,15 +302,22 @@ class SliderUIFieldWidget extends WidgetBase {
     if (in_array($type, $multi_range_fields)) {
       $from = $items[$delta]->from ?? '';
       $to = $items[$delta]->to ?? '';
-      
+
+      if (empty($element['#id'])) {
+        $element['#id'] = Html::getUniqueId($name . '-' . $delta . '-slider');
+      }
+
+      $from_id = $element['#id'] . '-from';
+      $to_id = $element['#id'] . '-to';
+
       $element['#multi_value'] = TRUE;
       $element['#values'] = [$from, $to];
       $element['#range'] = TRUE;
       
       // Definiert die Felder, die gesynct werden sollen, um die Textfelder zu aktualisieren.
       $element['#fields_to_sync_css_selector'] = [
-        '[name="' . $name . '[' . $delta . '][from]"]',
-        '[name="' . $name . '[' . $delta . '][to]"]',
+        '#' . $from_id,
+        '#' . $to_id,
       ];
       
       // Erzeugt das Haupt-Slider-Element.
@@ -322,6 +329,9 @@ class SliderUIFieldWidget extends WidgetBase {
         '#default_value' => $from,
         '#type' => 'hidden',
         '#disabled' => $element['#disabled'] ?? FALSE,
+        '#attributes' => [
+          'id' => $from_id,
+        ],
       ];
       // Fügt die Range-spezifischen Attribute zum Element hinzu.
       $range_from += $slider_element;
@@ -331,6 +341,9 @@ class SliderUIFieldWidget extends WidgetBase {
         '#default_value' => $to,
         '#type' => 'hidden',
         '#disabled' => $element['#disabled'] ?? FALSE,
+        '#attributes' => [
+          'id' => $to_id,
+        ],
       ];
       $range_to += $slider_element;
 

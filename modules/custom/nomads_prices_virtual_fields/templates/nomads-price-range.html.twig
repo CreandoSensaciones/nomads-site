@@ -1,0 +1,46 @@
+{#
+/**
+ * @file
+ * Price range virtual field output.
+ */
+#}
+<div class="nomads-price-range field--label-above">
+  {% set has_content = day_mode in ['range', 'starting_at'] or month_mode in ['range', 'starting_at'] %}
+  {% if label and has_content %}
+    <div class="nomads-price-range__label field__label">{{ label }}</div>
+  {% endif %}
+  {% if has_content %}
+    <div class="nomads-price-range__body">
+    {% if day_mode == 'range' %}
+      <div class="nomads-price-range__line">
+        {{ day_prefix }}:
+        <span class="price-range-wrapper">
+          <span class="npvf-price npvf-price--min" title="{{ 'minimal price available'|t }}">{{ day_min }}</span>
+          -
+          <span class="npvf-price npvf-price--max" title="{{ 'maximum price offered'|t }}">{{ day_max }}</span>
+        </span>
+      </div>
+    {% elseif day_mode == 'starting_at' %}
+      <div class="nomads-price-range__line">
+        {{ day_prefix }}: {{ 'starting at'|t }}
+        <span class="npvf-price npvf-price--min" title="{{ 'minimal price available'|t }}">{{ day_min }}</span>
+      </div>
+    {% endif %}
+    {% if month_mode == 'range' %}
+      <div class="nomads-price-range__line">
+        {{ month_prefix }}:
+        <span class="price-range-wrapper">
+          <span class="npvf-price npvf-price--min" title="{{ 'minimal price available'|t }}">{{ month_min }}</span>
+          -
+          <span class="npvf-price npvf-price--max" title="{{ 'maximum price offered'|t }}">{{ month_max }}</span>
+        </span>
+      </div>
+    {% elseif month_mode == 'starting_at' %}
+      <div class="nomads-price-range__line">
+        {{ month_prefix }}: {{ 'starting at'|t }}
+        <span class="npvf-price npvf-price--min" title="{{ 'minimal price available'|t }}">{{ month_min }}</span>
+      </div>
+    {% endif %}
+    </div>
+  {% endif %}
+</div>

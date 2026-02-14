@@ -1,0 +1,16 @@
+/* Features layer for page- or feature-specific styling.
+   Allowed: feature flags, experiment styles, debug-only (commented) blocks.
+   Not allowed: base vars, layout helpers, components, forms.
+   Override policy: may override earlier layers; should be scoped and minimal.
+   Notes for Codex: Edit only this file when changing feature-specific styling.
+   Last updated: 2026-02-04 */
+/*
+Debug region outlines (disabled in production)
+
+.region-navbar { outline: 3px solid red; }
+.region-hero { outline: 3px solid orange; }
+.region-title { outline: 3px solid yellow; }
+.region-content { outline: 3px solid green; }
+.region-bottom { outline: 3px solid cyan; }
+.region-footer { outline: 3px solid blue; }
+*/

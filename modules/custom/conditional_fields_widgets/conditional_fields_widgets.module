@@ -84,6 +84,15 @@ function _conditional_fields_widgets_force_options_widgets(array &$element): voi
         $element['#default_value'] = reset($element['#default_value']);
       }
     }
+
+    if (!array_key_exists('#value', $element)) {
+      if (array_key_exists('#default_value', $element)) {
+        $element['#value'] = $element['#default_value'];
+      }
+      else {
+        $element['#value'] = $element['#multiple'] ? [] : '_none';
+      }
+    }
   }
 
   foreach (Element::children($element) as $child_key) {

@@ -19,3 +19,144 @@ function nomads_preprocess_image_widget(array &$variables): void {
     unset($data['preview']);
   }
 }
+
+/**
+ * Implements hook_preprocess_page().
+ */
+function nomads_preprocess_page(array &$variables): void {
+  $menu_tree = \Drupal::menuTree();
+  $parameters = (new \Drupal\Core\Menu\MenuTreeParameters())
+    ->setMaxDepth(1);
+  $allowed_query_keys = ['q', 'view', 'tags', 'from', 'to'];
+  $current_query = \Drupal::request()->query->all();
+  $whitelisted_query = array_intersect_key($current_query, array_flip($allowed_query_keys));
+
+  $main_tree = $menu_tree->load('main', $parameters);
+  $main_tree = $menu_tree->transform(
+    $main_tree,
+    [
+      ['callable' => 'menu.default_tree_manipulators:checkAccess'],
+      ['callable' => 'menu.default_tree_manipulators:generateIndexAndSort'],
+    ]
+  );
+
+  $account_tree = $menu_tree->load('account', $parameters);
+  $account_tree = $menu_tree->transform(
+    $account_tree,
+    [
+      ['callable' => 'menu.default_tree_manipulators:checkAccess'],
+      ['callable' => 'menu.default_tree_manipulators:generateIndexAndSort'],
+    ]
+  );
+
+  $domains_tree = $menu_tree->load('domains', $parameters);
+  $domains_tree = $menu_tree->transform(
+    $domains_tree,
+    [
+      ['callable' => 'menu.default_tree_manipulators:checkAccess'],
+      ['callable' => 'menu.default_tree_manipulators:generateIndexAndSort'],
+    ]
+  );
+
+  $domains = [];
+  foreach ($domains_tree as $element) {
+    $link = $element->link;
+    $url = $link->getUrlObject();
+    $url->setOption('query', $whitelisted_query);
+    $domains[] = [
+      'title' => $link->getTitle(),
+      'url' => $url,
+    ];
+  }
+
+  $variables['nomads_mainmenu'] = $menu_tree->build($main_tree);
+  $variables['nomads_accountmenu'] = $menu_tree->build($account_tree);
+  $variables['nomads_domainsmenu_items'] = $domains;
+}
+
+/**
+ * Implements hook_preprocess_paragraph().
+ */
+function nomads_preprocess_paragraph(array &$variables): void {
+  $view_mode = $variables['view_mode'] ?? NULL;
+  if ($view_mode !== '2' && $view_mode !== '3') {
+    return;
+  }
+
+  $variables['nomads_paragraph_type_label'] = '';
+  $variables['nomads_paragraph_type_icon_markup'] = '';
+
+  if (empty($variables['paragraph'])) {
+    return;
+  }
+
+  $paragraph = $variables['paragraph'];
+  $bundle = $paragraph->bundle();
+  /** @var \Drupal\paragraphs\ParagraphsTypeInterface|null $paragraph_type */
+  $paragraph_type = \Drupal::entityTypeManager()
+    ->getStorage('paragraphs_type')
+    ->load($bundle);
+
+  if (!$paragraph_type) {
+    return;
+  }
+
+  $label = $paragraph_type->label();
+  if (is_string($label) && $label !== '') {
+    $variables['nomads_paragraph_type_label'] = $label;
+  }
+
+  $icon_value = '';
+  if (method_exists($paragraph_type, 'getIconUrl')) {
+    $icon_value = (string) $paragraph_type->getIconUrl();
+  }
+
+  $icon_value = trim($icon_value);
+  if ($icon_value === '') {
+    return;
+  }
+
+  $has_slash = strpos($icon_value, '/') !== FALSE;
+  $has_ext = (bool) preg_match('/\.(svg|png|jpe?g)(\?.*)?$/i', $icon_value);
+  $is_class = !$has_slash && !$has_ext;
+
+  if ($is_class) {
+    $class_tokens = preg_split('/\s+/', $icon_value, -1, PREG_SPLIT_NO_EMPTY);
+    $class_tokens = array_map('\Drupal\Component\Utility\Html::cleanCssIdentifier', $class_tokens);
+    $class_attr = trim(implode(' ', $class_tokens));
+    if ($class_attr !== '') {
+      $variables['nomads_paragraph_type_icon_markup'] = \Drupal\Core\Render\Markup::create(
+        '<span class="nomads-paragraph-type-icon ' . $class_attr . '"></span>'
+      );
+    }
+    return;
+  }
+
+  $safe_icon_url = \Drupal\Component\Utility\UrlHelper::stripDangerousProtocols($icon_value);
+  if ($safe_icon_url === '') {
+    return;
+  }
+
+  $alt = '';
+  if (is_string($label) && $label !== '') {
+    $alt = $label;
+  }
+  $variables['nomads_paragraph_type_icon_markup'] = \Drupal\Core\Render\Markup::create(
+    '<img class="nomads-paragraph-type-icon" src="' . \Drupal\Component\Utility\Html::escape($safe_icon_url) . '" alt="' . \Drupal\Component\Utility\Html::escape($alt) . '">'
+  );
+}
+
+/**
+ * Implements hook_preprocess_field().
+ */
+function nomads_preprocess_field(array &$variables): void {
+  if (($variables['entity_type'] ?? '') !== 'node') {
+    return;
+  }
+  if (($variables['field_name'] ?? '') !== 'field_subtitle') {
+    return;
+  }
+
+  $variables['host_entity'] = $variables['element']['#object'] ?? NULL;
+  $variables['host_view_mode'] = $variables['element']['#view_mode'] ?? '';
+}

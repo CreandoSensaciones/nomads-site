@@ -1,0 +1,58 @@
+{#
+/**
+ * @file
+ * Paragraph template for view mode 2.
+ */
+#}
+{%
+  set classes = [
+    'paragraph',
+    'nomads-icon-paragraph',
+    'paragraph--type--' ~ paragraph.bundle|clean_class,
+    view_mode ? 'paragraph--view-mode--' ~ view_mode|clean_class,
+    not paragraph.isPublished() ? 'paragraph--unpublished'
+  ]
+%}
+
+{% set label = paragraph.bundle|replace({'_': ' '})|upper %}
+
+{% set modal_link_attributes = paragraph_relevance_modal_link_attributes is defined
+  ? create_attribute(paragraph_relevance_modal_link_attributes)
+  : create_attribute() %}
+{% set modal_link_attributes = modal_link_attributes
+  .addClass('nomads-paragraph-modal-link')
+  .setAttribute('title', 'open paragraph as modal')
+  .setAttribute('aria-label', 'open paragraph as modal') %}
+
+<div{{ attributes.addClass(classes) }}>
+  {% if nomads_paragraph_type_icon_markup or nomads_paragraph_type_label %}
+    <div class="nomads-paragraph-header">
+      <div class="nomads-paragraph-icon-wrapper">
+        {% if nomads_paragraph_type_label %}
+          <div class="nomads-paragraph-label-wrapper">
+            <div class="nomads-paragraph-label">{{ label }}</div>
+          </div>
+        {% endif %}
+        {% if nomads_paragraph_type_icon_markup %}
+          <div class="nomads-paragraph-icon">{{ nomads_paragraph_type_icon_markup|raw }}</div>
+        {% endif %}
+      </div>
+      <div class="nomads-paragraph-title-wrapper">
+        {% if content.field_title %}
+          <div class="nomads-paragraph-title">
+           {{ content.field_title }}
+          </div>
+        {% endif %}
+      </div>
+      {% if paragraph_relevance_modal_url is defined %}
+    <div class="nomads-paragraph-modal-link-wrapper">
+      <a href="{{ paragraph_relevance_modal_url }}"{{ modal_link_attributes }}>
+        <img src="{{ '/' ~ directory ~ '/assets/ui/modal.svg' }}" alt="open paragraph as modal" />
+      </a>
+    </div>
+  {% endif %}
+    </div>
+  {% endif %}
+
+  {{ content|without('field_title') }}
+</div>

@@ -22,6 +22,9 @@ class FittedPillsListFormatter extends FittedPillsFormatterBase {
    * {@inheritdoc}
    */
   public function viewElements(FieldItemListInterface $items, $langcode): array {
+    if ($items->isEmpty()) {
+      return [];
+    }
     $pill_items = [];
     $allowed_values = [];
     $show_tooltip = (bool) $this->getSetting('show_tooltip');
@@ -63,6 +66,9 @@ class FittedPillsListFormatter extends FittedPillsFormatterBase {
         'tooltip' => $tooltip,
       ];
     }
+    if ($pill_items === []) {
+      return [];
+    }
 
     $big_pills = FALSE;
     $packer_settings = $this->getPackerSettings();
@@ -97,7 +103,7 @@ class FittedPillsListFormatter extends FittedPillsFormatterBase {
       $inline_build = [
         '#type' => 'container',
         '#attributes' => [
-          'class' => ['nomads-fitted-pills'],
+          'class' => ['nomads-fitted-pills', 'nomads-pills', 'nomads-pills--fitted-pills'],
         ],
         '#attached' => [
           'library' => [
@@ -110,7 +116,7 @@ class FittedPillsListFormatter extends FittedPillsFormatterBase {
         $inline_build['pill_' . $pill_index] = [
           '#type' => 'container',
           '#attributes' => [
-            'class' => ['nomads-fitted-pills__pill'],
+            'class' => ['nomads-fitted-pills__pill', 'nomads-pill'],
           ],
           0 => $pill_builder($pill_item),
         ];

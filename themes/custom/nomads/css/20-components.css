@@ -1,0 +1,1280 @@
+/* Components layer for reusable UI pieces.
+   Allowed: component blocks, elements, and state rules.
+   Not allowed: base vars, layout helpers, feature-specific, forms.
+   Override policy: may override 00-base.css and 10-layout.css; may be overridden by later layers.
+   Notes for Codex: Edit only this file when changing component styling.
+   Last updated: 2026-02-04 */
+
+/* ========== Compentent Navbar ========== */
+
+.nomads-navbar {
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  position: relative;
+}
+
+.nomads-navbar__inner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 78px;
+}
+
+.nomads-navbar__brand {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  flex: 0 0 auto;
+}
+
+.nomads-navbar__brand-logo {
+  height: 48px;
+  width: auto;
+  display: block;
+}
+
+.nomads-navbar__brand-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nomads-navbar__search {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center;
+}
+
+.nomads-navbar__search-input {
+  width: min(400px, 100%);
+  height: 42px;
+  padding: 0 18px;
+  border: 1px solid #bdbdbd;
+  border-radius: 999px;
+  font-size: 18px;
+  color: #333;
+  outline: none;
+}
+
+.nomads-navbar__search-input::placeholder {
+  color: #888;
+}
+
+.nomads-navbar__actions {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.nomads-navbar__icon {
+  width: 55px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.nomads-navbar__icon img {
+  width: 38px;
+  height: 38px;
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .nomads-navbar__search {
+    justify-content: flex-start;
+  }
+
+  .nomads-navbar__search-input {
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .nomads-navbar__actions {
+    gap: 10px;
+  }
+}
+
+.nomads-navbar__actions {
+  gap: 0;
+}
+
+.nomads-navbar__group {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.nomads-navbar__group--user {
+  margin-left: 100px;
+}
+
+@media (max-width: 900px) {
+  .nomads-navbar__group {
+    gap: 10px;
+  }
+
+  .nomads-navbar__group--user {
+    margin-left: 150px;
+  }
+}
+
+/* ========== Compentent Dropdown menus ========== */
+
+.nomads-navbar__dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1000;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  padding: 12px;
+  min-width: 260px;
+  margin-top: 8px;
+}
+
+.nomads-navbar__dropdownwrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.nomads-navbar__dropdownwrap--account .nomads-navbar__dropdown {
+  right: 0;
+}
+
+.nomads-navbar__dropdownwrap--main .nomads-navbar__dropdown {
+  right: 0;
+}
+
+.nomads-navbar__dropdownwrap::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 12px;
+}
+
+.nomads-navbar__dropdown--domains {
+  top: calc(100% + 8px);
+  left: 0;
+  right: auto;
+  margin-top: 0;
+}
+
+/* Domains dropdown typography and container styling */
+
+.nomads-navbar__dropdown--domains {
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid #e6eef2;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  font-family: Candara, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.nomads-navbar__dropdown-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Domains dropdown list layout */
+.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Domains dropdown layout overrides */
+
+.nomads-navbar__dropdown--domains {
+  width: fit-content;
+  max-width: none;
+  display: inline-block;
+  text-align: right;
+}
+
+/* Respect hidden state for JS-controlled visibility */
+.nomads-navbar__dropdown--domains[hidden] {
+  display: none;
+}
+
+.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list {
+  width: fit-content;
+  max-width: none;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list li {
+  width: fit-content;
+  max-width: none;
+  white-space: nowrap;
+}
+
+.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list a {
+  justify-content: flex-end;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.nomads-navbar__dropdown-list a {
+  display: block;
+  padding: 10px 12px;
+}
+
+/* Domains dropdown link styling */
+.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 16pt; /* 18pt requested for visual size consistency */
+  line-height: 1.15;
+  text-decoration: none;
+  background: transparent;
+}
+
+.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list a:hover {
+  background: rgba(5, 117, 177, 0.08);
+  text-decoration: none;
+}
+
+.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list a:focus-visible {
+  outline: 2px solid #0575b1;
+  outline-offset: 2px;
+  background: rgba(5, 117, 177, 0.12);
+}
+
+/* Domains dropdown first word styling with gradient fallback */
+.nomads-navbar__dropdown--domains .domain-first {
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #0575b1;
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .nomads-navbar__dropdown--domains .domain-first {
+    background-image: linear-gradient(90deg, #0dafc5, #0575b1);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+/* Domains dropdown remaining words styling */
+.nomads-navbar__dropdown--domains .domain-rest {
+  text-transform: lowercase;
+  color: #888;
+  font-weight: 400;
+}
+
+/* Domains dropdown first item override */
+#nomads-domainsmenu .nomads-navbar__dropdown-list li:first-of-type .domain-rest {
+  color: #000;
+}
+
+/* Main/account dropdown box styling (match domains feel with smaller typography) */
+#nomads-mainmenu,
+#nomads-accountmenu {
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid #e6eef2;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  font-family: Candara, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #222;
+  width: fit-content;
+  max-width: none;
+  display: inline-block;
+}
+
+/* Respect hidden state for JS-controlled visibility */
+#nomads-mainmenu[hidden],
+#nomads-accountmenu[hidden] {
+  display: none;
+}
+
+#nomads-mainmenu ul,
+#nomads-accountmenu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#nomads-mainmenu li,
+#nomads-accountmenu li {
+  width: fit-content;
+  max-width: none;
+}
+
+#nomads-mainmenu a,
+#nomads-accountmenu a {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 14px;
+  border-radius: 10px;
+  font-size: 14pt;
+  line-height: 1.35;
+  color: #222;
+  text-decoration: none;
+  background: transparent;
+  white-space: nowrap;
+}
+
+#nomads-mainmenu a:hover,
+#nomads-accountmenu a:hover {
+  background: rgba(5, 117, 177, 0.08);
+  text-decoration: none;
+}
+
+#nomads-mainmenu a:focus-visible,
+#nomads-accountmenu a:focus-visible {
+  outline: 2px solid #0575b1;
+  outline-offset: 2px;
+  background: rgba(5, 117, 177, 0.12);
+  text-decoration: none;
+}
+
+/* Main/account dropdown headings (non-link spans) */
+#nomads-mainmenu .menu .menu-item > span,
+#nomads-accountmenu .menu .menu-item > span {
+  display: block;
+  text-align: center;
+  padding: 8px 14px 8px 50px;
+  font-size: 10pt;
+  text-transform: uppercase;
+  color: #0575b1;
+  font-weight: 700;
+  cursor: default;
+  user-select: none;
+}
+
+/* Extra section spacing above non-link headers (except the first) */
+#nomads-mainmenu .menu > .menu-item + .menu-item > span,
+#nomads-accountmenu .menu > .menu-item + .menu-item > span {
+  padding-top: 25px;
+}
+
+.nomads-navbar__dropdown a {
+  display: block;
+  padding: 10px 12px;
+  text-decoration: none;
+}
+
+.nomads-navbar__dropdown ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nomads-navbar__dropdown ul ul {
+  display: none;
+}
+
+/* ========== Listing Node - Data Visualisation ========== */
+
+/* ------- Paragraph Relevance / Key aspects ------- */
+
+.paragraph-relevance-key-aspects__group {
+  margin-top: 30px;
+}
+
+/* Paragraph relevance group labels (h3) */
+.nomads-icon-formatter--paragraph-relevance .nomads-icon-formatter__title {
+  font-size: 13pt;
+}
+
+/* Paragraph relevance icon box alignment */
+.nomads-icon-formatter--paragraph-relevance .nomads-icon-formatter__icon {
+  width: 60px;
+  height: 60px;
+  margin: 8px 10px 0 10px;
+}
+
+.nomads-icon-formatter--paragraph-relevance .nomads-icon-formatter__icon img {
+  width: 60px;
+  max-height: 60px;
+}
+
+.nomads-icon-formatter--paragraph-relevance .paragraph-relevance-key-aspects__group--core_focus .nomads-icon-formatter__icon {
+  width: 80px;
+  height: 80px;
+}
+
+ .nomads-icon-formatter--paragraph-relevance .paragraph-relevance-key-aspects__group--core_focus .nomads-icon-formatter__icon img {
+  width: 80px;
+  max-height: 80px;
+}
+
+ .nomads-icon-formatter--paragraph-relevance .paragraph-relevance-key-aspects__group--core_focus .nomads-icon-formatter__label {
+  font-size: 9pt;
+ }
+
+ .paragraph-relevance-key-aspects__label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+}
+
+.paragraph-relevance-key-aspects__label::before,
+.paragraph-relevance-key-aspects__label::after {
+  content: "";
+  width: 70px;
+  height: 2px;
+  background: #cfcfcf;
+}
+
+
+
+/* ========== Paragraphs general ========== */
+
+#paragraphs-container .paragraph-relevance-vfield {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+
+/* ------- Paragraph Header ------ */
+/* Defaults for view mode 3 */
+.nomads-paragraph-header {
+  width: 100%;
+}
+
+.nomads-paragraph-icon {
+  width: 100px;
+  height: auto;
+}
+
+.nomads-paragraph-icon img {
+  width: 100px;
+  height: auto;
+  display: block;
+}
+
+.nomads-paragraph-label {
+  font-family: Candara, "Segoe UI", Arial, sans-serif;
+  font-weight: 700;
+  font-size: 18pt;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #0dafc5, #0575b1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.nomads-paragraph-title {
+  margin: 0;
+}
+
+.nomads-paragraph-title h2,
+.nomads-paragraph-title h3 {
+  margin: 0;
+  text-align: center;
+}
+
+
+
+
+/* ========== Paragraphs view mode 3 ========== */
+
+.paragraph--viewmode-vm-3.relevance-paragraph.col2 {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+        "title title"
+        "left right";
+    gap: 10px;
+}
+
+/* ------- Paragraphs view mode 3 - Header ------- */
+
+.paragraph--viewmode-vm-3 {
+  width: 1556px;
+  margin: 0 auto;
+  padding: 10px;
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.10);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  overflow: hidden; /* keeps rounded corners clean */
+  transition: box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease;
+}
+.paragraph--viewmode-vm-3 .nomads-paragraph-icon-wrapper {
+  display: flex;
+  gap: 18px;
+  text-align: left;
+}
+.paragraph--viewmode-vm-3 h2 {
+  margin: 0 0 20px 100px;
+}
+
+.paragraph--viewmode-vm-3.nomads-paragraph-modal-link-wrapper {
+  text-align: right;
+  width: 100%;
+  display: flexbox;
+  border-top: 1px solid #035c8f;
+}
+/* Paragraph view mode 3 head row */
+.paragraph--viewmode-vm-3 .nomads-paragraph-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+.paragraph--viewmode-vm-3 .nomads-paragraph-modal-link-wrapper {
+  position: absolute;
+  top: -10px;
+  right: 0;
+}
+.paragraph--viewmode-vm-3 .nomads-paragraph-title {
+  flex: 1 1 auto;
+}
+.paragraph--viewmode-vm-3 .data-tile .nomads-pill {
+  font-size: 10pt;
+  font-weight: 500;
+}
+.paragraph--viewmode-vm-3 .nomads-paragraph-icon {
+  height: 100px;
+  margin-bottom: -80px;
+}
+.paragraph--viewmode-vm-3 .nomads-paragraph-icon img {
+  width: 100px;
+  height: auto;
+  display: block;
+}
+
+
+/* ========== Paragraphs View Mode 2 ========== */
+
+
+
+
+/* ========== Paragraph Icon Fields ========== */
+
+/* ------- Digital: Internet Speed Icons ------- */
+
+.nomads-icon-paragraph .field--name-field-internet-speed {
+  text-align: center;
+}
+
+.nomads-icon-paragraph .field--name-field-internet-speed .container-inline.field__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+}
+
+.nomads-icon-paragraph .field--name-field-internet-speed .double-field-first,
+.nomads-icon-paragraph .field--name-field-internet-speed .double-field-second {
+  display: inline-flex;
+  align-items: center;
+  font-size: 18pt;
+  font-weight: 700;
+}
+
+.nomads-icon-paragraph .field--name-field-internet-speed .double-field-first::before,
+.nomads-icon-paragraph .field--name-field-internet-speed .double-field-second::before {
+  content: "";
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  margin: auto 5px auto 20px;
+  background: url("/sites/default/files/data-icons/internet-up.svg") center center / contain no-repeat;
+}
+
+.nomads-icon-paragraph .field--name-field-internet-speed .double-field-first::before {
+  transform: rotate(180deg);
+}
+
+.nomads-icon-paragraph .field--name-field-internet-speed .double-field-first::after,
+.nomads-icon-paragraph .field--name-field-internet-speed .double-field-second::after {
+  content: " Mb/s";
+  font-size: 12pt;
+  font-weight: 400;
+  margin: auto 20px auto 5px;
+}
+ /* ------- Data Tile ------- */
+.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-first::before,
+.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-second::before {
+  width: 27px;
+  height: 27px;
+  flex: 0 0 20px;
+  margin: auto 1px auto 5px;
+}
+.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-first,
+.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-second {
+  font-size: 15pt;
+}
+.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-first::after,
+.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-second::after {
+  font-size: 9pt;
+  font-weight: 400;
+  margin: auto 10px auto 5px;
+}
+
+
+/* ========== Paragraphs - Field tweaks ========== */
+
+/* ------- Digital fields ------- */
+
+/* Paragraph bundle digital: connection + reliability inline (view modes 2 and 3) 
+.nomads-icon-paragraph .field--name-field-connection,
+.nomads-icon-paragraph .field--name-field-internet-reliability {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}*/
+
+/* ========== Paragraphs - Open Modal Icon ========== */
+
+.paragraph--viewmode-vm-3 .nomads-paragraph-modal-link-wrapper img {
+  width: 36px;
+  height: 36px;
+  display: block;
+}
+
+.paragraph--viewmode-vm-3 .nomads-paragraph-modal-link-wrapper .ajax-progress-throbber {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+}
+
+.paragraph--viewmode-vm-3 .nomads-paragraph-modal-link-wrapper .ajax-progress-throbber .message {
+  display: none;
+}
+
+.paragraph--viewmode-vm-3:not(.relevance-paragraph) {
+  position: relative;
+}
+
+.paragraph--viewmode-vm-3:not(.relevance-paragraph) > .nomads-paragraph-modal-link-wrapper {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+
+.paragraph--viewmode-vm-3:not(.relevance-paragraph) > .nomads-paragraph-modal-link-wrapper img {
+  width: 36px;
+  height: 36px;
+  display: block;
+}
+
+.paragraph--viewmode-vm-3:not(.relevance-paragraph) > .nomads-paragraph-modal-link-wrapper .ajax-progress-throbber {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+}
+
+.paragraph--viewmode-vm-3:not(.relevance-paragraph) > .nomads-paragraph-modal-link-wrapper .ajax-progress-throbber .message {
+  display: none;
+}
+
+/* ========== Tiles ========== */
+
+/* Data tile background */
+.nomads-tiles .data-tile {
+  padding: 8px 2px;
+  overflow: hidden;
+  background: linear-gradient(125deg, #cff6f0, #94d9fe);
+}
+
+.nomads-tiles .tile {
+  border-radius: 5px;
+  border: none;
+  text-align: center;
+}
+
+.nomads-tiles .tile h3 {
+  font-size: 12pt;
+  font-family: inter;
+  font-weight: 700;
+  color: #0575b1;
+}
+
+.nomads-tiles .tile .field--label-above .field__label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    justify-content: center;
+    color: #0570A1;
+    font-size: 10pt;
+    font-weight: 600;
+}
+
+.nomads-tiles .tile .field--label-above .field__label::before,
+.nomads-tiles .tile .field--label-above .field__label::after {
+  content: "";
+  width: 50px;
+  height: 1px;
+  background: #0DAFC5;
+}
+
+/* ------- Tiles - Icon Label Formatter ----- */
+
+.data-tile .nomads-icon-field-label__icon {
+    max-width: 24px;
+    height: 24px;
+}
+
+.data-tile .nomads-icon-field-label__icon svg {
+    max-width: 24px;
+    max-height: 24px;
+}
+.data-tile .nomads-icon-field-label__wrapper {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;  
+  gap: 3px;             
+  padding: 0 ; 
+  height: 24px;
+  vertical-align: middle;
+  font-size: 15pt;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.data-tile .inline-field {
+  display: inline-flex;
+}
+
+/* ========== Data Tile layout ========== */
+
+.nomads-tiles .data-tile.one-column-justify {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  height: 250px;
+}
+.nomads-tiles .data-tile.one-field-justify .field__item  div {
+  
+}
+
+.paragraph--bundle-digital .data-tile-3 {
+  display: grid;
+  height: 250px;
+  align-content: space-between;
+  justify-items: center;  
+  grid-template-columns: fit-content(45%) fit-content(45%);
+  justify-content: center; /* centers the two-column "pair" as a unit */
+}
+
+/* Title spans full width */
+.data-tile > h3 {
+  grid-column: 1 / -1;
+}
+
+/* icon fields: each stays inside its column and centers */
+.paragraph--bundle-digital .data-tile-3 .field--name-field-coworkingspace,
+.paragraph--bundle-digital .data-tile-3 .field--name-field-coworkingspace-capacity{
+  width: auto;
+  justify-self: auto;
+}
+
+/* full-width fields */
+.paragraph--bundle-digital .data-tile-3 .field--name-field-coworkingspace-access,
+.paragraph--bundle-digital .data-tile-3 .field--name-field-coworking-features{
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+/* Put the two icon-label fields into the same row */
+.paragraph--bundle-digital .data-tile-3 .field--name-field-coworkingspace {
+  grid-column: 1;
+  width: max-content;
+}
+.paragraph--bundle-digital .data-tile-3 .field--name-field-coworkingspace-capacity {
+  grid-column: 2;
+}
+
+.paragraph--bundle-hosting .data-tile.data-tile-3{
+  display: grid;
+  height: 250px;
+  align-content: space-evenly;            /* even vertical spacing incl edges */
+  justify-content: center;                /* center the grid block */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  justify-items: center;
+}
+
+/* 2) First 4 icon fields: 2 columns grid, centered as a block */
+.paragraph--bundle-hosting .data-tile.data-tile-3 .field--name-field-rooms { grid-column: 1; min-width: 0; }
+.paragraph--bundle-hosting .data-tile.data-tile-3 .field--name-field-capacity { grid-column: 2; min-width: 0; }
+.paragraph--bundle-hosting .data-tile.data-tile-3 .field--name-field-showers { grid-column: 3; min-width: 0; } 
+.paragraph--bundle-hosting .data-tile.data-tile-3 .field--name-field-toilets {    grid-column: 4; min-width: 0; }
+.paragraph--bundle-hosting .data-tile.data-tile-3 .field--name-field-amenities{
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+/* ========== Paragraphs view mode 2 ========== */
+
+.paragraph--viewmode-vm-2 .price-range-wrapper {
+  font-size: 14pt;
+}
+
+.paragraph--viewmode-vm-2 .nomads-pill {
+  font-size: 8pt;
+}
+
+.paragraph--viewmode-vm-2 .field--name-field-lodging .nomads-pill,
+.paragraph--viewmode-vm-2 .nomads-hosting-period .nomads-hosting-period__text > :nth-child(1) .nomads-pill {
+  font-size: 10pt;
+}
+
+.paragraph--viewmode-vm-2 .field--name-field-crew .nomads-pill {
+  font-size: 12pt;
+}
+
+.paragraph--viewmode-vm-2 .inline-mayor-pills .field {
+  display: inline-block;
+  width: 30%;
+  text-align: center;
+}
+
+.paragraph--viewmode-vm-2 .inline-mayor-pills .nomads-pill {
+  font-size: 10pt;
+}
+
+.paragraph--viewmode-vm-2 .inline-mayor-pills .field .field__label {
+  white-space: wrap;
+  font-size: 7pt !important;
+}
+
+.paragraph--viewmode-vm-2 .nomads-paragraph-icon img {
+  width: 80px;
+}
+
+.paragraph--viewmode-vm-2 .nomads-paragraph-label-wrapper {
+  top: -15px;
+  left: 70px;
+  background-color: #fff;
+  padding: 0 20px;
+  position: absolute;
+}
+
+.paragraph--viewmode-vm-2 .nomads-paragraph-title-wrapper {
+  position: relative;
+}
+
+.paragraph--viewmode-vm-2 .field--name-field-images {
+  order: 3;
+}
+
+.paragraph--viewmode-vm-2 .nomads-paragraph-header {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  text-align: left;
+}
+
+.paragraph--viewmode-vm-2 .nomads-paragraph-icon-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100px;
+  text-align: center;
+}
+
+.paragraph--viewmode-vm-2 .field--label-above .field__label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    justify-content: center;
+    color: #0570A1;
+
+}
+
+.paragraph--viewmode-vm-2 .field--label-above .field__label::before,
+.paragraph--viewmode-vm-2 .field--label-above .field__label::after {
+  content: "";
+  width: 130px;
+  height: 1px;
+  background: #0DAFC5;
+}
+
+.paragraph--viewmode-vm-2 .nomads-paragraph-title {
+  flex: 1 1 auto;
+  width: 100%;
+  margin-top: 15px;
+  text-align: center;
+}
+
+.paragraph--viewmode-vm-2 .nomads-paragraph-title h2 {
+  font-size: 18pt;
+}
+
+.paragraph--viewmode-vm-2 .field--name-field-images {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+}
+
+.paragraph--viewmode-vm-2 .field--name-field-images .field__item {
+  flex: 0 0 auto;
+}
+
+.paragraph--viewmode-vm-2 {
+  display: flex;
+  flex-direction: column;
+  max-height: 700px;
+  gap: 10px;
+}
+
+.paragraph--viewmode-vm-2 .field--name-field-description {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 calc(100% - 40px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 calc(100% - 40px),
+    transparent 100%
+  );
+}
+
+.paragraph--viewmode-vm-2 .field--name-field-images {
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+.paragraph--viewmode-vm-2.relevance-paragraph {
+  text-align: center;
+  padding: 3px;
+}
+
+.paragraph--viewmode-vm-2.relevance-paragraph .field--name-field-description {
+  text-align: left;
+}
+
+.paragraph--viewmode-vm-2.relevance-paragraph .field__label {
+  font-family: Inter;
+  font-size: 10pt;
+  font-weight: 700;
+  text-transform: capitalize;
+  margin-bottom: 7px;
+}
+
+.paragraph--viewmode-vm-2 .nomads-paragraph-modal-link-wrapper {
+  order: 2;
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  background: #fff;
+  width: 36px;
+  height: 36px;
+}
+
+.paragraph--viewmode-vm-2 .nomads-paragraph-modal-link-wrapper img {
+  width: 36px;
+  height: 36px;
+  display: block;
+}
+
+.paragraph--viewmode-vm-2 .nomads-paragraph-modal-link-wrapper .ajax-progress-throbber {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+}
+
+.paragraph--viewmode-vm-2 .nomads-paragraph-modal-link-wrapper .ajax-progress-throbber .message {
+  display: none;
+}
+
+/* ========== Paragraphs view mode modal ========== */
+
+
+
+/* ========== Taxonomy icons ========== */
+
+.nomads-taxonomy-icons__icon img {
+  width: 36px;
+  height: auto;
+}
+
+.nomads-taxonomy-icons--grouped .nomads-taxonomy-icons__item {
+  width: 50px;
+}
+
+.nomads-taxonomy-icons--grouped .nomads-icon-formatter__group {
+  display: inline-block;
+  vertical-align: top;
+  background: #f2f2f2;
+  border-radius: 18px;
+  padding: 5px;
+  margin: 4px;
+}
+
+.nomads-taxonomy-icons--grouped .nomads-icon-formatter__label {
+  whitespace: wrap;
+}
+
+/* Taxonomy icons first item remains larger */
+.nomads-icon-formatter--taxonomy-icons > .field__item:first-child .nomads-icon-formatter__icon img {
+  width: 180px;
+  height: auto;
+}
+
+.nomads-icon-formatter--taxonomy-icons.categories > .field__item:first-child .nomads-icon-formatter__label {
+  font-size: 12pt;
+  margin-top: 10px;
+}
+
+/* ========== Icon formatter ========== */
+
+/* Shared icon formatter typography */
+.nomads-icon-formatter__label {
+  margin: 0;
+  font-size: 7pt;
+  text-transform: uppercase;
+  color: #0575b1;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+  display: block;
+}
+
+.nomads-icon-formatter__title {
+  margin:7px auto;
+  font-size: 13pt;
+  color: #222;
+  font-weight: 500;
+  text-decoration: none;
+  text-align: center;
+  display: block;
+}
+
+/* Ensure label links inherit shared typography */
+.nomads-icon-formatter__label a {
+  color: inherit;
+  text-decoration: none;
+  text-transform: inherit;
+  font-weight: inherit;
+}
+
+/* Shared icon formatter icon alignment */
+.nomads-icon-formatter__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* ========== Pills ========== */
+div .nomads-pill,
+div .nomads-pill__label,
+.price-range-wrapper
+{
+  display: inline-block;
+  border-radius: 999px;
+  padding: 4px 8px;
+  margin: 2px;
+  font-size: 10pt;
+  line-height: 1.2;
+  vertical-align: middle;
+  border: 0;
+  font-weight: 500;
+  background-color: #0570A1;
+  color: #fff;
+}
+
+/* Shared pills base styles 
+.nomads-pills:not(.nomads-pills--fitted-pills) {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+*/
+
+.nomads-pill__link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.nomads-pill__label {
+  color: inherit;
+}
+
+/* Fitted pills sizing override 
+.nomads-pills--fitted-pills .nomads-pill {
+  padding: 2px 5px;
+  margin: 2px;
+  font-size: 11px;
+  line-height: 1.25;
+  border: 0;
+  font-weight: 600;
+  background-color: #0570A1;
+  color: #fff;
+}
+*/
+
+/* ========== Field label inline ========== */
+
+.field--label-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+
+.field--label-inline .field__label {
+  min-width: 150px;
+  margin-right: 10px;
+}
+
+.field--label-inline .field__label::after {
+  content: ":";
+}
+
+.field--label-inline .field__items,
+.field--label-inline .field__item {
+  display: inline;
+}
+
+/* ========== Data icons inline ========== */
+
+.data-icons-inline .field {
+  display: inline-block;
+  font-size: 18pt;
+  font-weight: 700;
+  vertical-align: middle;
+  margin: 0 10px 0 10px;
+}
+
+.data-icons-inline .nomads-icon-field-label__wrapper {
+  vertical-align: middle;
+}
+
+.data-icons-inline .nomads-icon-field-label__wrapper span {
+  margin: -3px 10px;
+  vertical-align: middle;
+}
+
+
+/* ========== Tooltips ========== */
+
+[data-tooltip]{position:relative;cursor:help;}
+[data-tooltip]::after{
+  content:attr(data-tooltip);
+  position:absolute;left:50%;bottom:calc(100% + 8px);
+  transform:translateX(-50%);z-index:9999;
+  padding:6px 10px;border-radius:8px;
+  border:1px solid rgba(0,0,0,.25);
+  background:#111;color:#fff;
+  font-size:13px;line-height:1.25;
+  white-space:normal;width:max-content;max-width:260px;
+  opacity:0;pointer-events:none;transition:opacity .12s ease;
+}
+[data-tooltip]::before{
+  content:"";
+  position:absolute;left:50%;bottom:calc(100% + 2px);
+  transform:translateX(-50%);
+  border:6px solid transparent;border-top-color:#111;
+  opacity:0;pointer-events:none;transition:opacity .12s ease;
+}
+[data-tooltip]:hover::after,
+[data-tooltip]:hover::before,
+[data-tooltip]:focus::after,
+[data-tooltip]:focus::before,
+[data-tooltip]:focus-within::after,
+[data-tooltip]:focus-within::before{opacity:1;}
+
+
+
+/* ========== Teaser ========== */
+
+.nomads-icon-formatter--taxonomy-icons.categories > .field__item:first-child .nomads-icon-formatter__icon img {
+  width: 80px;
+}
+.nomads-icon-formatter--taxonomy-icons.tags > .field__item > div,
+.nomads-icon-formatter--taxonomy-icons.tags > .field__item > span {
+  display: inline-block;
+}
+.nomads-icon-formatter--taxonomy-icons.tags > .field__item .nomads-icon-formatter__icon img {
+  width: 24px;
+}
+.nomads-icon-formatter--taxonomy-icons.tags .nomads-icon-formatter__label {
+  font-size: 7pt;
+}
+.teaser-inner-wrapper {
+  background: #fafafa;
+}
+.node--type-listing.node--view-mode-teaser .field--name-title h2 a {
+  text-decoration: none;
+  color: #000;
+}
+.node--type-listing.node--view-mode-teaser .field--name-field-subtitle {
+  text-align: center;
+}
+/* Teaser box shadow (soft, clean, clickable) */
+.node--type-listing.node--view-mode-teaser {
+  background: #f8f8f8;
+  border-radius: 18px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.10);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  overflow: hidden; /* keeps rounded corners clean */
+  transition: box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease;
+}
+.node--type-listing.node--view-mode-teaser .teaser-inner-wrapper {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.node--view-mode-teaser:hover {
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14);
+  transform: translateY(-2px);
+  border-color: rgba(0, 0, 0, 0.10);
+}
+
+/* .node--view-mode-teaser:focus-within {
+  box-shadow: 0 0 0 4px rgba(18, 183, 200, 0.28), 0 14px 36px rgba(0, 0, 0, 0.12);
+  border-color: rgba(18, 183, 200, 0.55); */
+
+
+#hero-gallery img { 
+  border-radius: 8px;}

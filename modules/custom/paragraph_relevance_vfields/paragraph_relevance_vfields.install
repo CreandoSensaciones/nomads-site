@@ -1,0 +1,64 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall hooks for paragraph_relevance_vfields.
+ */
+
+use Drupal\Core\Entity\EntityFormDisplay;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+
+/**
+ * Ensure field_relevance2 exists on paragraph bundles referenced by key aspects.
+ */
+function paragraph_relevance_vfields_update_9001(): string {
+  $storage = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
+  $terms = $storage->loadByProperties(['vid' => 'key_aspects']);
+
+  $field_storage = FieldStorageConfig::loadByName('paragraph', 'field_relevance2');
+  if (!$field_storage) {
+    return (string) t('field_relevance2 storage is missing; no paragraph fields were added.');
+  }
+
+  $bundles = [];
+  foreach ($terms as $term) {
+    if (!$term->hasField('field_paragraph_bundle')) {
+      continue;
+    }
+    $bundle = trim((string) ($term->get('field_paragraph_bundle')->value ?? ''));
+    if ($bundle !== '') {
+      $bundles[$bundle] = TRUE;
+    }
+  }
+
+  $created = [];
+  foreach (array_keys($bundles) as $bundle) {
+    $field = FieldConfig::loadByName('paragraph', $bundle, 'field_relevance2');
+    if ($field) {
+      continue;
+    }
+    FieldConfig::create([
+      'field_storage' => $field_storage,
+      'bundle' => $bundle,
+      'label' => 'Relevance 2',
+      'description' => '',
+      'required' => FALSE,
+    ])->save();
+    $created[] = $bundle;
+
+    $form_display = EntityFormDisplay::load('paragraph.' . $bundle . '.default');
+    if ($form_display) {
+      $form_display->removeComponent('field_relevance2');
+      $form_display->save();
+    }
+  }
+
+  if (!$created) {
+    return (string) t('No paragraph bundles required field_relevance2 updates.');
+  }
+
+  return (string) t('Added field_relevance2 to paragraph bundles: @bundles', [
+    '@bundles' => implode(', ', $created),
+  ]);
+}

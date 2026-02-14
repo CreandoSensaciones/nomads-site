@@ -1,0 +1,200 @@
+/* Layout layer for structural containers and spacing rules.
+   Allowed: layout helpers, containers, region spacing, breakout rules.
+   Not allowed: component styling, feature-specific, forms, base vars.
+   Override policy: may override 00-base.css; may be overridden by later layers.
+   Notes for Codex: Edit only this file when changing layout helpers or region spacing.
+   Last updated: 2026-02-04 */
+
+/*
+ * Listing base layout (theme-agnostic, structural only).
+ * Assumes these IDs render as siblings inside
+ * .node__content.
+ * IDs: #hero-gallery, #title-container, #left-sidebar, #right-sidebar,
+ * #content-container, #connectbar, #paragraphs-container.
+ */
+
+ /* =========== Listing base layout ========== */
+
+.node--type-listing.node--view-mode-full > .node__content {
+  --nomads-listing-gap: 16px;
+  --nomads-left-width: 25%;
+  --nomads-right-width: 25%;
+  --nomads-breakpoint: 900px;
+}
+
+.node--type-listing.node--view-mode-full > .node__content {
+  display: grid;
+  gap: var(--nomads-listing-gap);
+  grid-template-columns:
+    minmax(0, var(--nomads-left-width))
+    minmax(0, 1fr)
+    minmax(0, var(--nomads-right-width));
+  grid-template-areas:
+    "hero hero hero"
+    "title title title"
+    "left content right"
+    "connect connect connect"
+    "paragraphs paragraphs paragraphs";
+  align-items: stretch;
+}
+
+.node--type-listing.node--view-mode-full > .node__content > #hero-gallery {
+  grid-area: hero;
+}
+
+.node--type-listing.node--view-mode-full > .node__content > #title-container {
+  grid-area: title;
+}
+
+.node--type-listing.node--view-mode-full > .node__content > #left-sidebar {
+  grid-area: left;
+}
+
+.node--type-listing.node--view-mode-full > .node__content > #content-container {
+  grid-area: content;
+}
+
+.node--type-listing.node--view-mode-full > .node__content > #right-sidebar {
+  grid-area: right;
+}
+
+.node--type-listing.node--view-mode-full > .node__content > #connectbar {
+  grid-area: connect;
+}
+
+.node--type-listing.node--view-mode-full > .node__content > #paragraphs-container {
+  grid-area: paragraphs;
+}
+
+@media (max-width: 900px) {
+.node--type-listing.node--view-mode-full > .node__content {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "hero"
+      "title"
+      "content"
+      "left"
+      "right"
+      "connect"
+      "paragraphs";
+  }
+}
+
+
+/* ========== Teaser ========== */
+
+.node--type-listing.node--view-mode-teaser {
+  width: 1200px;
+  margin: 10px auto;
+  padding: 7px;
+}
+.node--type-listing.node--view-mode-teaser .teaser-inner-wrapper {
+  height: 250px;
+  overflow: hidden;
+}
+
+
+/* Teaser: force 4 columns with fixed widths: 200 / 300 / 300 / 200 */
+.node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper > .node__content {
+  display: grid;
+  grid-template-columns: 400px 500px 250px;
+  gap: 16px;              /* adjust */
+  align-items: start;     /* top align */
+}
+
+/* Make sure the 4 column wrappers behave as grid items */
+.node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper > .node__content
+  > .teaser-column-left-2,
+.node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper > .node__content
+  > .teaser-column-left-1,
+.node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper > .node__content
+  > .teaser-column-right-1,
+.node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper > .node__content
+  > .teaser-column-right-2 {
+  min-width: 0;           /* prevents overflow from long content */
+}
+
+/* Optional: if any column contains big images/sliders, keep them inside */
+.node--type-listing.node--view-mode-teaser img,
+.node--type-listing.node--view-mode-teaser .splide {
+  max-width: 100%;
+}
+
+
+
+
+
+
+
+
+
+
+.nomads-inner {
+  width: 100%;
+}
+
+.nomads-inner--constrained {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.nomads-content .nomads-breakout {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+}
+
+/* Nomads: basic vertical spacing */
+.region-navbar {
+  padding: 12px 0;
+}
+
+.region-title {
+  padding: 24px 0 12px;
+}
+
+.region-content {
+  padding: 24px 0;
+}
+
+.region-footer {
+  padding: 32px 0;
+}
+
+/* Breakout scope: allow inner elements to go full width */
+.nomads-breakout-scope {
+  position: relative;
+}
+
+/* Sidebar alignment */
+#left-sidebar,
+#right-sidebar {
+  text-align: center;
+}
+
+/* Listing title region minimum height */
+#title-container {
+  min-height: 180px;
+}
+
+#title-container .field--name-field-organization-ref {
+  width: 20%;
+  min-width: 200px;
+  display: inline-block;
+  vertical-align: top;
+}
+
+/* Description field padding */
+article .field--name-field-description {
+  padding-left: 1vw;
+  padding-right: 1vw;
+}
+.paragraph-relevance-virtual-field-2 .paragraph-relevance-virtual-field-items {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 40px;
+}
+
+

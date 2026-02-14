@@ -1,0 +1,72 @@
+<?php
+
+/**
+ * @file
+ * Nomads Prices Virtual Fields module.
+ */
+
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function nomads_prices_virtual_fields_entity_extra_field_info() {
+  $extra = [];
+  $extra['paragraph']['hosting']['display']['nomads_prices_virtual_fields_price_range'] = [
+    'label' => t('Price Range'),
+    'description' => t('Combined price range from Commerce price fields.'),
+    'weight' => 0,
+    'visible' => FALSE,
+  ];
+
+  return $extra;
+}
+
+/**
+ * Implements hook_entity_view().
+ */
+function nomads_prices_virtual_fields_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  if ($entity->getEntityTypeId() !== 'paragraph' || $entity->bundle() !== 'hosting') {
+    return;
+  }
+
+  $view_display = \Drupal::service('entity_display.repository')->getViewDisplay('paragraph', 'hosting', $view_mode);
+  $component = $view_display->getComponent('nomads_prices_virtual_fields_price_range');
+  if (empty($component) || ($component['region'] ?? 'hidden') === 'hidden') {
+    return;
+  }
+
+  /** @var \Drupal\nomads_prices_virtual_fields\PriceVirtualFieldBuilder $builder */
+  $builder = \Drupal::service('nomads_prices_virtual_fields.builder');
+  $render_array = $builder->buildPriceRange($entity, $entity->language()->getId());
+  if (empty($render_array)) {
+    return;
+  }
+
+  $render_array['#weight'] = $component['weight'] ?? 0;
+  $render_array['#region'] = $component['region'] ?? 'content';
+  $build['nomads_prices_virtual_fields_price_range'] = $render_array;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function nomads_prices_virtual_fields_theme() {
+  return [
+    'nomads_price_range' => [
+      'template' => 'nomads-price-range',
+      'variables' => [
+        'label' => NULL,
+        'day_prefix' => NULL,
+        'day_min' => NULL,
+        'day_max' => NULL,
+        'day_mode' => NULL,
+        'month_prefix' => NULL,
+        'month_min' => NULL,
+        'month_max' => NULL,
+        'month_mode' => NULL,
+      ],
+    ],
+  ];
+}

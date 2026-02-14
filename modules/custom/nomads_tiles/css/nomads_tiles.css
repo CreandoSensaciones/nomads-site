@@ -18,13 +18,3 @@
   background-size: cover;
   background-position: center;
 }
-
-.nomads-tiles .empty-tile {
-  background: repeating-linear-gradient(
-    45deg,
-    rgba(0, 0, 0, 0.06),
-    rgba(0, 0, 0, 0.06) 10px,
-    rgba(0, 0, 0, 0.1) 10px,
-    rgba(0, 0, 0, 0.1) 20px
-  );
-}

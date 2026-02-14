@@ -1,0 +1,8 @@
+name: 'Nomads hosting period virtual field'
+type: module
+description: 'Provides a hosting period virtual field for hosting paragraphs.'
+package: Custom
+core_version_requirement: ^11
+
+dependencies:
+  - paragraphs:paragraphs

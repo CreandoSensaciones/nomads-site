@@ -73,6 +73,19 @@ class NomadsEasyTaggingMasterWidget extends WidgetBase implements ContainerFacto
   /**
    * {@inheritdoc}
    */
+  protected function formMultipleElements(FieldItemListInterface $items, array &$form, FormStateInterface $form_state) {
+    $elements = parent::formMultipleElements($items, $form, $form_state);
+    if ($elements) {
+      $parents = array_merge($form['#parents'], [$this->fieldDefinition->getName()]);
+      $elements['#attributes']['data-name-prefix'] = $this->buildNamePrefix($parents);
+    }
+
+    return $elements;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state): array {
     $target_type = $this->getFieldSetting('target_type');
     if ($target_type !== 'taxonomy_term') {
@@ -110,6 +123,7 @@ class NomadsEasyTaggingMasterWidget extends WidgetBase implements ContainerFacto
         'data-unified-vids' => implode(',', $vocabulary_ids),
         'data-type-field-name' => $type_field_info['field_name'],
         'data-type-vids' => implode(',', $type_field_info['vids']),
+        'data-cardinality' => $this->getCardinalityValue(),
       ],
       '#attached' => [
         'library' => ['nomads_easy_tagging/widget'],
@@ -201,8 +215,59 @@ class NomadsEasyTaggingMasterWidget extends WidgetBase implements ContainerFacto
     ];
 
     $term_storage = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
+    $vocabulary_storage = \Drupal::entityTypeManager()->getStorage('taxonomy_vocabulary');
 
     foreach ($vocabulary_ids as $vid) {
+      if (!$this->vocabularyHasHierarchy($term_storage, $vid)) {
+        $terms = $term_storage->loadTree($vid, 0, NULL, TRUE);
+        $cards_payload = [];
+        foreach ($terms as $term) {
+          if ($term instanceof TermInterface) {
+            $cards_payload[] = $this->resolver->buildTermCardData($term);
+          }
+        }
+
+        $section_key = 'vocab_' . $vid;
+        $elements[$section_key] = [
+          '#type' => 'container',
+          '#attributes' => [
+            'class' => ['nomads-easy-tagging__section'],
+            'data-branch-tid' => '0',
+            'data-branch-type' => 'default',
+          ],
+        ];
+
+        $vocabulary_label = '';
+        $vocabulary = $vocabulary_storage->load($vid);
+        if ($vocabulary) {
+          $vocabulary_label = (string) $vocabulary->label();
+        }
+
+        if ($vocabulary_label !== '') {
+          $elements[$section_key]['heading'] = [
+            '#type' => 'html_tag',
+            '#tag' => 'h3',
+            '#value' => Html::escape($vocabulary_label),
+            '#attributes' => [
+              'class' => ['nomads-easy-tagging__heading'],
+            ],
+          ];
+        }
+
+        $elements[$section_key]['cards'] = [
+          '#type' => 'container',
+          '#attributes' => [
+            'class' => ['nomads-easy-tagging__cards'],
+            'data-parent-tid' => '0',
+            'data-parent-limit' => '',
+            'data-root-items' => Json::encode($cards_payload),
+            'data-view' => 'root',
+          ],
+        ] + $this->buildCardsElements($cards_payload, $selected_ids, FALSE, 0);
+
+        continue;
+      }
+
       $top_level_terms = $term_storage->loadTree($vid, 0, 1, TRUE);
       foreach ($top_level_terms as $branch_term) {
         if (!$branch_term instanceof TermInterface) {
@@ -239,6 +304,22 @@ class NomadsEasyTaggingMasterWidget extends WidgetBase implements ContainerFacto
           ],
         ];
 
+        $branch_explainer = '';
+        if ($branch_term->hasField('field_ui_explainer')) {
+          $branch_explainer = trim((string) $branch_term->get('field_ui_explainer')->value);
+        }
+        $branch_explainer_html = $branch_explainer !== '' ? Xss::filter($branch_explainer, ['p', 'br', 'strong', 'em', 'a']) : '';
+        if ($branch_explainer_html !== '') {
+          $elements[$section_key]['explainer'] = [
+            '#type' => 'html_tag',
+            '#tag' => 'div',
+            '#value' => Markup::create($branch_explainer_html),
+            '#attributes' => [
+              'class' => ['nomads-easy-tagging__explainer'],
+            ],
+          ];
+        }
+
         $elements[$section_key]['back'] = [
           '#type' => 'html_tag',
           '#tag' => 'button',
@@ -265,6 +346,20 @@ class NomadsEasyTaggingMasterWidget extends WidgetBase implements ContainerFacto
     }
 
     return $elements;
+  }
+
+  /**
+   * Determine if a vocabulary has hierarchical terms.
+   */
+  protected function vocabularyHasHierarchy($term_storage, string $vid): bool {
+    $tree = $term_storage->loadTree($vid, 0, 2, FALSE);
+    foreach ($tree as $item) {
+      if (!empty($item->depth)) {
+        return TRUE;
+      }
+    }
+
+    return FALSE;
   }
 
   /**
@@ -404,6 +499,14 @@ class NomadsEasyTaggingMasterWidget extends WidgetBase implements ContainerFacto
       $name .= '[' . $parent . ']';
     }
     return $name;
+  }
+
+  /**
+   * Get the field cardinality for the widget.
+   */
+  protected function getCardinalityValue(): string {
+    $cardinality = $this->fieldDefinition->getFieldStorageDefinition()->getCardinality();
+    return $cardinality > 0 ? (string) $cardinality : '';
   }
 
 }
