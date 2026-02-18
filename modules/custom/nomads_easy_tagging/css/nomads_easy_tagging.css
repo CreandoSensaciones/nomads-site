@@ -136,7 +136,6 @@
   background: #fff !important;
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35) !important;
   cursor: pointer !important;
-  pointer-events: auto !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -145,8 +144,19 @@
   line-height: 0 !important;
   text-shadow: none !important;
   white-space: nowrap !important;
-  opacity: 1 !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transform: scale(0.98) !important;
   transition: transform 160ms ease, box-shadow 160ms ease !important;
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next[aria-hidden="false"]:not(.is-disabled):not(:disabled):not([aria-disabled="true"]),
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next:not([aria-hidden="true"]):not(.is-disabled):not(:disabled):not([aria-disabled="true"]) {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transform: scale(1) !important;
 }
 
 #drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next::before {
@@ -172,8 +182,12 @@
 
 #drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next.is-disabled,
 #drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next:disabled,
-#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next[aria-disabled="true"] {
-  display: none !important;
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next[aria-disabled="true"],
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next[aria-hidden="true"] {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transform: scale(0.98) !important;
 }
 
 @media (max-width: 960px) {
