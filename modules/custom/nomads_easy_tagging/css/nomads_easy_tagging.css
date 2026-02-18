@@ -8,6 +8,22 @@
   padding: 8px 0 4px;
 }
 
+.nomads-easy-tagging__section--initially-hidden {
+  display: none;
+}
+
+.nomads-easy-tagging--category-steps .nomads-easy-tagging__section--step-hidden {
+  display: none !important;
+}
+
+.nomads-easy-tagging--category-steps .nomads-easy-tagging__section--step-active {
+  display: block;
+}
+
+.nomads-easy-tagging--category-steps .nomads-easy-tagging__section--initially-hidden.nomads-easy-tagging__section--step-active {
+  display: block;
+}
+
 .nomads-easy-tagging__heading {
   font-size: 1.2rem;
   font-weight: 700;
@@ -92,6 +108,76 @@
 .nomads-easy-tagging__card-explainer {
   font-size: 0.9rem;
   line-height: 1.35;
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-actions {
+  position: absolute !important;
+  top: 50% !important;
+  right: -28px !important;
+  transform: translateY(-50%) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  z-index: 100001 !important;
+  pointer-events: none !important;
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  position: relative !important;
+  z-index: 100002 !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  white-space: nowrap;
+  text-shadow: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next::before {
+  content: "";
+  width: 28px;
+  height: 28px;
+  display: block;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 28px 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M9 6l6 6-6 6' stroke='%23095B80' stroke-width='3.25' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next:hover,
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next:focus,
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next:focus-visible {
+  background: #fff !important;
+  opacity: 1 !important;
+  outline: none !important;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45) !important;
+  transform: scale(1.03);
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next.is-disabled,
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next:disabled,
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next[aria-disabled="true"] {
+  background: #fff !important;
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2) !important;
+  pointer-events: none !important;
+  transform: none !important;
 }
 
 @media (max-width: 960px) {

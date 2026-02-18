@@ -15,6 +15,33 @@
    - details.vertical-tabs__pane > summary + .details-wrapper
    ========================================================== */
 
+
+   /* =========== Modal wizard ========= */
+
+.ui-dialog.ui-widget {
+  background: linear-gradient(135deg, #0a8bd6, #035c8f);
+  color: #fff;
+  border-radius: 12px;
+  height: 400px;
+}
+.ui-dialog .ui-dialog-titlebar,
+.ui-dialog .ui-dialog-buttonpane {
+  background: transparent;
+  border: 0;
+}
+.ui-dialog .form-type-vertical-tabs {
+  display: none;
+}
+.ui-dialog h1 {
+  font-size: 20pt;
+  color: #fff;
+}
+.ui-dialog input {
+  font-size: 16pt;
+  padding: 10px;
+  border-radius: 8px;
+}
+
 .field-group-tabs-wrapper {
   --vt-default: linear-gradient(135deg, #0575B1 40%, #012437);
   --vt-hover: linear-gradient(135deg, #0a8bd6, #035c8f);
@@ -41,6 +68,433 @@
   color: var(--form-text);
 }
 
+
+
+
+
+/* ================================
+   Listing Wizard Modal (Nomads)
+   Cleaned, ordered, no duplicates
+   Place in 40-forms.css
+   ================================ */
+
+
+/* ------------------------------------------------
+   1) Dialog shell: fixed height, shadow, rounding
+   ------------------------------------------------ */
+.ui-dialog.ui-dialog-buttons {
+  height: 600px !important;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: visible !important;
+  border-radius: 16px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35) !important;
+}
+
+
+/* ------------------------------------------------
+   2) Dialog content: let #drupal-modal grow properly
+   ------------------------------------------------ */
+.ui-dialog.ui-dialog-buttons > #drupal-modal.ui-dialog-content {
+  flex: 1 1 auto;
+  height: auto !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  border-radius: 16px;
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* ------------------------------------------------
+   3) Button pane: stable space + Next aligned right
+   ------------------------------------------------ */
+.ui-dialog.ui-dialog-buttons > .ui-dialog-buttonpane {
+  min-height: 74px;
+  padding: 18px 22px;
+}
+
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset {
+  float: none;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+
+/* ------------------------------------------------
+   4) Wizard wrapper: padding and reserved bottom room
+   ------------------------------------------------ */
+#drupal-modal #nomads-listing-wizard-wrapper {
+  position: relative !important;
+  box-sizing: border-box;
+  padding: 28px 34px 92px !important; /* bottom reserved for button pane */
+  height: 100%;
+  min-height: 0;
+}
+
+
+/* ------------------------------------------------
+   5) Text colors: wizard white, inputs dark text
+   ------------------------------------------------ */
+#drupal-modal #nomads-listing-wizard-wrapper,
+#drupal-modal #nomads-listing-wizard-wrapper * {
+  color: #fff;
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper input,
+#drupal-modal #nomads-listing-wizard-wrapper textarea,
+#drupal-modal #nomads-listing-wizard-wrapper select {
+  color: #111;
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper label,
+#drupal-modal #nomads-listing-wizard-wrapper .fieldset-legend,
+#drupal-modal #nomads-listing-wizard-wrapper .description {
+  color: #fff;
+}
+
+
+/* ------------------------------------------------
+   6) Easy Tagging cards: grid layout (3x2 / 2x3)
+   ------------------------------------------------ */
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__cards {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 22px !important;
+
+  /* fill available height and keep equal rows */
+  height: 100%;
+  min-height: 0;
+  grid-auto-rows: 1fr;
+
+  /* do NOT center the whole grid vertically (prevents odd gaps) */
+  align-content: stretch;
+  align-items: stretch;
+
+  /* kill any inherited pill layouts */
+  flex-wrap: unset !important;
+}
+
+@media (max-width: 900px) {
+  #drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+
+/* ------------------------------------------------
+   7) Cards: equal height, internal structure stable
+   ------------------------------------------------ */
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden;
+
+  display: flex !important;
+  flex-direction: column;
+  justify-content: flex-start;
+
+  padding: 18px 18px 16px;
+  box-sizing: border-box;
+
+  width: auto !important;
+  max-width: none !important;
+}
+
+/* Card text color:
+   - default: black text
+   - selected: white text */
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card,
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card * {
+  color: #111 !important;
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card.is-selected,
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card.is-selected *,
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card[aria-pressed="true"],
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card[aria-pressed="true"] * {
+  color: #fff !important;
+}
+
+
+/* ------------------------------------------------
+   8) Card header: icon 80x80 + label aligned
+   ------------------------------------------------ */
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 0 0 auto;
+  margin-bottom: 10px;
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card-icon,
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card-icon-wrapper {
+  width: 80px !important;
+  height: 80px !important;
+  flex: 0 0 80px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card-icon img,
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card-icon svg {
+  width: 80px !important;
+  height: 80px !important;
+  max-width: 80px !important;
+  max-height: 80px !important;
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card-label {
+  flex: 1 1 auto;
+  margin: 0;
+  line-height: 1.15;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* ------------------------------------------------
+   9) Card body: explainer centered in remaining space
+   ------------------------------------------------ */
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card-explainer {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 8px;
+  line-height: 1.35;
+  overflow: hidden;
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card-explainer p {
+  margin: 0;
+}
+
+
+
+/* ==========================================
+   Wizard: floating Next (SVG), no buttonpane space, no clipping
+   ========================================== */
+
+/* 1) Do NOT clip the dialog itself (otherwise the floating button disappears) */
+.ui-dialog.ui-dialog-buttons {
+  position: relative;
+  overflow: visible !important;   /* IMPORTANT */
+}
+
+/* Keep the rounded corners for the blue content, not for the dialog wrapper */
+.ui-dialog.ui-dialog-buttons > #drupal-modal.ui-dialog-content {
+  border-radius: 16px;
+  overflow: hidden;              /* content can still be clipped nicely */
+}
+
+/* 2) Button pane must not take layout space, but must still be "there" */
+.ui-dialog.ui-dialog-buttons > .ui-dialog-buttonpane {
+  position: absolute !important;
+  inset: 0 0 0 0;                /* cover the dialog area for anchoring */
+  width: 100% !important;
+  height: 100% !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+
+  pointer-events: none;          /* pane itself does not block clicks */
+  overflow: visible !important;
+  z-index: 50;                   /* above modal content */
+}
+
+/* 3) Place the buttonset on the right edge, vertically centered */
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset {
+  position: absolute !important;
+  top: 50% !important;
+  right: -28px !important;       /* half the button width */
+  transform: translateY(-50%) !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  pointer-events: auto;          /* buttons remain clickable */
+  z-index: 60;
+  float: none !important;
+}
+
+/* 4) Style the primary action as a round floating button */
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"] {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+
+  border-radius: 999px !important;
+  border: 2px solid rgba(255,255,255,0.60) !important;
+  background: rgba(255,255,255,0.18) !important;
+
+  box-shadow: 0 10px 26px rgba(0,0,0,0.25) !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  cursor: pointer;
+  pointer-events: auto;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Remove any normal text rendering (we render an SVG chevron) */
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button .ui-button-text,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button-text {
+  font-size: 0 !important;
+  line-height: 0 !important;
+}
+
+/* SVG chevron (white) */
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button::before,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button::before,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"]::before {
+  content: "";
+  width: 28px;
+  height: 28px;
+  display: block;
+
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 28px 28px;
+
+  /* simple chevron-right SVG */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M9 6l6 6-6 6' stroke='%23ffffff' stroke-width='3.25' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+/* Hover / focus */
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button:hover,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button:hover,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"]:hover {
+  background: rgba(255,255,255,0.28) !important;
+  border-color: rgba(255,255,255,0.85) !important;
+}
+
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button:focus,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button:focus,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"]:focus {
+  outline: 3px solid rgba(255,255,255,0.35) !important;
+  outline-offset: 3px !important;
+}
+
+/* 5) Last step: keep Save as text, no chevron.
+   Common Drupal: #edit-submit. Extend if needed.
+*/
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset #edit-submit,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button#edit-submit,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input#edit-submit,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[value="Save"],
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button[value="Save"] {
+  width: auto !important;
+  min-width: 120px !important;
+  padding: 0 18px !important;
+}
+
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset #edit-submit::before,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button#edit-submit::before,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input#edit-submit::before,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[value="Save"]::before,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button[value="Save"]::before {
+  content: none !important;
+}
+
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset #edit-submit .ui-button-text,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button#edit-submit .ui-button-text {
+  font-size: 16px !important;
+  line-height: 1 !important;
+}
+
+/* ==========================================
+   Floating wizard button: no "Next" label, solid color, hide until enabled
+   ========================================== */
+
+/* 1) ALWAYS hide any text inside the button (Next label) */
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"] {
+  color: transparent !important;          /* kills plain text */
+  text-shadow: none !important;
+}
+
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button .ui-button-text,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button-text {
+  display: none !important;               /* kills jQuery UI text span */
+}
+
+/* 2) Solid, full-color round button (no translucent look) */
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"] {
+  background: #ffffff !important;         /* full color */
+  border: 0 !important;
+  box-shadow: 0 14px 34px rgba(0,0,0,0.35) !important;
+}
+
+/* Chevron color for the SVG data URI (currently white in your other block).
+   If you want it dark on white button, override with a dark chevron: */
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button::before,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button::before,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M9 6l6 6-6 6' stroke='%23095B80' stroke-width='3.25' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+}
+
+/* 3) Hide the button completely while disabled (until fields are valid/filled)
+   Covers common Drupal/jQuery UI disabled states */
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button.ui-state-disabled,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button:disabled,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button:disabled,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"]:disabled,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset [aria-disabled="true"] {
+  display: none !important;
+}
+
+/* If your wizard disables via a wrapper class, also hide in that case */
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset.ui-state-disabled {
+  display: none !important;
+}
+
+/* ------------------------------------------------
+   10) NOTE: Vertical centering for single-field steps
+   Removed here intentionally because the current rule
+   used :has(), and the "safe CSS only" approach was
+   breaking other wizard step types (pills overview).
+   ------------------------------------------------ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ========== Cleaning ========== */
 
 [id$="-format-help"] {  /* format info link below text fields */
@@ -55,6 +509,24 @@
 }
 form .details-wrapper {
    border: 0;
+}
+
+/* Keep autocomplete throbber as a single icon (avoid tiled background flashes). */
+.js input.form-autocomplete,
+.js .ui-autocomplete-input {
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 16px;
+}
+
+.js input.form-autocomplete.ui-autocomplete-loading,
+.js .ui-autocomplete-input.ui-autocomplete-loading {
+  background-repeat: no-repeat;
+}
+
+[dir="rtl"] .js input.form-autocomplete,
+[dir="rtl"] .js .ui-autocomplete-input {
+  background-position: left 0.75rem center;
 }
 
 
@@ -165,15 +637,7 @@ form details.field-group-toggle .fieldset-wrapper {
   transform: translateY(1px);
 }
 
-input.button {
-  padding: 8px 12px;
-  font-size: 16px;
-  border-radius: 12px;
-  border: 1px solid var(--form-border);
-  background: var(--form-button);
-  color: #fff;
-  margin-right: 20px;
-}
+
 
 
 /* ========== Responsiveness ========== */
