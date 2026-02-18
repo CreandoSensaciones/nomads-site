@@ -74,53 +74,41 @@
 
 /* ================================
    Listing Wizard Modal (Nomads)
-   Cleaned, ordered, no duplicates
-   Place in 40-forms.css
+   Single source of truth
    ================================ */
 
 
 /* ------------------------------------------------
-   1) Dialog shell: fixed height, shadow, rounding
+   1) Dialog shell and stacking context
    ------------------------------------------------ */
 .ui-dialog.ui-dialog-buttons {
   height: 600px !important;
   display: flex;
   flex-direction: column;
-  position: relative;
+  position: relative !important;
   overflow: visible !important;
   border-radius: 16px;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35) !important;
+  z-index: 1001 !important;
+}
+
+.ui-widget-overlay {
+  z-index: 1000 !important;
 }
 
 
 /* ------------------------------------------------
-   2) Dialog content: let #drupal-modal grow properly
+   2) Clip only inner modal content
    ------------------------------------------------ */
 .ui-dialog.ui-dialog-buttons > #drupal-modal.ui-dialog-content {
   flex: 1 1 auto;
   height: auto !important;
   max-height: none !important;
   overflow: hidden !important;
-  border-radius: 16px;
+  border-radius: 16px !important;
   padding: 0 !important;
   display: flex;
   flex-direction: column;
-}
-
-
-/* ------------------------------------------------
-   3) Button pane: stable space + Next aligned right
-   ------------------------------------------------ */
-.ui-dialog.ui-dialog-buttons > .ui-dialog-buttonpane {
-  min-height: 74px;
-  padding: 18px 22px;
-}
-
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset {
-  float: none;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
 }
 
 
@@ -281,92 +269,65 @@
 
 
 /* ==========================================
-   Wizard: floating Next (SVG), no buttonpane space, no clipping
+   Real wizard button: floating Next / Save
    ========================================== */
-
-/* 1) Do NOT clip the dialog itself (otherwise the floating button disappears) */
-.ui-dialog.ui-dialog-buttons {
-  position: relative;
-  overflow: visible !important;   /* IMPORTANT */
-}
-
-/* Keep the rounded corners for the blue content, not for the dialog wrapper */
-.ui-dialog.ui-dialog-buttons > #drupal-modal.ui-dialog-content {
-  border-radius: 16px;
-  overflow: hidden;              /* content can still be clipped nicely */
-}
-
-/* 2) Button pane must not take layout space, but must still be "there" */
 .ui-dialog.ui-dialog-buttons > .ui-dialog-buttonpane {
   position: absolute !important;
-  inset: 0 0 0 0;                /* cover the dialog area for anchoring */
-  width: 100% !important;
-  height: 100% !important;
-
+  inset: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
-
-  background: transparent !important;
   border: 0 !important;
-  box-shadow: none !important;
-
-  pointer-events: none;          /* pane itself does not block clicks */
+  background: transparent !important;
+  pointer-events: none !important;
   overflow: visible !important;
-  z-index: 50;                   /* above modal content */
 }
 
-/* 3) Place the buttonset on the right edge, vertically centered */
 .ui-dialog.ui-dialog-buttons .ui-dialog-buttonset {
   position: absolute !important;
   top: 50% !important;
-  right: -28px !important;       /* half the button width */
+  right: -28px !important;
   transform: translateY(-50%) !important;
-
+  margin: 0 !important;
+  padding: 0 !important;
+  float: none !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-
-  margin: 0 !important;
-  padding: 0 !important;
-
-  pointer-events: auto;          /* buttons remain clickable */
-  z-index: 60;
-  float: none !important;
+  pointer-events: auto !important;
+  z-index: 1002 !important;
 }
 
-/* 4) Style the primary action as a round floating button */
 .ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button,
 .ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button,
 .ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"] {
   width: 56px !important;
   height: 56px !important;
   min-width: 56px !important;
-
-  border-radius: 999px !important;
-  border: 2px solid rgba(255,255,255,0.60) !important;
-  background: rgba(255,255,255,0.18) !important;
-
-  box-shadow: 0 10px 26px rgba(0,0,0,0.25) !important;
-
   padding: 0 !important;
   margin: 0 !important;
-
-  cursor: pointer;
-  pointer-events: auto;
-
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35) !important;
+  cursor: pointer !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-}
-
-/* Remove any normal text rendering (we render an SVG chevron) */
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button .ui-button-text,
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button-text {
+  color: transparent !important;
   font-size: 0 !important;
   line-height: 0 !important;
+  text-shadow: none !important;
+  white-space: nowrap !important;
+  opacity: 1 !important;
+  transition: transform 160ms ease, box-shadow 160ms ease !important;
+  pointer-events: auto !important;
 }
 
-/* SVG chevron (white) */
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button .ui-button-text,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button-text {
+  display: none !important;
+}
+
 .ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button::before,
 .ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button::before,
 .ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"]::before {
@@ -374,33 +335,38 @@
   width: 28px;
   height: 28px;
   display: block;
-
   background-repeat: no-repeat;
   background-position: center;
   background-size: 28px 28px;
-
-  /* simple chevron-right SVG */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M9 6l6 6-6 6' stroke='%23ffffff' stroke-width='3.25' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M9 6l6 6-6 6' stroke='%23095B80' stroke-width='3.25' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
-/* Hover / focus */
 .ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button:hover,
 .ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button:hover,
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"]:hover {
-  background: rgba(255,255,255,0.28) !important;
-  border-color: rgba(255,255,255,0.85) !important;
-}
-
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"]:hover,
 .ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button:focus,
 .ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button:focus,
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"]:focus {
-  outline: 3px solid rgba(255,255,255,0.35) !important;
-  outline-offset: 3px !important;
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"]:focus,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button:focus-visible,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button:focus-visible,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"]:focus-visible {
+  opacity: 1 !important;
+  background: #fff !important;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45) !important;
+  transform: scale(1.03) !important;
+  outline: none !important;
 }
 
-/* 5) Last step: keep Save as text, no chevron.
-   Common Drupal: #edit-submit. Extend if needed.
-*/
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button.ui-state-disabled,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-state-disabled,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button:disabled,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button:disabled,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"]:disabled,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset [aria-disabled="true"],
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset.ui-state-disabled {
+  display: none !important;
+}
+
 .ui-dialog.ui-dialog-buttons .ui-dialog-buttonset #edit-submit,
 .ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button#edit-submit,
 .ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input#edit-submit,
@@ -408,7 +374,10 @@
 .ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button[value="Save"] {
   width: auto !important;
   min-width: 120px !important;
-  padding: 0 18px !important;
+  padding: 0 22px !important;
+  color: #095b80 !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
 }
 
 .ui-dialog.ui-dialog-buttons .ui-dialog-buttonset #edit-submit::before,
@@ -420,58 +389,11 @@
 }
 
 .ui-dialog.ui-dialog-buttons .ui-dialog-buttonset #edit-submit .ui-button-text,
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button#edit-submit .ui-button-text {
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button#edit-submit .ui-button-text,
+.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button[value="Save"] .ui-button-text {
+  display: inline-block !important;
   font-size: 16px !important;
   line-height: 1 !important;
-}
-
-/* ==========================================
-   Floating wizard button: no "Next" label, solid color, hide until enabled
-   ========================================== */
-
-/* 1) ALWAYS hide any text inside the button (Next label) */
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button,
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button,
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"] {
-  color: transparent !important;          /* kills plain text */
-  text-shadow: none !important;
-}
-
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button .ui-button-text,
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button-text {
-  display: none !important;               /* kills jQuery UI text span */
-}
-
-/* 2) Solid, full-color round button (no translucent look) */
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button,
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button,
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"] {
-  background: #ffffff !important;         /* full color */
-  border: 0 !important;
-  box-shadow: 0 14px 34px rgba(0,0,0,0.35) !important;
-}
-
-/* Chevron color for the SVG data URI (currently white in your other block).
-   If you want it dark on white button, override with a dark chevron: */
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button::before,
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button::before,
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"]::before {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M9 6l6 6-6 6' stroke='%23095B80' stroke-width='3.25' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
-}
-
-/* 3) Hide the button completely while disabled (until fields are valid/filled)
-   Covers common Drupal/jQuery UI disabled states */
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button.ui-state-disabled,
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset .ui-button:disabled,
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset button:disabled,
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset input[type="submit"]:disabled,
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset [aria-disabled="true"] {
-  display: none !important;
-}
-
-/* If your wizard disables via a wrapper class, also hide in that case */
-.ui-dialog.ui-dialog-buttons .ui-dialog-buttonset.ui-state-disabled {
-  display: none !important;
 }
 
 /* ------------------------------------------------
