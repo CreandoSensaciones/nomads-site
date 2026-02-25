@@ -21,7 +21,6 @@ function nomads_form_widgets_form_alter(array &$form, FormStateInterface $form_s
 
   if (nomads_form_widgets_has_sliderwidget($form)) {
     $form['#attached']['library'][] = 'nomads_form_widgets/sliderwidget_bubble_tweaks';
-    $form['#attached']['library'][] = 'nomads_form_widgets/sliderwidget_hosting_period';
   }
 
   if ($form_id === 'field_config_edit_form') {

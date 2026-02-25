@@ -5,6 +5,8 @@ global:
       css/00-base.css: {}
       css/10-layout.css: {}
       css/20-components.css: {}
+      css/21-component-navbar.css: {}
+      css/22-component-tax-icons.css: {}
       css/30-features.css: {}
       css/40-forms.css: {}
       css/50-style.css: {}

@@ -6,6 +6,9 @@ core.entity_view_display.*.*.*.third_party.paragraph_relevance_vfields:
       type: mapping
       label: 'Key aspects formatter settings'
       mapping:
+        ignore_crew_and_audience:
+          type: boolean
+          label: 'Ignore crew and audience'
         core_focus:
           type: mapping
           label: 'Core focus settings'

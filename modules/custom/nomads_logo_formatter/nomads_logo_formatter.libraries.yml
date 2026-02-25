@@ -1,0 +1,5 @@
+logo_formatter:
+  version: 1.x
+  css:
+    theme:
+      css/nomads_logo_formatter.css: {}

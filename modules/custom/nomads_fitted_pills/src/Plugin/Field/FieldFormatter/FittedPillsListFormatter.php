@@ -11,7 +11,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
  */
 #[FieldFormatter(
   id: 'nomads_fitted_pills_list',
-  label: new TranslatableMarkup('Pills'),
+  label: new TranslatableMarkup('Fitted pills'),
   field_types: [
     'list_string',
   ],

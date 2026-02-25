@@ -1,0 +1,8 @@
+name: Nomads Listing Wizard
+type: module
+description: 'Provides /listing/wizard onboarding flow for listing node creation with modal/AJAX multi-step form handling.'
+core_version_requirement: ^11
+package: 'Nomads Forms'
+dependencies:
+  - node
+  - entity_form_steps:entity_form_steps

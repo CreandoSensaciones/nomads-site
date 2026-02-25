@@ -1,7 +1,7 @@
 name: Special Category Select
 type: module
-description: 'Placeholder for Special Category select functionality.'
-package: 'Nomads Widgets'
+description: 'Provides a custom taxonomy-term tree selection widget with ordered selected-list output, optional leaves-only mode, and Conditional Fields handler integration.'
+package: 'Nomads Forms'
 core_version_requirement: '^11'
 dependencies:
   - nomads_listing:nomads_listing

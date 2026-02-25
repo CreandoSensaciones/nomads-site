@@ -1,0 +1,114 @@
+<?php
+
+/**
+ * @file
+ * Term dependee support across taxonomy term widgets.
+ */
+
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\WidgetInterface;
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_field_widget_third_party_settings_form().
+ */
+function nomads_term_dependees_field_widget_third_party_settings_form(WidgetInterface $plugin, FieldDefinitionInterface $field_definition, $form_mode, array $form, FormStateInterface $form_state): array {
+  $element = [];
+
+  if ($field_definition->getType() !== 'entity_reference') {
+    return $element;
+  }
+  if ($field_definition->getSetting('target_type') !== 'taxonomy_term') {
+    return $element;
+  }
+
+  $element['enable_dependees'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Enable term dependees'),
+    '#default_value' => (bool) $plugin->getThirdPartySetting('nomads_term_dependees', 'enable_dependees', FALSE),
+    '#description' => t('When a selected term has field_dependee references, those terms are auto-selected in this form and auto-unselected when no longer required.'),
+  ];
+
+  return $element;
+}
+
+/**
+ * Implements hook_field_widget_settings_summary_alter().
+ */
+function nomads_term_dependees_field_widget_settings_summary_alter(array &$summary, array $context): void {
+  $widget = $context['widget'] ?? NULL;
+  if (!$widget instanceof WidgetInterface) {
+    return;
+  }
+
+  if ($widget->getThirdPartySetting('nomads_term_dependees', 'enable_dependees', FALSE)) {
+    $summary[] = t('Term dependees: enabled');
+  }
+}
+
+/**
+ * Implements hook_field_widget_form_alter().
+ */
+function nomads_term_dependees_field_widget_form_alter(array &$element, FormStateInterface $form_state, array $context): void {
+  $items = $context['items'] ?? NULL;
+  if (!$items) {
+    return;
+  }
+
+  $definition = $items->getFieldDefinition();
+  if ($definition->getType() !== 'entity_reference') {
+    return;
+  }
+  if ($definition->getSetting('target_type') !== 'taxonomy_term') {
+    return;
+  }
+  // Defensive fix for malformed field config where handler can be NULL.
+  // Core selection manager expects a valid group/plugin ID and fatals on NULL.
+  $handler = $definition->getSetting('handler');
+  if ((!is_string($handler) || $handler === '') && method_exists($definition, 'setSetting')) {
+    $definition->setSetting('handler', 'default:taxonomy_term');
+  }
+
+  $handler_settings = $definition->getSetting('handler_settings') ?? [];
+  $target_bundles = array_values($handler_settings['target_bundles'] ?? []);
+  $field_name = $definition->getName();
+
+  if (!isset($element['#attributes']) || !is_array($element['#attributes'])) {
+    $element['#attributes'] = [];
+  }
+  $element['#attributes']['data-nomads-term-target'] = '1';
+  $element['#attributes']['data-nomads-term-field'] = $field_name;
+  $element['#attributes']['data-nomads-term-vids'] = implode(',', $target_bundles);
+
+  $widget = $context['widget'] ?? NULL;
+  $enabled = $widget instanceof WidgetInterface
+    && (
+      $widget->getPluginId() === 'nomads_easy_tagging_master'
+      || $widget->getThirdPartySetting('nomads_term_dependees', 'enable_dependees', FALSE)
+      || $field_name === 'field_type'
+    );
+  $element['#attributes']['data-nomads-term-dependees-enabled'] = $enabled ? '1' : '0';
+  $element['#attached']['library'][] = 'nomads_term_dependees/constraints';
+  $constraint_map = \Drupal::service('nomads_term_dependees.constraint_map_builder')->getConstraintMap();
+  $element['#attached']['drupalSettings']['nomadsTermConstraints'] = [
+    'map' => $constraint_map,
+  ];
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function nomads_term_dependees_form_alter(array &$form, FormStateInterface $form_state, $form_id): void {
+  if (!is_array($form)) {
+    return;
+  }
+  if (!isset($form['field_type']) && !isset($form['field_types'])) {
+    return;
+  }
+
+  $form['#attached']['library'][] = 'nomads_term_dependees/constraints';
+  $constraint_map = \Drupal::service('nomads_term_dependees.constraint_map_builder')->getConstraintMap();
+  $form['#attached']['drupalSettings']['nomadsTermConstraints'] = [
+    'map' => $constraint_map,
+  ];
+}

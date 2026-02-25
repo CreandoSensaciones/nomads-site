@@ -2,6 +2,7 @@
 
 namespace Drupal\domain_source\HttpKernel;
 
+use Drupal\Core\Routing\CacheableRouteProviderInterface;
 use Drupal\Core\Routing\RequestContext;
 use Drupal\Core\Routing\RouteObjectInterface;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
@@ -51,7 +52,11 @@ class DomainSourceRouteMatcher {
    */
   protected static function getRouteProvider() {
     if (!isset(static::$routeProvider)) {
-      static::$routeProvider = \Drupal::service('router.route_provider');
+      static::$routeProvider = \Drupal::service('domain_source.route_provider');
+      if (static::$routeProvider instanceof CacheableRouteProviderInterface) {
+        $domain_id = \Drupal::service('domain.negotiator')->getActiveId();
+        static::$routeProvider->addExtraCacheKeyPart('domain', $domain_id);
+      }
     }
     return static::$routeProvider;
   }

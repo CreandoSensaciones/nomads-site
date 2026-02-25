@@ -28,7 +28,6 @@
   font-size: 1.2rem;
   font-weight: 700;
   margin: 0 0 12px;
-  color: #1f2a37;
 }
 
 .nomads-easy-tagging__back {
@@ -125,6 +124,11 @@
   pointer-events: none !important;
 }
 
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-actions--back {
+  right: auto !important;
+  left: -28px !important;
+}
+
 #drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next {
   width: 56px !important;
   height: 56px !important;
@@ -170,6 +174,10 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M9 6l6 6-6 6' stroke='%23095B80' stroke-width='3.25' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-back::before {
+  transform: scaleX(-1);
+}
+
 #drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next:hover,
 #drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next:focus,
 #drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__step-next:focus-visible {
@@ -200,4 +208,24 @@
   .nomads-easy-tagging__cards {
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
+}
+
+/* ========== Easy tagging Cards ========== */
+
+.nomads-easy-tagging__explainer,
+.nomads-easy-tagging__heading {
+  display: inline-block;
+  width: 50%;
+}
+.nomads-easy-tagging__heading {
+  width: 30%;
+}
+.node-listing-form .nomads-easy-tagging__heading {
+  display: inline-block;
+  width: 47%;
+  text-align: right;
+  margin-right: 5%;
+}
+.nomads-easy-tagging__card-explainer {
+  font-size: 10pt;
 }

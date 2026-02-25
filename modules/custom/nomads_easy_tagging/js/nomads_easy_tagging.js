@@ -300,6 +300,18 @@
     button.removeAttribute('aria-hidden');
   };
 
+  const setBackStepButtonEnabled = (button, enabled) => {
+    if (!button) {
+      return;
+    }
+
+    const isEnabled = Boolean(enabled);
+    button.classList.toggle('is-disabled', !isEnabled);
+    button.disabled = !isEnabled;
+    button.setAttribute('aria-disabled', isEnabled ? 'false' : 'true');
+    button.setAttribute('aria-hidden', isEnabled ? 'false' : 'true');
+  };
+
   const isSectionStepValid = (widget, section) => {
     if (!widget || !section) {
       return false;
@@ -320,17 +332,23 @@
     const templateButton = getWizardNextTemplate(widget);
 
     sections.forEach((section) => {
-      let actions = section.querySelector('.nomads-easy-tagging__step-actions');
-      let nextButton = section.querySelector('.nomads-easy-tagging__step-next');
+      let actions = section.querySelector('.nomads-easy-tagging__step-actions:not(.nomads-easy-tagging__step-actions--back)');
+      let nextButton = section.querySelector('.nomads-easy-tagging__step-next:not(.nomads-easy-tagging__step-back)');
       if (!actions) {
         actions = document.createElement('div');
         actions.className = 'nomads-easy-tagging__step-actions';
         section.appendChild(actions);
       }
+      if (nextButton && nextButton.closest('.nomads-easy-tagging__step-actions--back')) {
+        actions.appendChild(nextButton);
+      }
       if (!nextButton) {
         nextButton = document.createElement('button');
         nextButton.type = 'button';
         nextButton.textContent = Drupal.t('Next');
+        actions.appendChild(nextButton);
+      }
+      else if (nextButton.parentNode !== actions) {
         actions.appendChild(nextButton);
       }
 
@@ -372,10 +390,10 @@
       section.classList.toggle('nomads-easy-tagging__section--step-active', isActive);
       section.classList.toggle('nomads-easy-tagging__section--step-hidden', !isActive);
 
-      const nextButton = section.querySelector('.nomads-easy-tagging__step-next');
+      const nextButton = section.querySelector('.nomads-easy-tagging__step-next:not(.nomads-easy-tagging__step-back)');
       if (nextButton) {
         const isLastStep = index >= sections.length - 1;
-        const canAdvance = isActive && !isLastStep && isSectionStepValid(widget, section);
+        const canAdvance = isActive && !isLastStep;
         setStepButtonEnabled(nextButton, canAdvance);
       }
     });
@@ -401,7 +419,7 @@
     }
 
     widget.addEventListener('click', (event) => {
-      const nextButton = event.target.closest('.nomads-easy-tagging__step-next');
+      const nextButton = event.target.closest('.nomads-easy-tagging__step-next:not(.nomads-easy-tagging__step-back)');
       if (!nextButton || !widget.contains(nextButton)) {
         return;
       }
@@ -511,6 +529,23 @@
     backButton.dataset.nomadsBound = '1';
     backButton.addEventListener('click', (event) => {
       event.preventDefault();
+      const selectedBeforeBack = parseSelected(selectedInput);
+      const currentParentTid = parseInt(cardsContainer.dataset.parentTid || '0', 10);
+      const currentItems = parseItemsJson(cardsContainer.dataset.currentItems || '[]');
+      const currentBranchItemIds = currentItems
+        .map((item) => parseInt(item && item.tid ? item.tid : '0', 10))
+        .filter((value) => !Number.isNaN(value) && value > 0);
+
+      const filteredSelection = selectedBeforeBack.filter((selectedTid) => {
+        if (currentParentTid > 0 && selectedTid === currentParentTid) {
+          return false;
+        }
+        return !currentBranchItemIds.includes(selectedTid);
+      });
+
+      if (filteredSelection.length !== selectedBeforeBack.length) {
+        setSelected(selectedInput, filteredSelection);
+      }
 
       const previousView = popView(cardsContainer);
       if (previousView) {
@@ -525,10 +560,33 @@
       }
 
       cardsContainer.dataset.view = hasBackView(cardsContainer) ? 'children' : 'root';
-      backButton.style.display = hasBackView(cardsContainer) ? 'inline-flex' : 'none';
+      setBackStepButtonEnabled(backButton, hasBackView(cardsContainer));
       syncSelectedClasses(widget, parseSelected(selectedInput));
       refreshConstraints(widget, selectedInput, typeFieldName);
     });
+  };
+
+  const ensureBackStepControls = (section) => {
+    if (!section) {
+      return null;
+    }
+
+    const backButton = section.querySelector('[data-back]');
+    if (!backButton) {
+      return null;
+    }
+
+    let actions = section.querySelector('.nomads-easy-tagging__step-actions--back');
+    if (!actions) {
+      actions = document.createElement('div');
+      actions.className = 'nomads-easy-tagging__step-actions nomads-easy-tagging__step-actions--back';
+      section.appendChild(actions);
+    }
+
+    backButton.classList.add('nomads-easy-tagging__step-next', 'nomads-easy-tagging__step-back');
+    backButton.type = 'button';
+    actions.appendChild(backButton);
+    return backButton;
   };
 
   const initializeSection = (widget, section, selectedInput, typeFieldName) => {
@@ -556,6 +614,10 @@
       section.dataset.sourceKey = section.dataset.branchTid || '';
     }
 
+    const backButton = ensureBackStepControls(section);
+    if (backButton) {
+      setBackStepButtonEnabled(backButton, hasBackView(cardsContainer));
+    }
     bindBackButton(widget, section, selectedInput, typeFieldName);
   };
 
@@ -616,7 +678,6 @@
     backButton.type = 'button';
     backButton.className = 'nomads-easy-tagging__back';
     backButton.dataset.back = '1';
-    backButton.style.display = 'none';
     backButton.textContent = 'Back';
     section.appendChild(backButton);
 
@@ -700,7 +761,7 @@
 
         cardsContainer.dataset.view = 'children';
         if (backButton) {
-          backButton.style.display = 'inline-flex';
+          setBackStepButtonEnabled(backButton, true);
         }
 
         refreshConstraints(root, selectedInput, typeFieldName);

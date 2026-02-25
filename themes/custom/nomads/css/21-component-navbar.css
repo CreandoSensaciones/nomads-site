@@ -1,0 +1,393 @@
+/* ========== Compentent Navbar ========== */
+
+.nomads-navbar {
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+  z-index: 900;
+}
+
+.nomads-navbar__inner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 78px;
+}
+
+.nomads-navbar__brand {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  flex: 0 0 auto;
+}
+
+.nomads-navbar__brand-logo {
+  height: 48px;
+  width: auto;
+  display: block;
+}
+
+.nomads-navbar__brand-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nomads-navbar__search {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center;
+}
+
+.nomads-navbar__search-input {
+  width: min(400px, 100%);
+  height: 42px;
+  padding: 0 18px;
+  border: 1px solid #bdbdbd;
+  border-radius: 999px;
+  font-size: 18px;
+  color: #333;
+  outline: none;
+}
+
+.nomads-navbar__search-input::placeholder {
+  color: #888;
+}
+
+.nomads-navbar__actions {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.nomads-navbar__icon {
+  width: 55px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.nomads-navbar__icon.search-icon {
+  opacity: 0.5;
+}
+.nomads-navbar__icon:hover,
+.nomads-navbar__icon.active {
+  opacity: 1;
+}
+.nomads-navbar__icon.create-listing {
+  margin-right: 30px;
+}
+
+.nomads-navbar__icon img {
+  width: 38px;
+  height: 38px;
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .nomads-navbar__search {
+    justify-content: flex-start;
+  }
+
+  .nomads-navbar__search-input {
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .nomads-navbar__actions {
+    gap: 10px;
+  }
+}
+
+.nomads-navbar__actions {
+  gap: 0;
+}
+
+.nomads-navbar__group {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.nomads-navbar__group--user {
+  margin-left: 100px;
+}
+
+@media (max-width: 900px) {
+  .nomads-navbar__group {
+    gap: 10px;
+  }
+
+  .nomads-navbar__group--user {
+    margin-left: 150px;
+  }
+}
+
+/* ========== Compentent Dropdown menus ========== */
+
+.nomads-navbar__dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1000;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  padding: 12px;
+  min-width: 260px;
+  margin-top: 8px;
+}
+
+.nomads-navbar__dropdownwrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.nomads-navbar__dropdownwrap--account .nomads-navbar__dropdown {
+  right: 0;
+}
+
+.nomads-navbar__dropdownwrap--main .nomads-navbar__dropdown {
+  right: 0;
+}
+
+.nomads-navbar__dropdownwrap::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 12px;
+}
+
+.nomads-navbar__dropdown--domains {
+  top: calc(100% + 8px);
+  left: 0;
+  right: auto;
+  margin-top: 0;
+}
+
+/* Domains dropdown typography and container styling */
+
+.nomads-navbar__dropdown--domains {
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid #e6eef2;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  font-family: Candara, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.nomads-navbar__dropdown-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Domains dropdown list layout */
+.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Domains dropdown layout overrides */
+
+.nomads-navbar__dropdown--domains {
+  width: fit-content;
+  max-width: none;
+  display: inline-block;
+  text-align: right;
+}
+
+/* Respect hidden state for JS-controlled visibility */
+.nomads-navbar__dropdown--domains[hidden] {
+  display: none;
+}
+
+.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list {
+  width: fit-content;
+  max-width: none;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list li {
+  width: fit-content;
+  max-width: none;
+  white-space: nowrap;
+}
+
+.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list a {
+  justify-content: flex-end;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.nomads-navbar__dropdown-list a {
+  display: block;
+  padding: 10px 12px;
+}
+
+/* Domains dropdown link styling */
+.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 16pt; /* 18pt requested for visual size consistency */
+  line-height: 1.15;
+  text-decoration: none;
+  background: transparent;
+}
+
+.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list a:hover {
+  background: rgba(5, 117, 177, 0.08);
+  text-decoration: none;
+}
+
+.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list a:focus-visible {
+  outline: 2px solid #0575b1;
+  outline-offset: 2px;
+  background: rgba(5, 117, 177, 0.12);
+}
+
+/* Domains dropdown first word styling with gradient fallback */
+.nomads-navbar__dropdown--domains .domain-first {
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #0575b1;
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .nomads-navbar__dropdown--domains .domain-first {
+    background-image: linear-gradient(90deg, #0dafc5, #0575b1);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+/* Domains dropdown remaining words styling */
+.nomads-navbar__dropdown--domains .domain-rest {
+  text-transform: lowercase;
+  color: #888;
+  font-weight: 400;
+}
+
+/* Domains dropdown first item override */
+#nomads-domainsmenu .nomads-navbar__dropdown-list li:first-of-type .domain-rest {
+  color: #000;
+}
+
+/* Main/account dropdown box styling (match domains feel with smaller typography) */
+#nomads-mainmenu,
+#nomads-accountmenu {
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid #e6eef2;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  font-family: Candara, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #222;
+  width: fit-content;
+  max-width: none;
+  display: inline-block;
+}
+
+/* Respect hidden state for JS-controlled visibility */
+#nomads-mainmenu[hidden],
+#nomads-accountmenu[hidden] {
+  display: none;
+}
+
+#nomads-mainmenu ul,
+#nomads-accountmenu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#nomads-mainmenu li,
+#nomads-accountmenu li {
+  width: fit-content;
+  max-width: none;
+}
+
+#nomads-mainmenu a,
+#nomads-accountmenu a {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 14px;
+  border-radius: 10px;
+  font-size: 14pt;
+  line-height: 1.35;
+  color: #222;
+  text-decoration: none;
+  background: transparent;
+  white-space: nowrap;
+}
+
+#nomads-mainmenu a:hover,
+#nomads-accountmenu a:hover {
+  background: rgba(5, 117, 177, 0.08);
+  text-decoration: none;
+}
+
+#nomads-mainmenu a:focus-visible,
+#nomads-accountmenu a:focus-visible {
+  outline: 2px solid #0575b1;
+  outline-offset: 2px;
+  background: rgba(5, 117, 177, 0.12);
+  text-decoration: none;
+}
+
+/* Main/account dropdown headings (non-link spans) */
+#nomads-mainmenu .menu .menu-item > span,
+#nomads-accountmenu .menu .menu-item > span {
+  display: block;
+  text-align: center;
+  padding: 8px 14px 8px 50px;
+  font-size: 10pt;
+  text-transform: uppercase;
+  color: #0575b1;
+  font-weight: 700;
+  cursor: default;
+  user-select: none;
+}
+
+/* Extra section spacing above non-link headers (except the first) */
+#nomads-mainmenu .menu > .menu-item + .menu-item > span,
+#nomads-accountmenu .menu > .menu-item + .menu-item > span {
+  padding-top: 25px;
+}
+
+.nomads-navbar__dropdown a {
+  display: block;
+  padding: 10px 12px;
+  text-decoration: none;
+}
+
+.nomads-navbar__dropdown ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nomads-navbar__dropdown ul ul {
+  display: none;
+}
+

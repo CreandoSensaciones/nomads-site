@@ -11,6 +11,6 @@
 function field_group_toggler_field_group_formatter_info_alter(array &$info): void {
   if (isset($info['toggle'])) {
     $info['toggle']['label'] = t('Field Group Toggler');
-    $info['toggle']['category'] = t('Nomads Widgets');
+    $info['toggle']['category'] = t('Nomads Forms');
   }
 }

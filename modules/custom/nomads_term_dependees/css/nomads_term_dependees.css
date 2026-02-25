@@ -1,0 +1,13 @@
+.nomads-easy-tagging__card.is-dependee-auto {
+  box-shadow: 0 0 0 2px #b87333 inset;
+}
+
+[data-nomads-dependee-auto="1"],
+label.is-dependee-auto {
+  outline: 1px dashed #b87333;
+  outline-offset: 1px;
+}
+
+.nomads-easy-tagging--category-steps .nomads-easy-tagging__section.is-dependee-forced-visible[data-nomads-dependee-visible="1"] {
+  display: block !important;
+}

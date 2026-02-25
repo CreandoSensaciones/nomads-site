@@ -1,0 +1,9 @@
+next_button_gate:
+  css:
+    component:
+      css/nomads_listing_wizard.css: {}
+  js:
+    js/nomads_listing_wizard_next_button.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

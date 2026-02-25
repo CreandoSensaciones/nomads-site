@@ -8,6 +8,42 @@
 use Drupal\domain\DomainInterface;
 
 /**
+ * Implements hook_requirements().
+ */
+function domain_requirements($phase) {
+  $requirements = [];
+  if ($phase === 'runtime') {
+    /** @var \Drupal\domain\DomainStorageInterface $domain_storage */
+    $domain_storage = \Drupal::entityTypeManager()->getStorage('domain');
+    $domains = $domain_storage->loadMultiple();
+    $ids = [];
+    foreach ($domains as $domain) {
+      $ids[$domain->getDomainId()][] = $domain->label();
+    }
+    $duplicates = [];
+    foreach ($ids as $id => $names) {
+      if (count($names) > 1) {
+        $duplicates[] = t('ID @id is used by: @names', ['@id' => $id, '@names' => implode(', ', $names)]);
+      }
+    }
+    if (!empty($duplicates)) {
+      $requirements['domain_duplicates'] = [
+        'title' => t('Domain duplicates'),
+        'value' => t('Duplicate domain IDs found.'),
+        'description' => [
+          '#theme' => 'item_list',
+          '#items' => $duplicates,
+          '#title' => t('The following duplicate domain IDs have been detected:'),
+        ],
+        // REQUIREMENT_ERROR.
+        'severity' => 2,
+      ];
+    }
+  }
+  return $requirements;
+}
+
+/**
  * Implements hook_install().
  *
  * Installs the domain admin field on users.

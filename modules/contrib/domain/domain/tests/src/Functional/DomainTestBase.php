@@ -59,7 +59,7 @@ abstract class DomainTestBase extends BrowserTestBase {
   protected function tearDown(): void {
     // Sleep required to ensure that the site directory can be properly emptied.
     // @see https://www.drupal.org/project/gitlab_templates/issues/3500566#comment-16224265
-    sleep(5);
+    sleep(6);
     parent::tearDown();
   }
 

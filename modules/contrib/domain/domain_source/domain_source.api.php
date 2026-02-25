@@ -24,12 +24,12 @@ use Drupal\domain\DomainInterface;
  * @param \Drupal\domain\DomainInterface|null $source
  *   A domain object or NULL if not set, passed by reference.
  * @param string $path
- *   The outbound path request.
+ *   The outbound path request, passed by reference.
  * @param array $options
  *   The options for the url, as defined by
  *   \Drupal\Core\PathProcessor\OutboundPathProcessorInterface.
  */
-function hook_domain_source_alter(DomainInterface $source, $path, array $options) {
+function hook_domain_source_alter(?DomainInterface &$source, &$path, array $options) {
   // Always link to the default domain.
   $source = \Drupal::entityTypeManager()->getStorage('domain')->loadDefaultDomain();
 }
@@ -53,12 +53,12 @@ function hook_domain_source_alter(DomainInterface $source, $path, array $options
  * @param \Drupal\domain\DomainInterface|null $source
  *   A domain object or NULL if not set, passed by reference.
  * @param string $path
- *   The outbound path request.
+ *   The outbound path request, passed by reference.
  * @param array $options
  *   The options for the url, as defined by
  *   \Drupal\Core\PathProcessor\OutboundPathProcessorInterface.
  */
-function hook_domain_source_path_alter(DomainInterface $source, $path, array $options) {
+function hook_domain_source_path_alter(?DomainInterface &$source, &$path, array $options) {
   // Always make admin links go to the primary domain.
   $parts = explode('/', $path);
   if (isset($parts[0]) && $parts[0] === 'admin') {

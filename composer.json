@@ -20,15 +20,22 @@
         "drupal/autocomplete_deluxe": "^2.1",
         "drupal/commerce": "^3.2",
         "drupal/conditional_fields": "^4.0@alpha",
+        "drupal/config_pages": "*",
         "drupal/core-composer-scaffold": "^11.2",
         "drupal/core-project-message": "^11.2",
         "drupal/core-recipe-unpack": "^11.2",
         "drupal/core-recommended": "^11.2",
         "drupal/core-vendor-hardening": "^11.2",
+        "drupal/countries_info": "*",
         "drupal/cshs": "^4.0",
         "drupal/csv_importer": "^2.1",
         "drupal/currency": "^3.6",
+        "drupal/domain": "2.0.0-rc2",
+        "drupal/domain_access": "2.0.0-rc2",
+        "drupal/domain_menu_access": "2.0.1",
         "drupal/double_field": "^5.0@beta",
+        "drupal/dumi": "^1.0",
+        "drupal/entity_form_steps": "*",
         "drupal/feeds": "^3.2",
         "drupal/field_formatter_class": "^1.8",
         "drupal/geofield": "^1.66",
@@ -40,11 +47,16 @@
         "drupal/manage_display": "^3.0",
         "drupal/masonry": "^4.1",
         "drupal/masonry_views": "^4.1",
+        "drupal/office_hours": "*",
         "drupal/optgroup_taxonomy_select": "^1.5",
         "drupal/paragraphs_class": "^1.0@alpha",
+        "drupal/physical": "^1.5",
+        "drupal/select_or_other": "^4.2",
         "drupal/shs": "^2.0",
         "drupal/smart_date": "*",
+        "drupal/splide": "*",
         "drupal/svg_image": "^3.2",
+        "drupal/taxonomy_manager": "*",
         "drupal/views_bulk_edit": "^3.0",
         "drupal/views_bulk_operations": "^4.4",
         "drush/drush": "^13.7"
@@ -131,9 +143,6 @@
     "autoload": {
         "psr-4": {
             "Drupal\\magical_links\\": "modules/custom/magical_links/src/"
-        },
-        "files": [
-            "modules/custom/magical_links/autoload.php"
-        ]
+        }
     }
 }

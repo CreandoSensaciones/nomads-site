@@ -1,7 +1,7 @@
 name: 'Paragraph Relevance'
 type: module
-description: 'Toggles listing vertical tab labels and prevents paragraph creation when relevance is 0.'
-package: 'Nomads Relevance'
+description: 'Controls listing paragraph relevance workflows (tab visibility, relevance gating, paragraph reset safeguards, open-default behavior, and paragraph modal view integration).'
+package: 'Nomads Features'
 core_version_requirement: '^11'
 dependencies:
   - field_group:field_group

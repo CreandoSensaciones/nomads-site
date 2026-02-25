@@ -74,7 +74,7 @@ class DomainFormsTest extends DomainTestBase {
     // Delete the record.
     $this->drupalGet($deleteUrl);
     $this->submitForm([], 'Delete');
-    $this->assertSession()->pageTextContains('Domain Foo has been deleted.');
+    $this->assertSession()->pageTextContains('The domain record Foo has been deleted.');
     $this->assertSession()->statusCodeEquals(200);
     $storage->resetCache([$default_id]);
     $domain = $storage->load($default_id);

@@ -4,7 +4,7 @@ nomads_easy_tagging.children:
     _controller: '\Drupal\nomads_easy_tagging\Controller\NomadsEasyTaggingController::children'
     _title: 'Easy tagging children'
   requirements:
-    _permission: 'administer taxonomy'
+    _custom_access: '\Drupal\nomads_easy_tagging\Controller\NomadsEasyTaggingController::endpointAccess'
     parent_tid: '\d+'
   methods: [GET]
 
@@ -14,5 +14,5 @@ nomads_easy_tagging.constraints:
     _controller: '\Drupal\nomads_easy_tagging\Controller\NomadsEasyTaggingController::constraints'
     _title: 'Easy tagging constraints'
   requirements:
-    _permission: 'administer taxonomy'
+    _custom_access: '\Drupal\nomads_easy_tagging\Controller\NomadsEasyTaggingController::endpointAccess'
   methods: [POST]

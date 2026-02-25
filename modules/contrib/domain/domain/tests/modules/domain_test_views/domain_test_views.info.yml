@@ -9,7 +9,7 @@ dependencies:
   - drupal:language
   - domain:domain
 
-# Information added by Drupal.org packaging script on 2025-09-03
-version: '2.0.0-beta4'
+# Information added by Drupal.org packaging script on 2026-02-04
+version: '2.0.0-rc2'
 project: 'domain'
-datestamp: 1756880890
+datestamp: 1770210889

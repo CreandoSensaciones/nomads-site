@@ -1,8 +1,8 @@
 name: Conditional Fields Widgets
 type: module
-description: Admin helper to normalize conditional field value widgets.
+description: 'Normalizes Conditional Fields rule-edit value widgets to options-based controls (radios/checkboxes) and relaxes cardinality limits for admin configuration UX.'
 core_version_requirement: ^10 || ^11
-package: Admin helpers
+package: 'Nomads Forms'
 dependencies:
   - conditional_fields:conditional_fields
   - nomad_admin_helpers:nomad_admin_helpers

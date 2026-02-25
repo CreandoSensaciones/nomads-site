@@ -1,0 +1,450 @@
+<?php
+
+/**
+ * @file
+ * Nomads Listing Wizard module hooks.
+ *
+ * Example modal link:
+ * <a class="use-ajax" data-dialog-type="modal" data-dialog-options='{"width": 1100}' href="/listing/wizard">Add listing</a>
+ */
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function nomads_listing_wizard_entity_type_alter(array &$entity_types): void {
+  if (isset($entity_types['node'])) {
+    // Reuse the default node form class for the onboarding operation.
+    $entity_types['node']->setFormClass('onboarding', \Drupal\node\NodeForm::class);
+  }
+}
+
+/**
+ * Implements hook_entity_bundle_field_info_alter().
+ */
+function nomads_listing_wizard_entity_bundle_field_info_alter(array &$fields, \Drupal\Core\Entity\EntityTypeInterface $entity_type, string $bundle): void {
+  foreach ($fields as $field_definition) {
+    nomads_listing_wizard_normalize_entity_reference_definition($field_definition);
+  }
+}
+
+/**
+ * Implements hook_entity_base_field_info_alter().
+ */
+function nomads_listing_wizard_entity_base_field_info_alter(array &$fields, \Drupal\Core\Entity\EntityTypeInterface $entity_type): void {
+  foreach ($fields as $field_definition) {
+    nomads_listing_wizard_normalize_entity_reference_definition($field_definition);
+  }
+}
+
+/**
+ * Implements hook_entity_field_storage_info_alter().
+ */
+function nomads_listing_wizard_entity_field_storage_info_alter(array &$fields, \Drupal\Core\Entity\EntityTypeInterface $entity_type): void {
+  foreach ($fields as $field_storage_definition) {
+    nomads_listing_wizard_normalize_entity_reference_definition($field_storage_definition);
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function nomads_listing_wizard_form_alter(array &$form, \Drupal\Core\Form\FormStateInterface $form_state, string $form_id): void {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof \Drupal\node\NodeForm) {
+    return;
+  }
+  $entity = $form_object->getEntity();
+  if ($entity->getEntityTypeId() !== 'node' || $entity->bundle() !== 'listing') {
+    return;
+  }
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  if ($route_name !== 'nomads_listing_wizard.wizard') {
+    return;
+  }
+  nomads_listing_wizard_normalize_taxonomy_reference_handlers($entity);
+
+  $form['#prefix'] = '<div id="nomads-listing-wizard-wrapper">';
+  $form['#suffix'] = '</div>';
+  $form['#attached']['library'][] = 'core/drupal.ajax';
+  $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
+  $form['#attached']['library'][] = 'nomads_listing_wizard/next_button_gate';
+  $selected_terms = nomads_listing_wizard_collect_selected_taxonomy_terms($form_state);
+  $form_state->set('nomads_selected_terms', $selected_terms);
+  $form['#attached']['drupalSettings']['nomadsWizard']['selected'] = $selected_terms;
+
+  if (!isset($form['actions']) || !is_array($form['actions'])) {
+    return;
+  }
+
+  $is_last_step = nomads_listing_wizard_is_last_step($form_state, $form);
+  $primary_button_key = NULL;
+  $submit_keys = [];
+  foreach (\Drupal\Core\Render\Element::children($form['actions']) as $key) {
+    if (($form['actions'][$key]['#type'] ?? '') !== 'submit') {
+      continue;
+    }
+    $submit_keys[] = $key;
+    $form['actions'][$key]['#ajax'] = [
+      'callback' => 'nomads_listing_wizard_ajax_refresh',
+      'wrapper' => 'nomads-listing-wizard-wrapper',
+      'event' => 'click',
+    ];
+    $form['actions'][$key]['#submit'] = $form['actions'][$key]['#submit'] ?? [];
+    array_unshift($form['actions'][$key]['#submit'], 'nomads_listing_wizard_intermediate_step_submit');
+    if (($form['actions'][$key]['#button_type'] ?? '') === 'primary') {
+      $primary_button_key = $key;
+    }
+  }
+
+  if (!$is_last_step) {
+    foreach ($submit_keys as $key) {
+      $label = (string) ($form['actions'][$key]['#value'] ?? '');
+      if ($label !== '' && strcasecmp($label, 'Save') === 0) {
+        $form['actions'][$key]['#value'] = t('Next');
+      }
+    }
+  }
+
+  $next_keys = $primary_button_key !== NULL ? [$primary_button_key] : $submit_keys;
+  foreach ($next_keys as $key) {
+    if (!isset($form['actions'][$key]) || !is_array($form['actions'][$key])) {
+      continue;
+    }
+    $name = (string) ($form['actions'][$key]['#name'] ?? '');
+    if ($name === 'entity_form_steps_previous' || str_contains($name, 'add_more')) {
+      continue;
+    }
+    $form['actions'][$key]['#attributes']['data-nomads-next-button'] = '1';
+  }
+}
+
+/**
+ * Implements hook_entity_form_steps_complete_form_alter().
+ */
+function nomads_listing_wizard_entity_form_steps_complete_form_alter(array &$form, \Drupal\Core\Form\FormStateInterface $form_state, \Drupal\Core\Entity\FieldableEntityInterface $entity, array $state): void {
+  if ($entity->getEntityTypeId() !== 'node' || $entity->bundle() !== 'listing') {
+    return;
+  }
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof \Drupal\node\NodeForm) {
+    return;
+  }
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  if ($route_name !== 'nomads_listing_wizard.wizard') {
+    return;
+  }
+
+  if (isset($form['actions']) && is_array($form['actions'])) {
+    foreach (\Drupal\Core\Render\Element::children($form['actions']) as $key) {
+      if (($form['actions'][$key]['#type'] ?? '') !== 'submit') {
+        continue;
+      }
+      $form['actions'][$key]['#ajax'] = [
+        'callback' => 'nomads_listing_wizard_ajax_refresh',
+        'wrapper' => 'nomads-listing-wizard-wrapper',
+        'event' => 'click',
+      ];
+    }
+  }
+
+  if (isset($state['complete']) && $state['complete'] === FALSE && isset($form['actions']['submit'])) {
+    $form['actions']['submit']['#value'] = t('Next');
+    $form['actions']['submit']['#attributes']['data-nomads-next-button'] = '1';
+  }
+
+  // Entity Form Steps writes step-specific titles to $form['#title'], but this
+  // wizard renders in a modal with a fixed dialog title. Render the step title
+  // in-form so "Create title"/"Edit title" settings are visible per step.
+  if (!empty($form['#title'])) {
+    $title = (string) $form['#title'];
+    if ($title !== '') {
+      $title = str_replace('//', '<br>', $title);
+      $form['nomads_step_title'] = [
+        '#markup' => \Drupal\Core\Render\Markup::create('<h2 class="nomads-listing-step-title">' . $title . '</h2>'),
+        '#weight' => -1000,
+      ];
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_node_form_listing_steps_alter().
+ */
+function nomads_listing_wizard_entity_node_form_listing_steps_alter(array &$steps, \Drupal\Core\Form\FormStateInterface $form_state, \Drupal\Core\Entity\FieldableEntityInterface $entity): void {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof \Drupal\node\NodeForm) {
+    return;
+  }
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  if ($route_name !== 'nomads_listing_wizard.wizard') {
+    return;
+  }
+
+  $defaults = [
+    'add_label' => '',
+    'edit_label' => '',
+    'previous_button' => '',
+    'next_button' => '',
+    'submit_button' => '',
+    'preview_button' => '',
+    'cancel_button' => '',
+    'delete_button' => '',
+    'delete_path' => '',
+  ];
+
+  foreach ($steps as &$step) {
+    $step['format_settings'] = $step['format_settings'] ?? [];
+    foreach ($defaults as $key => $value) {
+      if (!array_key_exists($key, $step['format_settings'])) {
+        $step['format_settings'][$key] = $value;
+      }
+    }
+  }
+}
+
+/**
+ * Ajax callback to refresh the wizard wrapper.
+ */
+function nomads_listing_wizard_ajax_refresh(array &$form, \Drupal\Core\Form\FormStateInterface $form_state): \Drupal\Core\Ajax\AjaxResponse|array {
+  $trigger = $form_state->getTriggeringElement() ?? [];
+  if (($trigger['#type'] ?? '') !== 'submit') {
+    return $form;
+  }
+  $trigger_name = (string) ($trigger['#name'] ?? '');
+  if ($trigger_name === 'entity_form_steps_previous' || str_contains($trigger_name, 'add_more')) {
+    return $form;
+  }
+  if (!nomads_listing_wizard_is_last_step($form_state, $form)) {
+    return $form;
+  }
+  if ($form_state->hasAnyErrors()) {
+    return $form;
+  }
+
+  $url = NULL;
+  $redirect = $form_state->getRedirect();
+  if ($redirect) {
+    $url = \Drupal\Core\Url::fromRoute(
+      $redirect[0],
+      $redirect[1] ?? [],
+      $redirect[2] ?? []
+    );
+  }
+  if (!$url) {
+    $form_object = $form_state->getFormObject();
+    if ($form_object instanceof \Drupal\node\NodeForm) {
+      $entity = $form_object->getEntity();
+      if ($entity->id()) {
+        $url = $entity->toUrl('canonical');
+      }
+    }
+  }
+  if (!$url) {
+    return $form;
+  }
+
+  $response = new \Drupal\Core\Ajax\AjaxResponse();
+  $response->addCommand(new \Drupal\Core\Ajax\CloseModalDialogCommand());
+  $response->addCommand(new \Drupal\Core\Ajax\RedirectCommand($url->toString()));
+  return $response;
+}
+
+/**
+ * Prevents redirects between steps in the wizard modal.
+ */
+function nomads_listing_wizard_intermediate_step_submit(array &$form, \Drupal\Core\Form\FormStateInterface $form_state): void {
+  if (!nomads_listing_wizard_is_last_step($form_state, $form)) {
+    $form_state->disableRedirect();
+    $form_state->setRebuild(TRUE);
+  }
+}
+
+/**
+ * Determines whether the current wizard step is the last one.
+ */
+function nomads_listing_wizard_is_last_step(\Drupal\Core\Form\FormStateInterface $form_state, array $form): bool {
+  $efs = $form_state->get('entity_form_steps')
+    ?? $form_state->getStorage()['entity_form_steps'] ?? NULL;
+  if (isset($form['#entity_form_steps']) && is_array($form['#entity_form_steps'])) {
+    $efs = $form['#entity_form_steps'];
+  }
+  if (is_array($efs)) {
+    if (isset($efs['complete']) && is_bool($efs['complete'])) {
+      return $efs['complete'];
+    }
+    if (isset($efs['last']) && is_bool($efs['last'])) {
+      return $efs['last'];
+    }
+    if (isset($efs['current'], $efs['steps']) && is_array($efs['steps'])) {
+      $step_keys = array_keys($efs['steps']);
+      $current = (string) $efs['current'];
+      $last = (string) end($step_keys);
+      return $current === $last;
+    }
+  }
+
+  $current_step = $form_state->get('current_step') ?? $form_state->get('step');
+  $last_step = $form_state->get('last_step');
+  if ($current_step !== NULL && $last_step !== NULL) {
+    return (string) $current_step === (string) $last_step;
+  }
+
+  $hidden_current = NULL;
+  foreach ($form as $key => $element) {
+    if (is_array($element) && str_contains((string) $key, 'current_step')) {
+      if (isset($element['#value']) || isset($element['#default_value'])) {
+        $hidden_current = (string) ($element['#value'] ?? $element['#default_value']);
+        break;
+      }
+    }
+  }
+  if ($hidden_current !== NULL) {
+    $last = (string) ($form_state->get('last_step') ?? '');
+    if ($last !== '') {
+      return $hidden_current === $last;
+    }
+  }
+
+  // Last fallback: infer from triggering button label to avoid fail-open.
+  $trigger = $form_state->getTriggeringElement() ?? [];
+  $trigger_name = strtolower((string) ($trigger['#name'] ?? ''));
+  $trigger_value = strtolower(trim((string) ($trigger['#value'] ?? '')));
+  if ($trigger_name === 'entity_form_steps_previous' || str_contains($trigger_name, 'previous')) {
+    return FALSE;
+  }
+  if ($trigger_value === 'next') {
+    return FALSE;
+  }
+
+  // Conservative default for unknown state: not last.
+  return FALSE;
+}
+
+/**
+ * Collect selected taxonomy term IDs from current and persisted form values.
+ */
+function nomads_listing_wizard_collect_selected_taxonomy_terms(\Drupal\Core\Form\FormStateInterface $form_state): array {
+  $values = $form_state->getValues();
+  if (!is_array($values)) {
+    return (array) $form_state->get('nomads_selected_terms');
+  }
+
+  $taxonomy_fields = nomads_listing_wizard_get_taxonomy_reference_field_names($form_state);
+  if (!$taxonomy_fields) {
+    return (array) $form_state->get('nomads_selected_terms');
+  }
+
+  $tids = [];
+  $saw_taxonomy_field = FALSE;
+  nomads_listing_wizard_collect_term_ids_recursive($values, $taxonomy_fields, $tids, $saw_taxonomy_field, FALSE);
+
+  if (!$saw_taxonomy_field) {
+    return (array) $form_state->get('nomads_selected_terms');
+  }
+
+  sort($tids, SORT_NUMERIC);
+  return array_values(array_unique($tids));
+}
+
+/**
+ * Return taxonomy term reference field names from the listing entity.
+ */
+function nomads_listing_wizard_get_taxonomy_reference_field_names(\Drupal\Core\Form\FormStateInterface $form_state): array {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof \Drupal\node\NodeForm) {
+    return [];
+  }
+  $entity = $form_object->getEntity();
+  if (!$entity instanceof \Drupal\Core\Entity\FieldableEntityInterface) {
+    return [];
+  }
+
+  $field_names = [];
+  foreach ($entity->getFieldDefinitions() as $field_name => $definition) {
+    if ($definition->getType() !== 'entity_reference') {
+      continue;
+    }
+    if ($definition->getSetting('target_type') !== 'taxonomy_term') {
+      continue;
+    }
+    $field_names[] = (string) $field_name;
+  }
+
+  return $field_names;
+}
+
+/**
+ * Recursively collect selected term IDs inside taxonomy reference values.
+ */
+function nomads_listing_wizard_collect_term_ids_recursive(mixed $value, array $taxonomy_fields, array &$tids, bool &$saw_taxonomy_field, bool $inside_taxonomy_field): void {
+  if (is_array($value)) {
+    if ($inside_taxonomy_field && isset($value['target_id']) && is_numeric($value['target_id'])) {
+      $tid = (int) $value['target_id'];
+      if ($tid > 0) {
+        $tids[] = $tid;
+      }
+    }
+    if ($inside_taxonomy_field && isset($value['_net_values']) && is_string($value['_net_values'])) {
+      foreach (explode("\n", $value['_net_values']) as $item) {
+        $item = trim($item);
+        if ($item !== '' && is_numeric($item) && (int) $item > 0) {
+          $tids[] = (int) $item;
+        }
+      }
+    }
+
+    foreach ($value as $key => $child) {
+      $key_is_taxonomy = is_string($key) && in_array($key, $taxonomy_fields, TRUE);
+      if ($key_is_taxonomy) {
+        $saw_taxonomy_field = TRUE;
+      }
+      nomads_listing_wizard_collect_term_ids_recursive($child, $taxonomy_fields, $tids, $saw_taxonomy_field, $inside_taxonomy_field || $key_is_taxonomy);
+    }
+    return;
+  }
+
+  if ($inside_taxonomy_field && is_numeric($value)) {
+    $tid = (int) $value;
+    if ($tid > 0) {
+      $tids[] = $tid;
+    }
+  }
+}
+
+/**
+ * Ensure taxonomy reference fields always have a valid selection handler.
+ */
+function nomads_listing_wizard_normalize_taxonomy_reference_handlers(\Drupal\Core\Entity\FieldableEntityInterface $entity): void {
+  foreach ($entity->getFieldDefinitions() as $definition) {
+    nomads_listing_wizard_normalize_entity_reference_definition($definition);
+  }
+}
+
+/**
+ * Ensure entity reference settings include a concrete selection handler.
+ */
+function nomads_listing_wizard_normalize_entity_reference_definition(mixed $definition): void {
+  if (!is_object($definition) || !method_exists($definition, 'getType') || !method_exists($definition, 'getSetting')) {
+    return;
+  }
+  if ($definition->getType() !== 'entity_reference') {
+    return;
+  }
+
+  $target_type = (string) ($definition->getSetting('target_type') ?? '');
+  if ($target_type === '' && method_exists($definition, 'getFieldStorageDefinition')) {
+    $target_type = (string) ($definition->getFieldStorageDefinition()->getSetting('target_type') ?? '');
+  }
+  if ($target_type === '' || !method_exists($definition, 'setSetting')) {
+    return;
+  }
+
+  if (($definition->getSetting('target_type') ?? '') === '') {
+    $definition->setSetting('target_type', $target_type);
+  }
+
+  $handler = $definition->getSetting('handler');
+  if (!is_string($handler) || $handler === '' || $handler === 'default') {
+    $definition->setSetting('handler', 'default:' . $target_type);
+  }
+}

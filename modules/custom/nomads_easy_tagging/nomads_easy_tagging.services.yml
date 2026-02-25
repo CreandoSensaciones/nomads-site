@@ -3,7 +3,7 @@ services:
     class: Drupal\nomads_easy_tagging\Service\NomadsEasyTaggingConstraintResolver
     arguments:
       - '@entity_type.manager'
-      - '@entity_field.manager'
       - '@cache.default'
       - '@language_manager'
       - '@file_url_generator'
+      - '@nomads_term_dependees.constraint_map_builder'

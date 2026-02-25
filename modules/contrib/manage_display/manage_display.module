@@ -13,6 +13,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Template\Attribute;
 use Drupal\Core\Url;
+use Drupal\node\NodeInterface;
 
 /**
  * Implements hook_entity_type_build().
@@ -240,6 +241,43 @@ function template_preprocess_in_reply_to(&$variables) {
   $renderer = \Drupal::service('renderer');
   $variables['subject'] = $renderer->render($variables['elements']['subject']);
   $variables['uid'] = $renderer->render($variables['elements']['uid']);
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for 'node'.
+ *
+ * Temporary workaround for manage_display issue #3143678:
+ * https://www.drupal.org/project/manage_display/issues/3143678
+ *
+ * Keeps title available through the content variable when title is configured
+ * as a visible Manage Display component.
+ */
+function manage_display_preprocess_node(array &$variables): void {
+  if (empty($variables['elements']['#node']) || !$variables['elements']['#node'] instanceof NodeInterface) {
+    return;
+  }
+
+  /** @var \Drupal\node\NodeInterface $node */
+  $node = $variables['elements']['#node'];
+  $view_mode = (string) ($variables['elements']['#view_mode'] ?? 'default');
+  $display = \Drupal::service('entity_display.repository')->getViewDisplay('node', $node->bundle(), $view_mode);
+  $component = $display->getComponent('title');
+  if (!is_array($component) || (($component['region'] ?? 'content') === 'hidden')) {
+    return;
+  }
+
+  if (isset($variables['content']['title']) && is_array($variables['content']['title'])) {
+    // Comment #36 workaround from the issue.
+    $variables['content']['title']['#access'] = TRUE;
+    return;
+  }
+
+  // If title was dropped earlier in preprocessing, rebuild it from the
+  // configured title formatter so it renders via the content variable.
+  if ($node->hasField('title')) {
+    $variables['content']['title'] = $node->get('title')->view($component);
+    $variables['content']['title']['#weight'] = $component['weight'] ?? -49;
+  }
 }
 
 /**

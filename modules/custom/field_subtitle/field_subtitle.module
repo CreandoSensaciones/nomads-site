@@ -52,7 +52,8 @@ function field_subtitle_form_field_config_edit_form_alter(array &$form, FormStat
  * Implements hook_form_alter().
  */
 function field_subtitle_form_alter(array &$form, FormStateInterface $form_state, $form_id): void {
-  // Intentionally empty: keeps hook implementation stable after cache rebuilds.
+  $form['#after_build'] = $form['#after_build'] ?? [];
+  $form['#after_build'][] = 'field_subtitle_after_build';
 }
 
 /**
@@ -124,7 +125,45 @@ function field_subtitle_get_field_subtitle(array $context): ?string {
   $entity_type_id = $entity ? $entity->getEntityTypeId() : $field_definition->getTargetEntityTypeId();
   $bundle = $entity ? $entity->bundle() : ($field_definition->getTargetBundle() ?? NULL);
   if (!$entity_type_id || !$bundle) {
-    return NULL;
+    // Some nested widget contexts (for example paragraph subforms) may not
+    // expose a reliable bundle here. Fall back to field_config lookup by
+    // entity type + field name and use the configured subtitle if unique.
+    if (!$entity_type_id || $field_name === '') {
+      return NULL;
+    }
+
+    $field_configs = \Drupal::entityTypeManager()
+      ->getStorage('field_config')
+      ->loadByProperties([
+        'entity_type' => $entity_type_id,
+        'field_name' => $field_name,
+      ]);
+
+    $candidates = [];
+    foreach ($field_configs as $candidate) {
+      if (!$candidate instanceof FieldConfigInterface) {
+        continue;
+      }
+      $candidate_subtitle = $candidate->getThirdPartySetting('field_subtitle', 'subtitle', '');
+      if (!is_string($candidate_subtitle)) {
+        continue;
+      }
+      $candidate_subtitle = trim($candidate_subtitle);
+      if ($candidate_subtitle === '') {
+        continue;
+      }
+      $candidates[$candidate->getTargetBundle()] = $candidate_subtitle;
+    }
+
+    if (!$candidates) {
+      return NULL;
+    }
+    if (count($candidates) === 1) {
+      return reset($candidates) ?: NULL;
+    }
+
+    ksort($candidates);
+    return reset($candidates) ?: NULL;
   }
 
   $field_config = FieldConfig::loadByName($entity_type_id, $bundle, $field_name);
@@ -149,10 +188,17 @@ function field_subtitle_get_field_subtitle(array $context): ?string {
  */
 function field_subtitle_apply_to_element(array &$element, string $subtitle): void {
   $target = &$element;
-  if (isset($element['value']) && is_array($element['value'])) {
+  $is_smartdate_widget = isset($element['time_wrapper'])
+    || (
+      isset($element['#attributes']['class'])
+      && is_array($element['#attributes']['class'])
+      && in_array('smartdate--widget', $element['#attributes']['class'], TRUE)
+    );
+
+  if (!$is_smartdate_widget && isset($element['value']) && is_array($element['value'])) {
     $target = &$element['value'];
   }
-  elseif (!isset($target['#type']) || !isset($target['#title'])) {
+  elseif (!$is_smartdate_widget && !isset($target['#title'])) {
     foreach (Element::children($element) as $child_key) {
       if (isset($element[$child_key]['#type'], $element[$child_key]['#title'])) {
         $target = &$element[$child_key];
@@ -231,4 +277,87 @@ function field_subtitle_apply_to_special_category_select(array &$element, string
     $element['ui_title']['#attributes']['class'] = [];
   }
   $element['ui_title']['#attributes']['class'][] = 'field-subtitle-enabled';
+}
+
+/**
+ * Recursively applies subtitles when widget hooks miss nested structures.
+ */
+function field_subtitle_apply_fallback_subtitles(array &$element, ?string $entity_type = NULL, ?string $bundle = NULL): void {
+  if (isset($element['#entity_type']) && is_string($element['#entity_type']) && $element['#entity_type'] !== '') {
+    $entity_type = $element['#entity_type'];
+  }
+  if (isset($element['#bundle']) && is_string($element['#bundle']) && $element['#bundle'] !== '') {
+    $bundle = $element['#bundle'];
+  }
+  if (isset($element['#paragraph_type']) && is_string($element['#paragraph_type']) && $element['#paragraph_type'] !== '') {
+    $bundle = $element['#paragraph_type'];
+  }
+
+  if (
+    $entity_type
+    && $bundle
+    && isset($element['#title'])
+    && isset($element['#parents'])
+    && is_array($element['#parents'])
+    && count($element['#parents']) >= 2
+    && !field_subtitle_element_has_subtitle($element)
+  ) {
+    $parents = $element['#parents'];
+    $last = end($parents);
+    $field_name = prev($parents);
+    reset($parents);
+
+    if (is_numeric($last) && is_string($field_name) && str_starts_with($field_name, 'field_')) {
+      $subtitle = field_subtitle_get_config_subtitle($entity_type, $bundle, $field_name);
+      if ($subtitle !== NULL) {
+        field_subtitle_apply_to_element($element, $subtitle);
+      }
+    }
+  }
+
+  foreach (Element::children($element) as $child_key) {
+    if (!isset($element[$child_key]) || !is_array($element[$child_key])) {
+      continue;
+    }
+    field_subtitle_apply_fallback_subtitles($element[$child_key], $entity_type, $bundle);
+  }
+}
+
+/**
+ * Checks whether subtitle markup is already present on an element.
+ */
+function field_subtitle_element_has_subtitle(array $element): bool {
+  foreach ([$element['#field_prefix'] ?? NULL, $element['value']['#field_prefix'] ?? NULL] as $prefix) {
+    if (is_string($prefix) && str_contains($prefix, 'field-subtitle-text')) {
+      return TRUE;
+    }
+    if ($prefix instanceof Markup && str_contains($prefix->__toString(), 'field-subtitle-text')) {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+/**
+ * Resolves subtitle from field config by entity type, bundle, and field name.
+ */
+function field_subtitle_get_config_subtitle(string $entity_type_id, string $bundle, string $field_name): ?string {
+  $field_config = FieldConfig::loadByName($entity_type_id, $bundle, $field_name);
+  if (!$field_config) {
+    return NULL;
+  }
+  $subtitle = $field_config->getThirdPartySetting('field_subtitle', 'subtitle', '');
+  if (!is_string($subtitle)) {
+    return NULL;
+  }
+  $subtitle = trim($subtitle);
+  return $subtitle !== '' ? $subtitle : NULL;
+}
+
+/**
+ * Applies subtitle fallback logic after full form build.
+ */
+function field_subtitle_after_build(array $form, FormStateInterface $form_state): array {
+  field_subtitle_apply_fallback_subtitles($form);
+  return $form;
 }

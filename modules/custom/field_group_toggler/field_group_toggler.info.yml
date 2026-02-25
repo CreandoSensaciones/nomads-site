@@ -1,7 +1,7 @@
 name: 'Field Group Toggler'
 type: module
-description: 'Field Group formatter that adds a checkbox toggle to details groups.'
-package: 'Nomads Widgets'
+description: 'Adds a Field Group formatter that injects a checkbox toggle into details summaries and auto-opens groups with entered values.'
+package: 'Nomads Forms'
 core_version_requirement: '^11'
 dependencies:
   - field_group:field_group

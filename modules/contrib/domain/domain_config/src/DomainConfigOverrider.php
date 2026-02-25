@@ -29,6 +29,19 @@ class DomainConfigOverrider implements ConfigFactoryOverrideInterface {
   protected const DOMAIN_CONFIG_PREFIX = 'domain.config.';
 
   /**
+   * Cache of previously looked up configuration overrides.
+   *
+   * Stores configuration override results keyed by a hash of config names
+   * and language ID to prevent repeating expensive lookup operations.
+   * The array format is:
+   * - key: MD5 hash of imploded config names concatenated with language ID
+   * - value: Array of configuration overrides for those names.
+   *
+   * @var array
+   */
+  protected static $overridesCache = [];
+
+  /**
    * The domain negotiator.
    *
    * @var \Drupal\domain\DomainNegotiatorInterface
@@ -111,6 +124,13 @@ class DomainConfigOverrider implements ConfigFactoryOverrideInterface {
   public function __construct(StorageInterface $storage, ModuleHandlerInterface $module_handler) {
     $this->storage = $storage;
     $this->moduleHandler = $module_handler;
+    $this->initialize();
+  }
+
+  /**
+   * Initializes the domain configuration overrider state.
+   */
+  protected function initialize() {
     // Check if domain configs are available and if there are any overrides
     // in settings.php. If not, we can skip the overrides.
     // See https://www.drupal.org/project/domain/issues/3126532.
@@ -135,6 +155,24 @@ class DomainConfigOverrider implements ConfigFactoryOverrideInterface {
   }
 
   /**
+   * Reset the override cache and context.
+   *
+   * Used mainly for testing.
+   */
+  public function reset() {
+    // Reset the cache.
+    static::$overridesCache = [];
+    // Check for configuration overrides updates.
+    $this->initialize();
+    if ($this->hasOverrides) {
+      // Reset the context.
+      $this->domain = NULL;
+      $this->contextSet = NULL;
+      $this->cacheSuffix = NULL;
+    }
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function loadOverrides($names) {
@@ -148,12 +186,11 @@ class DomainConfigOverrider implements ConfigFactoryOverrideInterface {
     }
     else {
       // Try to prevent repeating lookups.
-      static $lookups;
       // Key should be a known length, so hash.
       // We add the language as a suffix as it can change after negotiation.
       $key = md5(implode(':', $names) . ':' . $this->language->getId());
-      if (isset($lookups[$key])) {
-        return $lookups[$key];
+      if (isset(static::$overridesCache[$key])) {
+        return static::$overridesCache[$key];
       }
 
       // Prepare our overrides.
@@ -163,7 +200,7 @@ class DomainConfigOverrider implements ConfigFactoryOverrideInterface {
       // So ensure that we are _not_ looking up a domain.record.*.
       // We also skip overriding the domain.settings config.
       if ($this->isInternalName(current($names))) {
-        $lookups[$key] = $overrides;
+        static::$overridesCache[$key] = $overrides;
         return $overrides;
       }
 
@@ -185,23 +222,39 @@ class DomainConfigOverrider implements ConfigFactoryOverrideInterface {
           }
           // Apply any existing settings.php language overrides.
           if (isset($GLOBALS['config'][$config_names['langcode']])) {
-            $overrides[$name] = NestedArray::mergeDeepArray(
-              [$overrides[$name], $GLOBALS['config'][$config_names['langcode']]], TRUE
-            );
+            if (isset($overrides[$name])) {
+              $overrides[$name] = NestedArray::mergeDeepArray(
+                [
+                  $overrides[$name],
+                  $GLOBALS['config'][$config_names['langcode']],
+                ], TRUE
+              );
+            }
+            else {
+              $overrides[$name] = $GLOBALS['config'][$config_names['langcode']];
+            }
           }
           // Apply any existing settings.php language agnostic overrides.
           elseif (isset($GLOBALS['config'][$config_names['domain']])) {
-            $overrides[$name] = NestedArray::mergeDeepArray(
-              [$overrides[$name], $GLOBALS['config'][$config_names['domain']]], TRUE
-            );
+            if (isset($overrides[$name])) {
+              $overrides[$name] = NestedArray::mergeDeepArray(
+                [
+                  $overrides[$name],
+                  $GLOBALS['config'][$config_names['domain']],
+                ], TRUE
+              );
+            }
+            else {
+              $overrides[$name] = $GLOBALS['config'][$config_names['domain']];
+            }
           }
         }
-        $lookups[$key] = $overrides;
+        static::$overridesCache[$key] = $overrides;
       }
       else {
         if ($this->domain === FALSE) {
           // No domain exists, so we can safely cache the empty overrides.
-          $lookups[$key] = $overrides;
+          static::$overridesCache[$key] = $overrides;
         }
       }
 

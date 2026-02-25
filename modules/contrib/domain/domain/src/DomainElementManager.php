@@ -162,7 +162,10 @@ class DomainElementManager implements DomainElementManagerInterface {
       // Prevent a fatal error caused by passing a NULL value.
       // See https://www.drupal.org/node/2841962.
       if ($entity_values !== []) {
-        $form_state->setValue($field, $entity_values);
+        // Ensure unique values by target_id (required for content translation).
+        // See DomainAccessLanguageSaveTest::testDomainAccessSaveTranslation().
+        $unique_values = array_column($entity_values, NULL, 'target_id');
+        $form_state->setValue($field, array_values($unique_values));
       }
     }
   }

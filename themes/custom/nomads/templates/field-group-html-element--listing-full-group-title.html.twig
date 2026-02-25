@@ -1,0 +1,37 @@
+{#
+/**
+ * @file
+ * Field group override for listing full view mode group_title.
+ *
+ * Injects local tasks before the group content.
+ */
+#}
+
+<{{ wrapper_element }} {{ attributes }}>
+{% if title %}
+  <{{ title_element }}{{ title_attributes }}>{{ title }}</{{ title_element }}>
+{% endif %}
+  {% if collapsible %}
+  <div class="field-group-wrapper">
+  {% endif %}
+
+  {% if nomads_group_title_local_tasks %}
+    <div class="column-right">
+      <div class="nomads-group-title__local-tasks" data-nomads-local-tasks>
+        <div class="nomads-title-local-tasks__select-wrap" data-nomads-local-tasks-select-wrap hidden>
+         <label class="visually-hidden">{{ 'Select tab'|t }}</label>
+         <select class="nomads-title-local-tasks__select" data-nomads-local-tasks-select></select>
+        </div>
+        <div class="nomads-title-local-tasks__tabs" data-nomads-local-tasks-tabs>
+          {{ nomads_group_title_local_tasks }}
+       </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {{ children }}
+
+  {% if collapsible %}
+  </div>
+  {% endif %}
+</{{ wrapper_element }}>

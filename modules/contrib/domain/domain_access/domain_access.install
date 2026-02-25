@@ -36,6 +36,10 @@ function domain_access_install() {
   foreach ($domains as $domain) {
     domain_access_domain_insert($domain);
   }
+
+  // Use a higher weight than content_translation (10).
+  // @see https://www.drupal.org/project/domain/issues/3367186
+  module_set_weight('domain_access', 20);
 }
 
 /**
@@ -158,4 +162,61 @@ function domain_access_update_8005() {
     }
   }
   return t('Set "add current domain" for required domain_access fields: @fields', ['@fields' => implode(', ', $field_ids)]);
+}
+
+/**
+ * Convert Domain Access filters from InOperator to ManyToOne.
+ */
+function domain_access_update_10001() {
+  $view_storage = \Drupal::entityTypeManager()->getStorage('view');
+  /** @var \Drupal\views\Entity\View[] $views */
+  $views = $view_storage->loadMultiple();
+
+  foreach ($views as $view) {
+    $changed = FALSE;
+
+    $displays = $view->get('display');
+    foreach ($displays as &$display) {
+      $filter_key = DomainAccessManagerInterface::DOMAIN_ACCESS_FIELD . '_target_id';
+      if (isset($display['display_options']['filters'][$filter_key])) {
+        $filter = &$display['display_options']['filters'][$filter_key];
+
+        if (isset($filter['plugin_id']) && $filter['plugin_id'] === 'domain_access_filter') {
+          // Replace legacy InOperator operation values with ManyToOne
+          // equivalents.
+          if (isset($filter['operator'])) {
+            switch ($filter['operator']) {
+              case 'in':
+                $filter['operator'] = 'or';
+                break;
+
+              case 'not in':
+                $filter['operator'] = 'not';
+                break;
+            }
+          }
+
+          $changed = TRUE;
+        }
+      }
+    }
+
+    if ($changed) {
+      $view->set('display', $displays);
+      $view->save();
+      \Drupal::logger('domain_access')->notice(
+        'Updated view %view: converted domain_access_filter from InOperator to ManyToOne.',
+        ['%view' => $view->id()]
+      );
+    }
+  }
+}
+
+/**
+ * Increase the module weight to run hooks after Content Translation.
+ */
+function domain_access_update_10002() {
+  // Use a higher weight than content_translation (10).
+  // @see https://www.drupal.org/project/domain/issues/3367186
+  module_set_weight('domain_access', 20);
 }

@@ -1,0 +1,7 @@
+name: 'Nomads Term Dependees'
+type: module
+description: 'Auto-select dependent taxonomy terms across widgets when configured per widget.'
+package: 'Nomads Forms'
+core_version_requirement: ^10 || ^11
+dependencies:
+  - drupal:taxonomy

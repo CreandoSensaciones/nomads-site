@@ -1,0 +1,7 @@
+nomads_listing_wizard.wizard:
+  path: /listing/wizard
+  defaults:
+    _controller: '\Drupal\nomads_listing_wizard\Controller\ListingWizardController::wizard'
+    _title: 'Create listing'
+  requirements:
+    _entity_create_access: 'node:listing'

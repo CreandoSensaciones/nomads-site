@@ -3,14 +3,14 @@
 namespace Drupal\domain_access\Plugin\views\filter;
 
 use Drupal\views\Attribute\ViewsFilter;
-use Drupal\views\Plugin\views\filter\InOperator;
+use Drupal\views\Plugin\views\filter\ManyToOne;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides filtering by assigned domain.
  */
 #[ViewsFilter('domain_access_filter')]
-class DomainAccessFilter extends InOperator {
+class DomainAccessFilter extends ManyToOne {
 
   /**
    * The domain storage.

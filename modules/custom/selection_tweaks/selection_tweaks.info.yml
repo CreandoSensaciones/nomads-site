@@ -1,7 +1,7 @@
 name: Selection Tweaks
 type: module
-description: Enforces grouped selection limits for multi-selects and checkboxes.
-package: 'Nomads Widgets'
+description: 'Applies grouped selection-limit behavior for multi-select/checkbox widgets and strips trailing priority suffixes from option labels on node forms.'
+package: 'Nomads Forms'
 core_version_requirement: '^11'
 dependencies:
   - nomads_listing:nomads_listing

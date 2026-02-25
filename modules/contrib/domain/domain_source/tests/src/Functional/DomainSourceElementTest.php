@@ -31,6 +31,10 @@ class DomainSourceElementTest extends DomainTestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    // Rebuild the container to take module weight into account.
+    // See https://www.drupal.org/project/domain/issues/3550142
+    $this->rebuildContainer();
+
     // Create 5 domains.
     $this->domainCreateTestDomains(5);
   }
@@ -179,6 +183,15 @@ class DomainSourceElementTest extends DomainTestBase {
     $this->assertSession()->statusCodeEquals(200);
 
     $this->assertSession()->fieldExists($locator);
+
+    // Check that the source element is inside the domain details element.
+    // See https://www.drupal.org/project/domain/issues/3550142
+    $domain_details = $this->assertSession()->elementExists('css', 'details#edit-domain');
+    $this->assertNotNull($domain_details, 'The domain details element exists on page.');
+    $this->assertNotNull(
+      $domain_details->find('css', 'select#edit-field-domain-source'),
+      'The domain source element is inside the domain details group.'
+    );
   }
 
 }

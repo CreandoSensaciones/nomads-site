@@ -1,0 +1,5 @@
+name: Nomads Taxonomy Breadcrumb
+type: module
+description: 'Provides a taxonomy-term reference formatter that renders breadcrumb labels from selected parent settings.'
+core_version_requirement: ^11
+package: 'Nomads Display'

@@ -1,28 +1,51 @@
 # Nomads Slideshow
 
-Splide-based slideshow field formatter for teaser cards and listing views.
+## Purpose
+`nomads_slideshow` is intended to provide Splide-based field formatters for image/media-image slideshow rendering in teaser and listing contexts.
 
-## Installation
+## What It Does
+- Declares frontend library `nomads_slideshow/splide` with:
+  - Splide vendor JS/CSS paths
+  - module init behavior `js/nomads_slideshow.init.js`
+  - module styling `css/nomads_slideshow.css`
+- Initializes Splide on `.nomads-splide` elements when at least two slides exist.
+- Reads per-instance options from `data-nomads-splide` JSON.
 
-1) Copy the module to:
-   `app/modules/custom/nomads_slideshow`
-2) Place Splide vendor assets locally:
-   - `vendor/splide/js/splide.min.js`
-   - `vendor/splide/css/splide.min.css`
-3) Enable the module and clear caches.
+## Files
+- `nomads_slideshow.libraries.yml`
+  Library registration for Splide assets and init behavior.
+- `js/nomads_slideshow.init.js`
+  Drupal behavior that mounts Splide per slideshow container.
+- `css/nomads_slideshow.css`
+  Slideshow sizing and ratio helper styles.
+- `src/Plugin/Field/FieldFormatter/NomadsSplideFormatterBase.php`
+  Intended formatter base class (currently empty file).
+- `src/Plugin/Field/FieldFormatter/NomadsSplideImageFormatter.php`
+  Intended image formatter plugin (currently empty file).
+- `src/Plugin/Field/FieldFormatter/NomadsSplideMediaImageFormatter.php`
+  Intended media-image formatter plugin (currently empty file).
+- `vendor/splide/js/splide.min.js`
+  Splide vendor JS placeholder.
+- `vendor/splide/css/splide.min.css`
+  Splide vendor CSS placeholder.
 
-## Splide assets
+## Runtime Behavior
 
-This module expects Splide assets to be placed locally under the module. Provide the minified JS/CSS files for your chosen Splide version (e.g. the latest stable version from the Splide release you use site-wide).
+1. Field formatter output (from formatter plugins) should render `.nomads-splide` markup with slide items and JSON options.
+2. Attached library loads Splide vendor assets plus init script.
+3. JS behavior mounts Splide only when there are 2+ slides.
 
-## Usage
+## Concerns
+- Critical functionality gap: All formatter PHP files in `src/Plugin/Field/FieldFormatter/` are currently zero-byte files, so formatter plugins are effectively missing.
+- Critical asset gap: `vendor/splide/js/splide.min.js` and `vendor/splide/css/splide.min.css` are placeholders, not real Splide assets; slideshow runtime cannot function as intended.
+- Documentation mismatch: Current usage instructions describe configurable formatters that are not actually implemented in code.
+- Stability: JS silently falls back to empty options when `data-nomads-splide` JSON parsing fails, making misconfiguration hard to detect.
+- Dependency governance: Vendored third-party assets in-module require manual updates and vulnerability tracking.
+- Testing: No automated tests for formatter discovery/rendering or frontend slideshow initialization.
 
-- Go to the field display or view mode for your content type.
-- Choose one of the formatters:
-  - "Nomads Slideshow (Splide) for Image" (image fields)
-  - "Nomads Slideshow (Splide) for Media Images" (media image references)
-- Configure image style, autoplay, arrows, pagination, aspect ratio, and lazy loading.
-
-## Views teaser cards
-
-When using a View with teaser cards, select the relevant field formatter in the view mode used by the View (or in the view field display if rendering fields). The Splide library is only attached when there are at least two images.
+## Maintenance Notes
+- Before production use, implement the formatter plugin classes and provide real Splide assets.
+- Add smoke tests that verify:
+  - formatter plugins are discoverable in Manage display
+  - rendered markup includes required `.nomads-splide` structure
+  - Splide JS mounts successfully on multi-slide output

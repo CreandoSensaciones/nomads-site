@@ -25,6 +25,14 @@ function nomads_preprocess_image_widget(array &$variables): void {
  */
 function nomads_preprocess_page(array &$variables): void {
   $menu_tree = \Drupal::menuTree();
+  $request = \Drupal::request();
+  $current_path = $request->getPathInfo();
+
+  // Normalize trailing slash (except root) so Twig checks are predictable.
+  if ($current_path !== '/' && substr($current_path, -1) === '/') {
+    $current_path = rtrim($current_path, '/');
+  }
+
   $parameters = (new \Drupal\Core\Menu\MenuTreeParameters())
     ->setMaxDepth(1);
   $allowed_query_keys = ['q', 'view', 'tags', 'from', 'to'];
@@ -72,6 +80,73 @@ function nomads_preprocess_page(array &$variables): void {
   $variables['nomads_mainmenu'] = $menu_tree->build($main_tree);
   $variables['nomads_accountmenu'] = $menu_tree->build($account_tree);
   $variables['nomads_domainsmenu_items'] = $domains;
+  $variables['nomads_current_path'] = $current_path;
+}
+
+/**
+ * Determines whether the current field group is listing/full group_title.
+ */
+function _nomads_is_listing_full_group_title(array $variables): bool {
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  if ($route_name !== 'entity.node.canonical') {
+    return FALSE;
+  }
+
+  $node = \Drupal::routeMatch()->getParameter('node');
+  if (!$node instanceof \Drupal\node\NodeInterface || $node->bundle() !== 'listing') {
+    return FALSE;
+  }
+
+  $group_name = $variables['group_name'] ?? ($variables['element']['#group_name'] ?? '');
+  if ($group_name === 'group_title') {
+    return TRUE;
+  }
+
+  if (!empty($variables['attributes']) && $variables['attributes'] instanceof \Drupal\Core\Template\Attribute) {
+    $classes = $variables['attributes']->offsetGet('class');
+    if (is_iterable($classes)) {
+      foreach ($classes as $class) {
+        if ($class === 'group-title' || $class === 'group_title') {
+          return TRUE;
+        }
+      }
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Implements hook_theme_suggestions_field_group_html_element_alter().
+ */
+function nomads_theme_suggestions_field_group_html_element_alter(array &$suggestions, array $variables): void {
+  if (_nomads_is_listing_full_group_title($variables)) {
+    $suggestions[] = 'field_group_html_element__listing_full_group_title';
+  }
+}
+
+/**
+ * Implements hook_preprocess_field_group_html_element().
+ */
+function nomads_preprocess_field_group_html_element(array &$variables): void {
+  if (!_nomads_is_listing_full_group_title($variables)) {
+    return;
+  }
+
+  $variables['nomads_group_title_local_tasks'] = [];
+
+  $block_manager = \Drupal::service('plugin.manager.block');
+  /** @var \Drupal\Core\Block\BlockPluginInterface $local_tasks */
+  $local_tasks = $block_manager->createInstance('local_tasks_block', []);
+  $access = $local_tasks->access(\Drupal::currentUser(), TRUE);
+  if (!$access->isAllowed()) {
+    return;
+  }
+
+  $build = $local_tasks->build();
+  if (is_array($build) && !empty($build)) {
+    $variables['nomads_group_title_local_tasks'] = $build;
+  }
 }
 
 /**
@@ -150,13 +225,45 @@ function nomads_preprocess_paragraph(array &$variables): void {
  * Implements hook_preprocess_field().
  */
 function nomads_preprocess_field(array &$variables): void {
-  if (($variables['entity_type'] ?? '') !== 'node') {
-    return;
+  $count = 0;
+
+  // Prefer the original field item list so custom formatters that collapse
+  // output into one rendered item still get the correct count.
+  if (isset($variables['element']['#items']) && is_countable($variables['element']['#items'])) {
+    $count = count($variables['element']['#items']);
   }
-  if (($variables['field_name'] ?? '') !== 'field_subtitle') {
-    return;
+  elseif (isset($variables['items']) && is_countable($variables['items'])) {
+    $count = count($variables['items']);
   }
 
-  $variables['host_entity'] = $variables['element']['#object'] ?? NULL;
-  $variables['host_view_mode'] = $variables['element']['#view_mode'] ?? '';
+  if ($count >= 2) {
+    $classes = ['items-count-' . $count];
+
+    $thresholds = [];
+    foreach ([3, 4] as $step) {
+      for ($n = $step; $n <= $count; $n += $step) {
+        $thresholds[$n] = TRUE;
+      }
+    }
+
+    ksort($thresholds);
+    foreach (array_keys($thresholds) as $n) {
+      $classes[] = 'items-' . $n;
+    }
+
+    if (($variables['attributes'] ?? NULL) instanceof \Drupal\Core\Template\Attribute) {
+      $variables['attributes']->addClass(...$classes);
+    }
+    elseif (is_array($variables['attributes'] ?? NULL)) {
+      $variables['attributes']['class'] = array_values(array_unique(array_merge(
+        $variables['attributes']['class'] ?? [],
+        $classes
+      )));
+    }
+  }
+
+  if (($variables['entity_type'] ?? '') === 'node' && ($variables['field_name'] ?? '') === 'field_subtitle') {
+    $variables['host_entity'] = $variables['element']['#object'] ?? NULL;
+    $variables['host_view_mode'] = $variables['element']['#view_mode'] ?? '';
+  }
 }

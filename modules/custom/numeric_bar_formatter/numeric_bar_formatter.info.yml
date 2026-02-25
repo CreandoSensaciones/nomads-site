@@ -1,5 +1,5 @@
 name: Numeric Bar Formatter
 type: module
-description: 'Provides progress bar field formatters for numeric and list fields.'
+description: 'Provides integer/list-integer field formatter variants for progress-style visual output (bar, color bar, circle, circular).'
 core_version_requirement: ^11
-package: Field types
+package: 'Nomads Display'

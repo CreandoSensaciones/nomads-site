@@ -7,8 +7,14 @@
 #}
 {% block content %}
   {% if content %}
-    <nav class="tabs" role="navigation" aria-label="{{ 'Tabs'|t }}">
-      {{ content }}
-    </nav>
+    <div class="nomads-title-local-tasks" data-nomads-local-tasks>
+      <div class="nomads-title-local-tasks__select-wrap" data-nomads-local-tasks-select-wrap hidden>
+        <label class="visually-hidden">{{ 'Select tab'|t }}</label>
+        <select class="nomads-title-local-tasks__select" data-nomads-local-tasks-select></select>
+      </div>
+      <nav class="tabs nomads-title-local-tasks__tabs" role="navigation" aria-label="{{ 'Tabs'|t }}" data-nomads-local-tasks-tabs>
+        {{ content }}
+      </nav>
+    </div>
   {% endif %}
 {% endblock %}

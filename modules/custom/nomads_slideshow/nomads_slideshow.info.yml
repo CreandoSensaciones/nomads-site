@@ -1,5 +1,5 @@
 name: 'Nomads Slideshow'
 type: module
-description: 'Splide-based slideshow field formatter for listing teasers.'
+description: 'Provides Splide slideshow formatter scaffolding and frontend initialization assets for image/media slideshow rendering. Currently not activated on this site.'
 core_version_requirement: ^11
-package: Nomads
+package: 'Nomads Display'

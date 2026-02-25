@@ -1,0 +1,59 @@
+.nomads-logo {
+  display: inline-flex;
+}
+
+.nomads-logo-item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 10pt;
+}
+
+.nomads-logo--fallback {
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  text-align: center;
+  line-height: 1.1;
+  padding: 0.35rem;
+  box-sizing: border-box;
+  background: linear-gradient(90deg, #3f3f3e, #831a02);
+  border: 0;
+  color: #fff;
+  font-weight: 600;
+}
+
+.nomads-logo--has-image {
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.nomads-logo--has-image img,
+.nomads-logo--has-image picture img {
+  border-radius: 50%;
+  display: block;
+  object-fit: cover;
+}
+
+.nomads-logo-title {
+  text-align: center;
+}
+
+.nomads-logo-title a {
+  text-decoration: none;
+}
+
+.nomads-logo-link {
+  display: inline-flex;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nomads-logo-link * {
+  cursor: pointer !important;
+}
+

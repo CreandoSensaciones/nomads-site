@@ -8,7 +8,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\domain_access\DomainAccessManagerInterface;
 
 /**
- * Removes a node to all affiliates..
+ * Removes a node to all affiliates.
  */
 #[Action(
   id: 'domain_access_none_action',

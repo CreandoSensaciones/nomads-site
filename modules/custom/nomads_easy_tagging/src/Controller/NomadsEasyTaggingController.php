@@ -3,7 +3,8 @@
 namespace Drupal\nomads_easy_tagging\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Access\AccessResult;
 use Drupal\nomads_easy_tagging\Service\NomadsEasyTaggingConstraintResolver;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -20,16 +21,10 @@ class NomadsEasyTaggingController extends ControllerBase {
   protected NomadsEasyTaggingConstraintResolver $resolver;
 
   /**
-   * The language manager.
-   */
-  protected LanguageManagerInterface $langManager;
-
-  /**
    * Constructs the controller.
    */
-  public function __construct(NomadsEasyTaggingConstraintResolver $resolver, LanguageManagerInterface $languageManager) {
+  public function __construct(NomadsEasyTaggingConstraintResolver $resolver) {
     $this->resolver = $resolver;
-    $this->langManager = $languageManager;
   }
 
   /**
@@ -38,8 +33,19 @@ class NomadsEasyTaggingController extends ControllerBase {
   public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('nomads_easy_tagging.constraint_resolver'),
-      $container->get('language_manager'),
     );
+  }
+
+  /**
+   * Access check for easy-tagging read/write endpoints.
+   */
+  public function endpointAccess(AccountInterface $account): AccessResult {
+    $listing_create_access = \Drupal::entityTypeManager()
+      ->getAccessControlHandler('node')
+      ->createAccess('listing', $account, [], TRUE);
+
+    return AccessResult::allowedIfHasPermission($account, 'administer taxonomy')
+      ->orIf($listing_create_access);
   }
 
   /**

@@ -216,3 +216,28 @@
 .special-category-select[data-sortable="0"] .special-category-select__handle {
   display: none;
 }
+
+
+/* ------- Speccial Taxonomy select overwrite ------ */
+
+.special-category-select__tree,
+.special-category-select__selected {
+    border: none;
+}
+
+form .special-category-select.form-wrapper {
+  background: #fff;
+  border-radius: 12px;
+  padding: 15px;
+  /* min-height: 500px; */
+}
+
+form .field--widget-special-category-select {
+  margin: 20px 0;
+}
+form .special-category-select.form-wrapper #edit-field-type-ui-selected{
+  max-width: 600px;
+}
+form .special-category-select.form-wrapper #edit-field-type-ui-selected li {
+  border-radius: 6px;
+}

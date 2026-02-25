@@ -1,0 +1,6 @@
+services:
+  nomads_term_dependees.constraint_map_builder:
+    class: Drupal\nomads_term_dependees\ConstraintMapBuilder
+    arguments:
+      - '@entity_type.manager'
+      - '@cache.default'

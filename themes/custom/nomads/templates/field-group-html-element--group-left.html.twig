@@ -1,0 +1,24 @@
+{#
+/**
+ * @file
+ * Field group override for group_left.
+ *
+ * Adds an icon placeholder above the group content.
+ */
+#}
+
+<{{ wrapper_element }} {{ attributes }}>
+{% if title %}
+  <{{ title_element }}{{ title_attributes }}>{{ title }}</{{ title_element }}>
+{% endif %}
+  {% if collapsible %}
+  <div class="field-group-wrapper">
+  {% endif %}
+
+  <div class="icon-placeholder"></div>
+  {{ children }}
+
+  {% if collapsible %}
+  </div>
+  {% endif %}
+</{{ wrapper_element }}>

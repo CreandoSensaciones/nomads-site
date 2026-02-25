@@ -1,0 +1,43 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a fieldgroup html element.
+ *
+ * Available variables:
+ * - title: Title of the group.
+ * - title_element: Element to wrap the title.
+ * - children: The children of the group.
+ * - wrapper_element: The html element to use
+ * - attributes: A list of HTML attributes for the group wrapper.
+ *
+ * @see template_preprocess_field_group_html_element()
+ *
+ * @ingroup themeable
+ */
+#}
+
+{% set selector = attributes['data-drupal-selector']|default('') %}
+{% if selector and selector matches '/^edit-field-([a-z0-9_]+)-widget-[0-9]+-subform-group-relevance$/' %}
+  {% set selector_trimmed = selector|replace({
+    'edit-field-': '',
+    '-subform-group-relevance': ''
+  }) %}
+  {% set bundle = selector_trimmed|split('-widget-')|first %}
+  {% set attributes = attributes
+    .setAttribute('data-paragraph-relevance-group', bundle)
+    .addClass('relevance-ui')
+  %}
+{% endif %}
+
+<{{ wrapper_element }} {{ attributes }}>
+{% if title %}
+  <{{ title_element }}{{ title_attributes }}>{{ title }}</{{ title_element }}>
+{% endif %}
+  {% if collapsible %}
+<div class="field-group-wrapper">
+  {% endif %}
+  {{children}}
+  {% if collapsible %}
+</div>
+{% endif %}
+</{{ wrapper_element }}>

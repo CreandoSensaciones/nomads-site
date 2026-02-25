@@ -1,0 +1,5 @@
+TODO: Remove temporary entity-reference selection safeguard once field config is fixed.
+- Current safeguard: nomads_listing_wizard overrides plugin.manager.entity_reference_selection with SafeSelectionPluginManager.
+- Why: prevent Drupal core fatal (SelectionPluginManager uasort(null)) during wizard submit.
+- Follow-up: audit and fix malformed entity_reference field handler settings (ensure handler is default:<target_type> and target_type is valid).
+- After cleanup and verification: remove SafeSelectionPluginManager + service override from nomads_listing_wizard.

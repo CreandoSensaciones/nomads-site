@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Creator: CorelDRAW 2019 (64-Bit) -->
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="1000px" height="1000px" version="1.1" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd"
+viewBox="0 0 10000 10000"
+ xmlns:xlink="http://www.w3.org/1999/xlink"
+ xmlns:xodm="http://www.corel.com/coreldraw/odm/2003">
+ <g id="Ebene_x0020_1">
+  <metadata id="CorelCorpID_0Corel-Layer"/>
+  <rect fill="#66C3D0" stroke="black" stroke-width="200" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="22.9256" x="2000" y="5900" width="6000" height="2000"/>
+  <circle fill="#FEFEFE" stroke="black" stroke-width="200" stroke-miterlimit="22.9256" cx="1800" cy="8100" r="1546"/>
+  <g>
+   <path fill="black" d="M1583 7884l0 -684c0,-40 33,-73 73,-73l287 0c40,0 73,33 73,73l0 684 -433 0zm433 438l0 677c0,40 -33,73 -73,73l-287 0c-40,0 -73,-33 -73,-73l0 -683 433 5zm756 -366l0 287c0,40 -33,73 -73,73l-1799 0c-40,0 -73,-33 -73,-73l0 -287c0,-40 33,-73 73,-73l1799 0c40,0 73,33 73,73z"/>
+   <path id="1" fill="none" stroke="#2B2A29" stroke-width="21" stroke-miterlimit="22.9256" d="M1583 7884l0 -684c0,-40 33,-73 73,-73l287 0c40,0 73,33 73,73l0 684m0 438l0 677c0,40 -33,73 -73,73l-287 0c-40,0 -73,-33 -73,-73l0 -683m1189 -360l0 287c0,40 -33,73 -73,73l-1799 0c-40,0 -73,-33 -73,-73l0 -287c0,-40 33,-73 73,-73l1799 0c40,0 73,33 73,73z"/>
+  </g>
+  <path fill="#FEFEFE" fill-rule="nonzero" stroke="black" stroke-width="200" stroke-linejoin="round" stroke-miterlimit="22.9256" d="M4303 7000c783,-1000 1914,-2612 3187,-2437l0 424 2260 -848 -2260 -848 0 424c-1704,-20 -2829,1917 -3187,3285l0 0z"/>
+ </g>
+</svg>

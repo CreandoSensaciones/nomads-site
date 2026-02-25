@@ -1,0 +1,372 @@
+/* ========== Basic ========== */
+
+.nomads-taxonomy-icons__icon img {
+  width: 32px;
+  height: auto;
+}
+
+.nomads-taxonomy-icons__icon .nomads-taxonomy-icons__missing-svg {
+  display: block;
+  width: 32px;
+  height: 32px;
+}
+
+.nomads-taxonomy-icons__item--pill {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.nomads-taxonomy-icons--grouped {
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+  text-align: center;
+}
+
+.nomads-taxonomy-icons--grouped .nomads-taxonomy-icons__items {
+  display: inline-flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  justify-content: flex-start;
+  width: 100%;
+  text-align: left;
+}
+
+/* labels*/
+.nomads-taxonomy-icons__label,
+.nomads-taxonomy-icons__label a,
+.nomads-taxonomy-icons__label .nomads-pill__link {
+  text-transform: uppercase;
+  font-size: 9pt;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #015d8f;
+}
+
+.node--view-mode-teaser .nomads-taxonomy-icons__label,
+.node--view-mode-teaser .nomads-taxonomy-icons__label a,
+.node--view-mode-teaser .nomads-taxonomy-icons__label .nomads-pill__link {
+  font-size: 8pt;
+  color: #015d8f;
+}
+
+
+/* ========== Grouped taxonomy icon cards ========== */
+/* 2 columns, masonry-like flow, white shadow boxes */
+
+.two-column .nomads-taxonomy-icons--grouped {
+  /* 2 columns that auto-flow items top-to-bottom, then into next column */
+  column-count: 2;
+  column-gap: 1rem;
+
+  /* optional: keep both columns nicely balanced when possible */
+  column-fill: balance;
+}
+/* Responsive: fall back to 1 column on narrow screens */
+@media (max-width: 700px) {
+  .nomads-taxonomy-icons--grouped {
+    column-count: 1;
+  }
+}
+
+/* Each category box */
+.nomads-taxonomy-icons__group {
+  --tax-group-pad-top: 0.9rem;
+  --tax-group-pad-x: 1rem;
+  --tax-group-pad-bottom: 1rem;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  position: relative;
+  overflow: visible;
+
+  background: #fff;
+  border-radius: 12px;
+  padding: 5px 15px 15px 15px;
+  margin: 0 0 1rem 0;
+
+  /* shadow box */
+  box-shadow: 0 10px 24px rgba(9, 96, 128, 0.08);
+}
+
+/* Category title inside the box */
+.nomads-taxonomy-icons__group-title {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+
+
+/* One term row: icon left, label right, vertically centered */
+.icons-list-aligned .nomads-taxonomy-icons__item {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  align-items: center;
+  column-gap: 0.6rem;
+}
+
+/* Icon sizing, no extra spacing */
+.nomads-taxonomy-icons__group .nomads-taxonomy-icons__icon a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.nomads-taxonomy-icons__group .nomads-taxonomy-icons__icon img {
+  display: block;
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+/* Label aligned left, centered vertically via grid align-items */
+.nomads-taxonomy-icons__group .nomads-taxonomy-icons__label,
+.nomads-taxonomy-icons__group .nomads-taxonomy-icons__label a {
+  display: block;
+  text-align: left;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+/* Optional: tighten pills look if .nomads-pill__link adds padding/borders */
+.nomads-taxonomy-icons__group .nomads-taxonomy-icons__label .nomads-pill__link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+/* Category title inside the box */
+.nomads-taxonomy-icons__group .nomads-taxonomy-icons__group-title {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #444;
+}
+
+
+
+
+
+
+
+/* force left alignment for labels */
+.nomads-taxonomy-icons__label,
+.nomads-taxonomy-icons__label a,
+.nomads-taxonomy-icons__label .nomads-pill__link {
+  text-align: left;
+  justify-self: start;   /* in case grid is influencing alignment */
+  align-self: center;    /* keep vertical centering */
+}
+/* only reflow the existing flat list into 2 alternating columns, no visual changes */
+
+
+
+/* ========== Tags in Teaser ========== */
+
+.node--view-mode-teaser .field--name-field-defaults-tags.field__items {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 0.5rem;
+  row-gap: 0.22rem; /* set to 0 if you want no extra vertical spacing */
+}
+
+/* keep items from adding their own margins that would break the rhythm */
+.node--view-mode-teaser .field--name-field-defaults-tags.field__items > .field__item {
+  margin: 0;
+}
+
+/* responsive: back to 1 column */
+@media (max-width: 700px) {
+  .node--view-mode-teaser .field--name-field-defaults-tags.field__items {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+
+/* ========= Listing Field Type - full node ========== */
+
+.node--type-listing.node--view-mode-full .field--name-field-type .nomads-icon-formatter__icon img {
+  width: 160px; 
+}
+.node--type-listing.node--view-mode-full .field--name-field-type .nomads-taxonomy-icons__label {
+  display: block;
+  font-size: 18pt;
+  text-align: center;
+  margin: 10px auto;
+  width: 100%;
+}
+.node--type-listing.node--view-mode-full .field--name-field-type .nomads-pill {
+  font-size: 9pt;
+}
+
+
+
+/* ========== Tags - Full node Listing ========== */
+
+
+
+/* Icon sizing, no extra spacing */
+.field--name-field-defaults-tags .nomads-taxonomy-icons__icon a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.field--name-field-defaults-tags .nomads-taxonomy-icons__icon img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+/* Label aligned left, centered vertically via grid align-items */
+.field--name-field-defaults-tags .nomads-taxonomy-icons__label,
+.field--name-field-defaults-tags .nomads-taxonomy-icons__label a {
+  display: block;
+  text-align: left;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+/* Override formatter defaults that center grouped items when only one is visible. */
+.field--name-field-defaults-tags .nomads-taxonomy-icons--grouped,
+.field--name-field-defaults-tags .nomads-taxonomy-icons__group {
+  text-align: left;
+}
+
+/* Optional: tighten pills look if .nomads-pill__link adds padding/borders */
+.nomads-taxonomy-icons__label .nomads-pill__link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+
+
+
+
+/* Taxonomy icons first item remains larger */
+.nomads-icon-formatter--taxonomy-icons.categories > .field__item:first-child .nomads-icon-formatter__icon img {
+  width: 180px;
+  height: auto;
+}
+
+.nomads-icon-formatter--taxonomy-icons.categories > .field__item:first-child .nomads-icon-formatter__label {
+  font-size: 12pt;
+  margin-top: 10px;
+}
+
+.nomads-icon-formatter--taxonomy-icons.categories > .field__item:first-child .nomads-icon-formatter__icon img {
+  width: 80px;
+}
+
+
+
+.nomads-icon-formatter--taxonomy-icons.tags > .field__item > div,
+.nomads-icon-formatter--taxonomy-icons.tags > .field__item > span {
+  display: inline-block;
+}
+.nomads-icon-formatter--taxonomy-icons.tags > .field__item .nomads-icon-formatter__icon img {
+  width: 24px;
+}
+.nomads-icon-formatter--taxonomy-icons.tags .nomads-icon-formatter__label {
+  font-size: 7pt;
+}
+
+
+
+
+
+
+
+
+
+/* =========== Collapsible formatter ========== */
+
+.nomads-taxonomy-icons__collapsible {
+  margin-top: 0;
+  margin-bottom: -15px;
+}
+
+.nomads-taxonomy-icons__collapsible-toggle {
+  color: #888;
+  display: flex;
+  width: 20px;
+  height: 20px;
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
+.nomads-taxonomy-icons__collapsible-toggle::before {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 9px solid currentColor;
+  transition: transform 0.2s ease;
+}
+
+.nomads-taxonomy-icons__collapsible.is-open .nomads-taxonomy-icons__collapsible-toggle::before {
+  transform: rotate(180deg);
+}
+
+.nomads-taxonomy-icons__collapsible-content {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease, opacity 0.2s ease;
+  margin-bottom: 10px;
+}
+
+.nomads-taxonomy-icons__collapsible.is-open .nomads-taxonomy-icons__collapsible-content {
+  opacity: 1;
+}
+/* Keep expanded hidden-terms panel out of normal flow so boxes below do not move */
+.nomads-taxonomy-icons__collapsible {
+  position: relative;
+}
+
+.nomads-taxonomy-icons__collapsible-content {
+  position: absolute;
+  top: 15px;
+  left: calc(-1 * var(--tax-group-pad-x));
+  right: calc(-1 * var(--tax-group-pad-x));
+  z-index: 30;
+  margin-top: 0.35rem;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+  padding: var(--tax-group-pad-top) var(--tax-group-pad-x) var(--tax-group-pad-bottom);
+  box-sizing: border-box;
+  pointer-events: none;
+  transform-origin: top center;
+  transform: translateY(-6px);
+  transition: max-height 0.25s ease, opacity 0.2s ease, transform 0.2s ease;
+}
+
+.nomads-taxonomy-icons__collapsible.is-open .nomads-taxonomy-icons__collapsible-content {
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* Keep row spacing in overlay consistent with main category list gaps */
+.nomads-taxonomy-icons__collapsible-content .nomads-taxonomy-icons__item + .nomads-taxonomy-icons__item {
+  margin-top: 8px;
+}

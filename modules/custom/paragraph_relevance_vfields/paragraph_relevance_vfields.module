@@ -77,10 +77,7 @@ function paragraph_relevance_vfields_entity_presave(EntityInterface $entity): vo
     return;
   }
 
-  \Drupal::logger('paragraph_relevance')->notice('PR DEBUG: presave listing nid=@nid', ['@nid' => $entity->id() ?? 'new']);
-
   $paragraphs = paragraph_relevance_vfields_collect_paragraphs($entity);
-  \Drupal::logger('paragraph_relevance')->notice('PR DEBUG: found @n paragraphs', ['@n' => count($paragraphs)]);
   if (!$paragraphs) {
     return;
   }
@@ -94,12 +91,6 @@ function paragraph_relevance_vfields_entity_presave(EntityInterface $entity): vo
     $dst_entity = $paragraph;
     $src = $src_entity->hasField('field_relevance') ? $src_entity->get('field_relevance')->value : 'MISSING';
     $dst = $dst_entity->hasField('field_relevance2') ? $dst_entity->get('field_relevance2')->value : 'MISSING';
-    \Drupal::logger('paragraph_relevance')->notice('PR DEBUG: p=@pid bundle=@b src=@src dst_before=@dst', [
-      '@pid' => $src_entity->id() ?? 'new',
-      '@b' => $src_entity->bundle(),
-      '@src' => (string) $src,
-      '@dst' => (string) $dst,
-    ]);
     if (!$src_entity->hasField('field_relevance')) {
       continue;
     }
@@ -475,6 +466,13 @@ function paragraph_relevance_vfields_form_entity_view_display_edit_form_alter(ar
       ];
     }
 
+    $form['fields']['key_aspects']['plugin']['settings_edit_form']['settings']['ignore_crew_and_audience'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Ignore crew and audience'),
+      '#default_value' => (bool) ($settings['ignore_crew_and_audience'] ?? $defaults['ignore_crew_and_audience']),
+      '#description' => t('Do not render key aspect terms with labels "Crew" or "Audience".'),
+    ];
+
     $form['fields']['key_aspects']['plugin']['settings_edit_form']['actions'] = [
       '#type' => 'actions',
       'save_settings' => $base_button + [
@@ -576,6 +574,11 @@ function paragraph_relevance_vfields_build_key_aspects(EntityInterface $listing,
   $paragraphs_by_bundle = paragraph_relevance_vfields_group_paragraphs_by_bundle($paragraphs);
 
   foreach ($key_aspect_terms as $term) {
+    $term_label = trim((string) $term->label());
+    if (!empty($settings['ignore_crew_and_audience']) && in_array($term_label, ['Crew', 'Audience'], TRUE)) {
+      continue;
+    }
+
     $bundle = trim((string) ($term->get('field_paragraph_bundle')->value ?? ''));
     if ($bundle === '' || empty($paragraphs_by_bundle[$bundle])) {
       continue;
@@ -778,6 +781,7 @@ function paragraph_relevance_vfields_key_aspects_groups(): array {
  */
 function paragraph_relevance_vfields_key_aspects_default_settings(): array {
   return [
+    'ignore_crew_and_audience' => FALSE,
     'core_focus' => [
       'output' => 'icon',
       'label' => 'Core focus',
@@ -825,6 +829,9 @@ function paragraph_relevance_vfields_key_aspects_output_options(): array {
  */
 function paragraph_relevance_vfields_key_aspects_settings_summary(array $settings, array $options): array {
   $summary = [];
+  $summary[] = t('Ignore crew and audience: @value', [
+    '@value' => !empty($settings['ignore_crew_and_audience']) ? t('Yes') : t('No'),
+  ]);
   $defaults = paragraph_relevance_vfields_key_aspects_default_settings();
   foreach (paragraph_relevance_vfields_key_aspects_groups() as $group) {
     $key = $group['key'];
@@ -845,9 +852,13 @@ function paragraph_relevance_vfields_key_aspects_settings_summary(array $setting
  * Apply key aspects settings to the display from form state.
  */
 function paragraph_relevance_vfields_apply_key_aspects_settings(EntityViewDisplayInterface $display, FormStateInterface $form_state): void {
-  $values = $form_state->getValue(['fields', 'key_aspects', 'settings_edit_form', 'settings', 'key_aspects']);
-  if (!is_array($values)) {
+  $settings_values = $form_state->getValue(['fields', 'key_aspects', 'settings_edit_form', 'settings']);
+  if (!is_array($settings_values)) {
     return;
+  }
+  $values = $settings_values['key_aspects'] ?? [];
+  if (!is_array($values)) {
+    $values = [];
   }
 
   $defaults = paragraph_relevance_vfields_key_aspects_default_settings();
@@ -855,6 +866,9 @@ function paragraph_relevance_vfields_apply_key_aspects_settings(EntityViewDispla
   $normalized = [];
 
   foreach ($defaults as $key => $default) {
+    if (!is_array($default)) {
+      continue;
+    }
     $group_values = $values[$key] ?? [];
     $label = isset($group_values['label']) ? trim((string) $group_values['label']) : $default['label'];
     $output = isset($group_values['output']) ? (string) $group_values['output'] : $default['output'];
@@ -868,6 +882,8 @@ function paragraph_relevance_vfields_apply_key_aspects_settings(EntityViewDispla
       'anchor' => $anchor,
     ];
   }
+
+  $normalized['ignore_crew_and_audience'] = !empty($settings_values['ignore_crew_and_audience']);
 
   $display->setThirdPartySetting('paragraph_relevance_vfields', 'key_aspects', $normalized);
 }

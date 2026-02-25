@@ -1,5 +1,5 @@
 name: Hidden formatter
 type: module
-description: 'Provides a hidden field formatter that renders no output.'
-package: 'Nomads Formatter'
+description: 'Provides the nomads_hidden field formatter to hide field output in view modes without disabling field storage.'
+package: 'Nomads Display'
 core_version_requirement: '^11'

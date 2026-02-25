@@ -1,6 +1,6 @@
 name: Slider widget
 type: module
-description: Slider widget UI for number field
+description: Slider widget UI for number field. Based on the Drupal 10 contrib module "sliderwidget" with the same name.
 core_version_requirement: ^9 || ^10 || ^11
 package: Fields
 

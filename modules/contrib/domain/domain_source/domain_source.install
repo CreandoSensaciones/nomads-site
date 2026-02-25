@@ -37,6 +37,10 @@ function domain_source_install() {
   foreach ($domains as $domain) {
     _domain_source_create_domain_source_set_action($domain, TRUE);
   }
+
+  // Use a higher weight than domain_access (20).
+  // @see https://www.drupal.org/project/domain/issues/3550142
+  module_set_weight('domain_source', 30);
 }
 
 /**
@@ -62,4 +66,13 @@ function domain_source_update_8001() {
   foreach ($domains as $domain) {
     _domain_source_create_domain_source_set_action($domain, TRUE);
   }
+}
+
+/**
+ * Increase the module weight to run hooks after Domain Access.
+ */
+function domain_source_update_10001() {
+  // Use a higher weight than domain_access (20).
+  // @see https://www.drupal.org/project/domain/issues/3550142
+  module_set_weight('domain_source', 30);
 }

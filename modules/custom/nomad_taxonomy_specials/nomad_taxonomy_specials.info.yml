@@ -1,5 +1,5 @@
 name: 'Nomad Taxonomy Specials'
 type: module
-description: 'Enforces special incompatibility rules for the type vocabulary.'
-package: 'Nomads Site'
+description: 'Enforces mutually exclusive term-selection rules for taxonomy references to the type vocabulary, including Special Category Select widgets.'
+package: 'Nomads Features'
 core_version_requirement: ^11

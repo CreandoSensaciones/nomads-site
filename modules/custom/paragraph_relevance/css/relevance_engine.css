@@ -1,0 +1,63 @@
+.relevance-ui .field--name-field-relevance2 {
+  background: rgba(5, 117, 177, 0.05);
+  border: 1px dashed rgba(5, 117, 177, 0.28);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.relevance-ui .field--name-field-relevance2,
+.relevance-ui .field--name-field-relevance2 * {
+  pointer-events: none !important;
+}
+
+.relevance-ui .field--name-field-relevance2 label,
+.relevance-ui .field--name-field-relevance2 .form-item__label {
+  cursor: default !important;
+}
+
+.relevance-ui .field--name-field-relevance .form-radios,
+.relevance-ui .field--name-field-relevance2 .form-radios {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.relevance-ui .field--name-field-relevance2 .pretty-element {
+  min-height: 72px;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.relevance-ui .field--name-field-relevance2 .pretty-element label,
+.relevance-ui .field--name-field-relevance2 .pretty-element .select-tooltip__label {
+  width: 100%;
+  text-align: center;
+  white-space: normal;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+}
+
+.relevance-ui .field--name-field-relevance2 .pretty-element.is-ghost {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.relevance-ui .field--name-field-relevance2 .pretty-element.is-active {
+  visibility: visible;
+  pointer-events: none;
+}
+
+.relevance-ui .field--name-field-relevance2 .pretty-element.is-requirements {
+  visibility: visible;
+  pointer-events: none;
+}
+
+.relevance-ui .field--name-field-relevance2 .pretty-element.is-requirements label,
+.relevance-ui .field--name-field-relevance2 .pretty-element.is-requirements .select-tooltip__label {
+  font-size: 12px;
+  font-weight: 400;
+}

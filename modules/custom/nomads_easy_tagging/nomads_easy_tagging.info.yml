@@ -1,10 +1,11 @@
 name: Easy Tagging
 type: module
 description: 'Custom taxonomy term reference widget with easy grids and constraint awareness.'
-package: Nomads Widgets
+package: 'Nomads Forms'
 core_version_requirement: '^10 || ^11'
 dependencies:
   - drupal:taxonomy
   - drupal:field
   - drupal:system
   - drupal:file
+  - nomads_term_dependees

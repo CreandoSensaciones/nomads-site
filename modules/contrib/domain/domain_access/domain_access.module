@@ -638,28 +638,36 @@ function domain_access_views_data_alter(array &$data) {
   $entity_definitions = $entity_type_manager->getDefinitions();
 
   foreach ($entity_definitions as $entity_definition) {
-    if ($entity_definition->entityClassImplements('Drupal\Core\Entity\ContentEntityInterface')) {
-      $table = $entity_definition->id() . '__' . DomainAccessManagerInterface::DOMAIN_ACCESS_FIELD;
-      $data[$table][DomainAccessManagerInterface::DOMAIN_ACCESS_FIELD]['field']['id'] = 'domain_access_field';
-      $data[$table][DomainAccessManagerInterface::DOMAIN_ACCESS_FIELD . '_target_id']['filter']['id'] = 'domain_access_filter';
-      $data[$table][DomainAccessManagerInterface::DOMAIN_ACCESS_FIELD . '_target_id']['argument']['id'] = 'domain_access_argument';
+    if ($entity_definition->entityClassImplements(ContentEntityInterface::class)) {
+      $tables = [$entity_definition->id() . '__' . DomainAccessManagerInterface::DOMAIN_ACCESS_FIELD];
+      if ($entity_definition->isRevisionable()) {
+        $tables[] = $entity_definition->id() . '_revision__' . DomainAccessManagerInterface::DOMAIN_ACCESS_FIELD;
+      }
+      foreach ($tables as $table) {
+        if (!isset($data[$table])) {
+          continue;
+        }
+        $data[$table][DomainAccessManagerInterface::DOMAIN_ACCESS_FIELD]['field']['id'] = 'domain_access_field';
+        $data[$table][DomainAccessManagerInterface::DOMAIN_ACCESS_FIELD . '_target_id']['filter']['id'] = 'domain_access_filter';
+        $data[$table][DomainAccessManagerInterface::DOMAIN_ACCESS_FIELD . '_target_id']['argument']['id'] = 'domain_access_argument';
 
-      // Current domain filter.
-      $data[$table]['current_all'] = [
-        'title' => t('Current domain'),
-        'group' => t('Domain'),
-        'filter' => [
-          'field' => DomainAccessManagerInterface::DOMAIN_ACCESS_FIELD . '_target_id',
-          'id' => 'domain_access_current_all_filter',
-          'title' => t('Available on current domain'),
-          'help' => t('Filters out @label available on current domain (published to current domain or all affiliates).', ['@label' => $entity_definition->getPluralLabel()]),
-          'type' => 'yes-no',
-        ],
-      ];
+        // Current domain filter.
+        $data[$table]['current_all'] = [
+          'title' => t('Current domain'),
+          'group' => t('Domain'),
+          'filter' => [
+            'field' => DomainAccessManagerInterface::DOMAIN_ACCESS_FIELD . '_target_id',
+            'id' => 'domain_access_current_all_filter',
+            'title' => t('Available on current domain'),
+            'help' => t('Filters out @label available on current domain (published to current domain or all affiliates).', ['@label' => $entity_definition->getPluralLabel()]),
+            'type' => 'yes-no',
+          ],
+        ];
 
-      // Since domains are not stored in the database,
-      // relationships cannot be used.
-      unset($data[$table][DomainAccessManagerInterface::DOMAIN_ACCESS_FIELD]['relationship']);
+        // Since domains are not stored in the database,
+        // relationships cannot be used.
+        unset($data[$table][DomainAccessManagerInterface::DOMAIN_ACCESS_FIELD]['relationship']);
+      }
     }
   }
 }
@@ -759,58 +767,69 @@ function domain_access_domain_delete(EntityInterface $entity) {
  * default values properly. Note that here we just care if the form saves an
  * entity. We then pass that entity to a helper function.
  *
- * @see domain_access_default_form_values()
+ * @see _domain_access_default_form_values()
  */
 function domain_access_form_alter(&$form, &$form_state, $form_id) {
   $object = $form_state->getFormObject();
-  if (is_object($object) && is_callable([$object, 'getEntity']) && $entity = $object->getEntity()) {
-    domain_access_default_form_values($form, $form_state, $entity);
+  if ($object instanceof EntityFormInterface) {
+    $form['#process'][] = '_domain_access_default_form_values';
   }
 }
 
 /**
- * Defines default values for domain access field.
+ * Defines default values for the domain access field.
  *
  * This function is a workaround for a core bug. When the domain access field
  * is not accessible to some users, the existing values are not preserved.
  *
  * @see domain_access_entity_field_access()
  */
-function domain_access_default_form_values(&$form, &$form_state, $entity) {
+function _domain_access_default_form_values($form, FormStateInterface $form_state) {
+  /** @var \Drupal\Core\Entity\ContentEntityForm $form_object */
+  $form_object = $form_state->getFormObject();
+  /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
+  $entity = $form_object->getEntity();
+
   // Set domain access default value when the user does not have access
   // to edit the field. This seems to work fine for all affiliates, which
   // suggests a core bug in entity reference handling.
   if (!$entity->isNew() &&
-      isset($form['field_domain_access']) &&
-      !$form['field_domain_access']['#access'] &&
-      isset($form['field_domain_access']['widget']['#default_value'])
-     ) {
+    isset($form['field_domain_access']) &&
+    !$form['field_domain_access']['#access'] &&
+    isset($form['field_domain_access']['widget']['#default_value'])
+  ) {
     // Set the default values correctly.
     $values = DomainAccessManager::getAccessValues($entity);
     $form['field_domain_access']['widget']['#default_value'] = array_keys($values);
   }
+
+  return $form;
 }
 
 /**
- * Implements hook_entity_update().
+ * Implements hook_entity_presave().
  */
-function domain_access_entity_update(EntityInterface $entity) {
-  // Clear access manager static cache when entities are updated.
-  DomainAccessManager::clearStaticCache(
-    $entity->id(),
-    $entity->getEntityTypeId()
-  );
+function domain_access_entity_presave(EntityInterface $entity) {
+  // Clear access manager static cache when entities are being updated.
+  if ($entity instanceof FieldableEntityInterface) {
+    DomainAccessManager::clearStaticCache(
+      $entity->id(),
+      $entity->getEntityTypeId()
+    );
+  }
 }
 
 /**
- * Implements hook_entity_delete().
+ * Implements hook_entity_predelete().
  */
-function domain_access_entity_delete(EntityInterface $entity) {
-  // Clear access manager static cache when entities are deleted.
-  DomainAccessManager::clearStaticCache(
-    $entity->id(),
-    $entity->getEntityTypeId()
-  );
+function domain_access_entity_predelete(EntityInterface $entity) {
+  // Clear access manager static cache when entities are being deleted.
+  if ($entity instanceof FieldableEntityInterface) {
+    DomainAccessManager::clearStaticCache(
+      $entity->id(),
+      $entity->getEntityTypeId()
+    );
+  }
 }
 
 /**

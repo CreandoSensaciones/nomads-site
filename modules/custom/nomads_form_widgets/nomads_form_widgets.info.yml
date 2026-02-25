@@ -1,7 +1,7 @@
 name: 'Nomads Form Widgets'
 type: module
-description: 'Custom form widgets for Nomads Site.'
-package: 'Nomads Widgets'
+description: 'Provides Nomads-specific widget behavior and form UI tweaks (buttons widget, sliderwidget bubble/default-value adjustments, daterange/geolocation/double-field layout fixes, and list_integer zero handling).'
+package: 'Nomads Forms'
 core_version_requirement: '^11'
 dependencies:
   - drupal:options

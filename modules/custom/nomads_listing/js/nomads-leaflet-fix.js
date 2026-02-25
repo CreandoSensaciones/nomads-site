@@ -1,6 +1,5 @@
 (function (Drupal, once) {
   'use strict';
-  console.log('[nomads_leaflet_fix] loaded');
 
   function fireResize() {
     try {
@@ -19,7 +18,6 @@
 
   Drupal.behaviors.nomadsLeafletFix = {
     attach(context) {
-      console.log('[nomads_leaflet_fix] attach', context);
       // 1) Drupal Vertical Tabs menu.
       once('nomadsLeafletFixVtabs', '.vertical-tabs__menu-item a', context).forEach((link) => {
         link.addEventListener('click', delayedResize, { passive: true });

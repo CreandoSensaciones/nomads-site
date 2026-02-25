@@ -5,392 +5,87 @@
    Notes for Codex: Edit only this file when changing component styling.
    Last updated: 2026-02-04 */
 
-/* ========== Compentent Navbar ========== */
+#hero-gallery img { 
+  border-radius: 8px;
+}
+/* ========== Local tasks Pill ========== */
 
-.nomads-navbar {
+  /* Big pill select */
+.nomads-title-local-tasks__select{
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  display: inline-block;
+  width: 100%;
+  max-width: 150px;          /* adjust */
+  height: 40px;              /* “big pill” */
+  padding: 0 54px 0 18px;    /* space for arrow on right */
+
+  border-radius: 9999px;
+  border: 1px solid rgba(0,0,0,.18);
   background: #fff;
-  border-bottom: 1px solid #eee;
-  position: relative;
-}
 
-.nomads-navbar__inner {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  min-height: 78px;
-}
-
-.nomads-navbar__brand {
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-  flex: 0 0 auto;
-}
-
-.nomads-navbar__brand-logo {
-  height: 48px;
-  width: auto;
-  display: block;
-}
-
-.nomads-navbar__brand-wrap {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.nomads-navbar__search {
-  flex: 1 1 auto;
-  display: flex;
-  justify-content: center;
-}
-
-.nomads-navbar__search-input {
-  width: min(400px, 100%);
-  height: 42px;
-  padding: 0 18px;
-  border: 1px solid #bdbdbd;
-  border-radius: 999px;
-  font-size: 18px;
-  color: #333;
-  outline: none;
-}
-
-.nomads-navbar__search-input::placeholder {
-  color: #888;
-}
-
-.nomads-navbar__actions {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.nomads-navbar__icon {
-  width: 55px;
-  height: 42px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  background: transparent;
-  border: 0;
-  padding: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 40px;         /* keeps text vertically centered */
   cursor: pointer;
+
+  box-sizing: border-box;
 }
 
-.nomads-navbar__icon img {
-  width: 38px;
-  height: 38px;
-  display: block;
+/* Hover + focus */
+.nomads-title-local-tasks__select:hover{
+  border-color: rgba(0,0,0,.30);
 }
 
-@media (max-width: 900px) {
-  .nomads-navbar__search {
-    justify-content: flex-start;
-  }
-
-  .nomads-navbar__search-input {
-    width: 100%;
-    max-width: 360px;
-  }
-
-  .nomads-navbar__actions {
-    gap: 10px;
-  }
+.nomads-title-local-tasks__select:focus{
+  outline: none;
+  border-color: rgba(0,0,0,.45);
+  box-shadow: 0 0 0 4px rgba(18,183,200,.18); /* matches your brand-ish cyan */
 }
 
-.nomads-navbar__actions {
-  gap: 0;
-}
-
-.nomads-navbar__group {
-  display: inline-flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.nomads-navbar__group--user {
-  margin-left: 100px;
-}
-
-@media (max-width: 900px) {
-  .nomads-navbar__group {
-    gap: 10px;
-  }
-
-  .nomads-navbar__group--user {
-    margin-left: 150px;
-  }
-}
-
-/* ========== Compentent Dropdown menus ========== */
-
-.nomads-navbar__dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  z-index: 1000;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-  padding: 12px;
-  min-width: 260px;
-  margin-top: 8px;
-}
-
-.nomads-navbar__dropdownwrap {
+/* Wrapper: add a custom dropdown arrow */
+.nomads-title-local-tasks__select-wrap{
   position: relative;
-  display: inline-flex;
-  align-items: center;
+  display: inline-block;
+  max-height: 50px;
 }
 
-.nomads-navbar__dropdownwrap--account .nomads-navbar__dropdown {
-  right: 0;
-}
-
-.nomads-navbar__dropdownwrap--main .nomads-navbar__dropdown {
-  right: 0;
-}
-
-.nomads-navbar__dropdownwrap::after {
+/* Arrow (no SVG needed) */
+.nomads-title-local-tasks__select-wrap::after{
   content: "";
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 100%;
-  height: 12px;
+  right: 18px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid rgba(0,0,0,.55);
+  border-bottom: 2px solid rgba(0,0,0,.55);
+  transform: translateY(-60%) rotate(45deg);
+  pointer-events: none;
 }
 
-.nomads-navbar__dropdown--domains {
-  top: calc(100% + 8px);
-  left: 0;
-  right: auto;
-  margin-top: 0;
+/* Optional: nicer disabled state */
+.nomads-title-local-tasks__select:disabled{
+  opacity: .55;
+  cursor: not-allowed;
 }
-
-/* Domains dropdown typography and container styling */
-
-.nomads-navbar__dropdown--domains {
-  padding: 10px;
-  border-radius: 14px;
-  border: 1px solid #e6eef2;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-  font-family: Candara, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.nomads-navbar__dropdown-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-/* Domains dropdown list layout */
-.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-/* Domains dropdown layout overrides */
-
-.nomads-navbar__dropdown--domains {
-  width: fit-content;
-  max-width: none;
-  display: inline-block;
-  text-align: right;
-}
-
-/* Respect hidden state for JS-controlled visibility */
-.nomads-navbar__dropdown--domains[hidden] {
-  display: none;
-}
-
-.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list {
-  width: fit-content;
-  max-width: none;
-  align-items: flex-end;
-  text-align: right;
-}
-
-.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list li {
-  width: fit-content;
-  max-width: none;
-  white-space: nowrap;
-}
-
-.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list a {
-  justify-content: flex-end;
-  text-align: right;
-  white-space: nowrap;
-}
-
-.nomads-navbar__dropdown-list a {
-  display: block;
-  padding: 10px 12px;
-}
-
-/* Domains dropdown link styling */
-.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list a {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 16pt; /* 18pt requested for visual size consistency */
-  line-height: 1.15;
-  text-decoration: none;
-  background: transparent;
-}
-
-.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list a:hover {
-  background: rgba(5, 117, 177, 0.08);
-  text-decoration: none;
-}
-
-.nomads-navbar__dropdown--domains .nomads-navbar__dropdown-list a:focus-visible {
-  outline: 2px solid #0575b1;
-  outline-offset: 2px;
-  background: rgba(5, 117, 177, 0.12);
-}
-
-/* Domains dropdown first word styling with gradient fallback */
-.nomads-navbar__dropdown--domains .domain-first {
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #0575b1;
-}
-
-@supports ((-webkit-background-clip: text) or (background-clip: text)) {
-  .nomads-navbar__dropdown--domains .domain-first {
-    background-image: linear-gradient(90deg, #0dafc5, #0575b1);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
+› /* FOUC prevention, reserve space */
+  html:not(.nomads-ready) .nomads-title-local-tasks__select-wrap{
+    min-height: 50px;     /* match your pill height */
+    width: 100%;          /* or your fixed width */
   }
-}
 
-/* Domains dropdown remaining words styling */
-.nomads-navbar__dropdown--domains .domain-rest {
-  text-transform: lowercase;
-  color: #888;
-  font-weight: 400;
-}
 
-/* Domains dropdown first item override */
-#nomads-domainsmenu .nomads-navbar__dropdown-list li:first-of-type .domain-rest {
-  color: #000;
-}
 
-/* Main/account dropdown box styling (match domains feel with smaller typography) */
-#nomads-mainmenu,
-#nomads-accountmenu {
-  padding: 10px;
-  border-radius: 14px;
-  border: 1px solid #e6eef2;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-  font-family: Candara, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  color: #222;
-  width: fit-content;
-  max-width: none;
-  display: inline-block;
-}
 
-/* Respect hidden state for JS-controlled visibility */
-#nomads-mainmenu[hidden],
-#nomads-accountmenu[hidden] {
-  display: none;
-}
-
-#nomads-mainmenu ul,
-#nomads-accountmenu ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-#nomads-mainmenu li,
-#nomads-accountmenu li {
-  width: fit-content;
-  max-width: none;
-}
-
-#nomads-mainmenu a,
-#nomads-accountmenu a {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 5px 14px;
-  border-radius: 10px;
-  font-size: 14pt;
-  line-height: 1.35;
-  color: #222;
-  text-decoration: none;
-  background: transparent;
-  white-space: nowrap;
-}
-
-#nomads-mainmenu a:hover,
-#nomads-accountmenu a:hover {
-  background: rgba(5, 117, 177, 0.08);
-  text-decoration: none;
-}
-
-#nomads-mainmenu a:focus-visible,
-#nomads-accountmenu a:focus-visible {
-  outline: 2px solid #0575b1;
-  outline-offset: 2px;
-  background: rgba(5, 117, 177, 0.12);
-  text-decoration: none;
-}
-
-/* Main/account dropdown headings (non-link spans) */
-#nomads-mainmenu .menu .menu-item > span,
-#nomads-accountmenu .menu .menu-item > span {
-  display: block;
-  text-align: center;
-  padding: 8px 14px 8px 50px;
-  font-size: 10pt;
-  text-transform: uppercase;
-  color: #0575b1;
-  font-weight: 700;
-  cursor: default;
-  user-select: none;
-}
-
-/* Extra section spacing above non-link headers (except the first) */
-#nomads-mainmenu .menu > .menu-item + .menu-item > span,
-#nomads-accountmenu .menu > .menu-item + .menu-item > span {
-  padding-top: 25px;
-}
-
-.nomads-navbar__dropdown a {
-  display: block;
-  padding: 10px 12px;
-  text-decoration: none;
-}
-
-.nomads-navbar__dropdown ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.nomads-navbar__dropdown ul ul {
-  display: none;
-}
 
 /* ========== Listing Node - Data Visualisation ========== */
 
 /* ------- Paragraph Relevance / Key aspects ------- */
 
-.paragraph-relevance-key-aspects__group {
+.node--type-listing.node--view-mode-full .paragraph-relevance-key-aspects__group {
   margin-top: 30px;
 }
 
@@ -448,7 +143,12 @@
 #paragraphs-container .paragraph-relevance-vfield {
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 60px;
+}
+#paragraphs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
 }
 
 
@@ -500,23 +200,24 @@
 
 .paragraph--viewmode-vm-3.relevance-paragraph.col2 {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 770px;
     grid-template-areas:
         "title title"
         "left right";
     gap: 10px;
+  row-gap: 0;
 }
 
 /* ------- Paragraphs view mode 3 - Header ------- */
 
 .paragraph--viewmode-vm-3 {
-  width: 1556px;
+  width: auto;
   margin: 0 auto;
   padding: 10px;
   border-radius: 12px;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.10);
   border: 1px solid rgba(0, 0, 0, 0.06);
-  overflow: hidden; /* keeps rounded corners clean */
+   /* overflow: hidden;keeps rounded corners clean */
   transition: box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease;
 }
 .paragraph--viewmode-vm-3 .nomads-paragraph-icon-wrapper {
@@ -541,10 +242,16 @@
   gap: 12px;
   position: relative;
 }
+
 .paragraph--viewmode-vm-3 .nomads-paragraph-modal-link-wrapper {
   position: absolute;
-  top: -10px;
+  top: -30px;
   right: 0;
+}
+.paragraph--viewmode-vm-3 .nomads-paragraph-icon-wrapper {
+  position: absolute;
+  top: 0px;
+  left: 0;
 }
 .paragraph--viewmode-vm-3 .nomads-paragraph-title {
   flex: 1 1 auto;
@@ -553,9 +260,9 @@
   font-size: 10pt;
   font-weight: 500;
 }
+
 .paragraph--viewmode-vm-3 .nomads-paragraph-icon {
   height: 100px;
-  margin-bottom: -80px;
 }
 .paragraph--viewmode-vm-3 .nomads-paragraph-icon img {
   width: 100px;
@@ -931,7 +638,9 @@
 }
 
 .paragraph--viewmode-vm-2 .nomads-paragraph-title h2 {
-  font-size: 18pt;
+  font-size: 14pt;
+  font-weight: 600;
+  color: #015180;
 }
 
 .paragraph--viewmode-vm-2 .field--name-field-images {
@@ -1026,40 +735,7 @@
 
 
 
-/* ========== Taxonomy icons ========== */
 
-.nomads-taxonomy-icons__icon img {
-  width: 36px;
-  height: auto;
-}
-
-.nomads-taxonomy-icons--grouped .nomads-taxonomy-icons__item {
-  width: 50px;
-}
-
-.nomads-taxonomy-icons--grouped .nomads-icon-formatter__group {
-  display: inline-block;
-  vertical-align: top;
-  background: #f2f2f2;
-  border-radius: 18px;
-  padding: 5px;
-  margin: 4px;
-}
-
-.nomads-taxonomy-icons--grouped .nomads-icon-formatter__label {
-  whitespace: wrap;
-}
-
-/* Taxonomy icons first item remains larger */
-.nomads-icon-formatter--taxonomy-icons > .field__item:first-child .nomads-icon-formatter__icon img {
-  width: 180px;
-  height: auto;
-}
-
-.nomads-icon-formatter--taxonomy-icons.categories > .field__item:first-child .nomads-icon-formatter__label {
-  font-size: 12pt;
-  margin-top: 10px;
-}
 
 /* ========== Icon formatter ========== */
 
@@ -1071,14 +747,13 @@
   color: #0575b1;
   font-weight: 700;
   text-decoration: none;
-  text-align: center;
   display: block;
 }
 
 .nomads-icon-formatter__title {
-  margin:7px auto;
+  margin: 0 auto 7px auto;
   font-size: 13pt;
-  color: #222;
+  color: #444;
   font-weight: 500;
   text-decoration: none;
   text-align: center;
@@ -1198,52 +873,135 @@ div .nomads-pill__label,
 
 /* ========== Tooltips ========== */
 
-[data-tooltip]{position:relative;cursor:help;}
+/* Tooltip anchor */
+[data-tooltip]{
+  position: relative;
+  cursor: help;
+}
+
+/* Tooltip box */
 [data-tooltip]::after{
-  content:attr(data-tooltip);
-  position:absolute;left:50%;bottom:calc(100% + 8px);
-  transform:translateX(-50%);z-index:9999;
-  padding:6px 10px;border-radius:8px;
-  border:1px solid rgba(0,0,0,.25);
-  background:#111;color:#fff;
-  font-size:13px;line-height:1.25;
-  white-space:normal;width:max-content;max-width:260px;
-  opacity:0;pointer-events:none;transition:opacity .12s ease;
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, calc(-100% - 10px));
+  z-index: 9999;
+
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,.25);
+  background: #111;
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.25;
+
+  white-space: normal;
+  width: max-content;
+  max-width: auto;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .12s ease;
 }
+
+/* Tooltip arrow */
 [data-tooltip]::before{
-  content:"";
-  position:absolute;left:50%;bottom:calc(100% + 2px);
-  transform:translateX(-50%);
-  border:6px solid transparent;border-top-color:#111;
-  opacity:0;pointer-events:none;transition:opacity .12s ease;
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -10px);
+  z-index: 9999;
+
+  border: 6px solid transparent;
+  border-bottom-color: #111;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .12s ease;
 }
+
+/* Show on hover/focus */
 [data-tooltip]:hover::after,
 [data-tooltip]:hover::before,
 [data-tooltip]:focus::after,
-[data-tooltip]:focus::before,
-[data-tooltip]:focus-within::after,
-[data-tooltip]:focus-within::before{opacity:1;}
+[data-tooltip]:focus::before{
+  opacity: 1;
+}
 
 
+/* ========== Listing Teaser ========== */
 
-/* ========== Teaser ========== */
-
-.nomads-icon-formatter--taxonomy-icons.categories > .field__item:first-child .nomads-icon-formatter__icon img {
-  width: 80px;
+article.node--type-listing.node--view-mode-teaser {
+    position: relative;
+  }
+article.node--type-listing.node--view-mode-teaser .teaser-column {
+    text-align: center;
 }
-.nomads-icon-formatter--taxonomy-icons.tags > .field__item > div,
-.nomads-icon-formatter--taxonomy-icons.tags > .field__item > span {
-  display: inline-block;
+/* Teaser box shadow (soft, clean, clickable) */
+article.node--type-listing.node--view-mode-teaser {
+  background: #f8f8f8;
+  border-radius: 18px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.10);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  /* overflow: hidden; keeps rounded corners clean */
+  transition: box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease;
 }
-.nomads-icon-formatter--taxonomy-icons.tags > .field__item .nomads-icon-formatter__icon img {
-  width: 24px;
-}
-.nomads-icon-formatter--taxonomy-icons.tags .nomads-icon-formatter__label {
-  font-size: 7pt;
-}
-.teaser-inner-wrapper {
+article.node--type-listing.node--view-mode-teaser .teaser-inner-wrapper {
+  border-radius: 12px;
   background: #fafafa;
 }
+article.node--type-listing.node--view-mode-teaser:hover {
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14);
+  transform: translateY(-2px);
+  border-color: rgba(0, 0, 0, 0.10);
+}
+
+/* ----- Categories ----- */
+
+/* ------- Categories ----- */
+
+article.node--type-listing.node--view-mode-teaser .categories  {
+  text-align: center;
+} 
+article.node--type-listing.node--view-mode-teaser .categories .nomads-icon-formatter__item {
+  display: inline-block;
+}
+article.node--type-listing.node--view-mode-teaser .categories .nomads-pill:first-of-type {
+  background: #015180;
+}
+article.node--type-listing.node--view-mode-teaser .field--name-title h2 {
+  margin-bottom: 5px;
+}
+article.node--type-listing.node--view-mode-teaser .field--name-field-subtitle {
+  margin-bottom: 8px;
+  font-size: 10pt;
+}
+article.node--type-listing.node--view-mode-teaser .nomads-taxonomy-breadcrumb,
+article.node--type-listing.node--view-mode-teaser .nomads-taxonomy-breadcrumb a
+ {
+  font-size: 8pt;
+  color: #999;
+  font-weight: 600;
+  text-transform: uppercase;
+  text-decoration: none;
+  margin-bottom: -3px;
+}
+article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects h3 {
+  font-size: 9pt;
+  text-transform: uppercase;
+  margin: 5px auto 2px auto;
+}
+article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects .nomads-pill {
+  background: #019baf;
+}
+article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects__group--important_aspect .nomads-pill {
+  font-size: 8pt;
+}
+
+
+
 .node--type-listing.node--view-mode-teaser .field--name-title h2 a {
   text-decoration: none;
   color: #000;
@@ -1251,30 +1009,116 @@ div .nomads-pill__label,
 .node--type-listing.node--view-mode-teaser .field--name-field-subtitle {
   text-align: center;
 }
-/* Teaser box shadow (soft, clean, clickable) */
-.node--type-listing.node--view-mode-teaser {
-  background: #f8f8f8;
-  border-radius: 18px;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.10);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  overflow: hidden; /* keeps rounded corners clean */
-  transition: box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease;
+
+/* ----- Tags ----- */
+
+.node--type-listing.node--view-mode-teaser .nomads-icon-formatter__icon img {
+  opacity: 0.6;
 }
-.node--type-listing.node--view-mode-teaser .teaser-inner-wrapper {
-  border-radius: 12px;
-  overflow: hidden;
+.node--type-listing.node--view-mode-teaser:hover .nomads-icon-formatter__icon img {
+  opacity: 1;
 }
 
-.node--view-mode-teaser:hover {
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14);
-  transform: translateY(-2px);
-  border-color: rgba(0, 0, 0, 0.10);
-}
+
+
+
+
+
+
+  /* ========== Listing Teaser ========== */
 
 /* .node--view-mode-teaser:focus-within {
   box-shadow: 0 0 0 4px rgba(18, 183, 200, 0.28), 0 14px 36px rgba(0, 0, 0, 0.12);
   border-color: rgba(18, 183, 200, 0.55); */
 
 
-#hero-gallery img { 
-  border-radius: 8px;}
+  
+
+  
+
+
+
+
+/* ========== Taxonomy Breadcrumb ========== */
+
+.node--type-listing.node--view-mode-full .nomads-taxonomy-breadcrumb,
+.node--type-listing.node--view-mode-full .nomads-taxonomy-breadcrumb a {
+  text-align: center;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #777;
+  font-size: 11pt;
+  font-weight: 600;
+}
+
+/* ========= Map ========== */
+
+.geolocation-map-wrapper,
+.geolocation-map-container.leaflet-container {
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+/* Leaflet sometimes draws panes beyond the container, clip them too */
+.geolocation-map-container.leaflet-container .leaflet-pane,
+.geolocation-map-container.leaflet-container .leaflet-tile-pane,
+.geolocation-map-container.leaflet-container .leaflet-map-pane {
+  border-radius: 5px;
+}
+
+
+/* LOCATION block overlay setup
+   Works because field_location, field_settlement, field_surroundings are siblings.
+   We overlay them using CSS Grid on the shared parent.
+*/
+
+/* 1) Make the parent a 1-cell grid so siblings can stack */
+.paragraph-center-column{
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto;
+  position: relative;
+}
+
+/* 2) Base layer: the map */
+.paragraph-center-column > .field--name-field-location{
+  grid-row: 1;
+  grid-column: 1;
+  z-index: 1;
+}
+
+/* Overlay both fields on top of the map (same grid cell) */
+.paragraph-center-column > .field--name-field-settlement,
+.paragraph-center-column > .field--name-field-surroundings{
+  grid-row: 1;
+  grid-column: 1;
+  z-index: 6;
+  margin: 12px;
+}
+
+/* Settlement pill: top-left */
+.paragraph-center-column > .field--name-field-settlement{
+  align-self: start;        /* top */
+  justify-self: start;      /* left */
+}
+
+/* Surroundings: bottom-center, pills stacked bottom-up */
+.paragraph-center-column > .field--name-field-surroundings{
+  z-index: 7;
+  align-self: end;          /* bottom */
+  justify-self: center;     /* center */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* pack to bottom */
+  gap: 8px;
+
+  max-height: calc(100% - 24px); /* needed so bottom-packing is visible */
+  overflow: auto;
+}
+.paragraph-center-column > .field--name-field-surroundings .nomads-pills {
+  text-align: center;
+}
+
+
+
+

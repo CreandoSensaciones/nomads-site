@@ -1,5 +1,5 @@
 name: Field Subtitle
 type: module
-description: Adds configurable field subtitles for form widgets.
-package: 'Nomads Widgets'
+description: 'Adds per-field configurable subtitles via third-party settings and renders them above field widgets on entity forms.'
+package: 'Nomads Forms'
 core_version_requirement: '^11'

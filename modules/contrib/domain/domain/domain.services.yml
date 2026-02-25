@@ -59,3 +59,6 @@ services:
     arguments: ['@domain.negotiator']
     tags:
       - { name: cache.context}
+  Drupal\domain\EventSubscriber\ConfigSubscriber:
+    tags:
+      - { name: event_subscriber }

@@ -114,6 +114,11 @@ function conditional_fields_element_after_build($element, FormStateInterface &$f
  *   A jQuery selector string.
  */
 function conditional_fields_field_selector($field) {
+  if (isset($field['#attributes']['data-name-prefix'])) {
+    $name_prefix = $field['#attributes']['data-name-prefix'];
+    return 'input[name="' . $name_prefix . '[_net_values]"]';
+  }
+
   if (isset($field['#attributes']['name'])) {
     return '[name="' . $field['#attributes']['name'] . '"]';
   }

@@ -83,8 +83,11 @@ class DomainAccessManager implements DomainAccessManagerInterface {
     if (is_null($entity)) {
       return [];
     }
-    if (isset(self::$staticCache[$entity->getEntityTypeId()][$entity->id()][$field_name])) {
-      return self::$staticCache[$entity->getEntityTypeId()][$entity->id()][$field_name];
+    $entity_id = $entity->id();
+    $langcode = $entity->language()->getId();
+    $entity_type_id = $entity->getEntityTypeId();
+    if (isset(self::$staticCache[$entity_type_id][$entity_id][$langcode][$field_name])) {
+      return self::$staticCache[$entity_type_id][$entity_id][$langcode][$field_name];
     }
     $list = [];
     // Get the values of an entity.
@@ -102,7 +105,7 @@ class DomainAccessManager implements DomainAccessManagerInterface {
         }
       }
     }
-    self::$staticCache[$entity->getEntityTypeId()][$entity->id()][$field_name] = $list;
+    self::$staticCache[$entity_type_id][$entity_id][$langcode][$field_name] = $list;
     return $list;
   }
 

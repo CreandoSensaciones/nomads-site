@@ -1,5 +1,5 @@
 name: Nomad Admin Helpers
 type: module
-description: Small UX tweaks for admin pages.
+description: 'Adds admin UX helpers; currently auto-collapses module groups on the Extend (/admin/modules) page.'
 core_version_requirement: ^10 || ^11
-package: Admin helpers
+package: 'Nomads Site General'

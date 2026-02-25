@@ -12,7 +12,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
  */
 #[FieldFormatter(
   id: 'nomads_fitted_pills_term_ref',
-  label: new TranslatableMarkup('Pills'),
+  label: new TranslatableMarkup('Fitted pills'),
   field_types: [
     'entity_reference',
   ],

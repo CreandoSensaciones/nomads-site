@@ -30,7 +30,7 @@ nomads_site_backup_*.sql
 # Local Composer cache
 .composer/
 composer.phar
+themes/custom/nomads/node_modules/
 
 # Project specific
 nomads_site_backup_*.sql
-

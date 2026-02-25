@@ -1,0 +1,21 @@
+dependees:
+  version: 1.x
+  js:
+    js/nomads_term_dependees.js: {}
+  css:
+    component:
+      css/nomads_term_dependees.css: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+constraints:
+  version: 1.x
+  js:
+    js/constraints.js: {}
+  css:
+    component:
+      css/nomads_term_dependees.css: {}
+  dependencies:
+    - core/drupal
+    - core/once

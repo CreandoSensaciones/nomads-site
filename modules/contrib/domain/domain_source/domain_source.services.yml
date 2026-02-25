@@ -18,3 +18,6 @@ services:
   domain_source.token:
     class: Drupal\domain_source\DomainSourceToken
     arguments: ['@config.factory']
+  domain_source.route_provider:
+    class: Drupal\domain_source\HttpKernel\DomainSourceRouteProvider
+    parent: router.route_provider

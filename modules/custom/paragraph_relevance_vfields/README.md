@@ -1,38 +1,57 @@
 # Paragraph Relevance Virtual Fields
 
-This module provides two virtual fields on Listing nodes:
-- Core Focus Paragraphs (3) (`core_focus_paragraphs_3`)
-- Relevant Paragraphs (2) (`relevant_paragraphs_2`)
+## Purpose
+`paragraph_relevance_vfields` adds listing virtual display fields that render paragraphs by relevance, ordered via hostname-specific key-aspect taxonomy configuration.
 
-Source of truth
-Paragraph entities store relevance in `field_relevance2`:
-- `3` = core focus
-- `2` = relevant
-Other values do not render in these virtual fields.
+## What It Does
+- Registers listing node extra fields:
+  - `key_aspects`
+  - `core_focus_paragraphs_3`
+  - `relevant_paragraphs_2`
+- Renders paragraphs with `field_relevance2 = 3` in `core_focus_paragraphs_3`.
+- Renders paragraphs with `field_relevance2 = 2` in `relevant_paragraphs_2`.
+- Builds key-aspect grouped output (`3/2/1`) with configurable output style:
+  - `icon`
+  - `pill`
+  - `label`
+  - `none`
+- Resolves ordering from taxonomy chain:
+  - `subsites.field_hostname` -> `subsites.field_key_aspects` -> `key_aspects.field_paragraph_bundle`
+- Applies hostname fallback to `field_hostname = default` when no exact match exists.
+- Copies paragraph `field_relevance` into `field_relevance2` during listing presave and updates bundle-level `field_<bundle>_relevance` maxima.
 
-Eligibility and ordering
-Paragraph bundles are selected and ordered per subsite:
-`subsites.field_hostname` (matches request hostname) ->
-`subsites.field_key_aspects` (ordered reference list) ->
-`key_aspects.field_paragraph_bundle` (bundle machine name)
+## Files
+- `paragraph_relevance_vfields.module`
+  Virtual field registration/rendering, display settings UI integration, key-aspect helpers, presave synchronization logic.
+- `paragraph_relevance_vfields.install`
+  Update hook to ensure `field_relevance2` field config exists on referenced paragraph bundles.
+- `paragraph_relevance_vfields.libraries.yml`
+  Key-aspects CSS library registration.
+- `css/paragraph_relevance_vfields.css`
+  Styling for key-aspect and virtual-field layouts.
+- `config/schema/paragraph_relevance_vfields.schema.yml`
+  Third-party display settings schema.
 
-The stored reference order on `subsites.field_key_aspects` is the primary sort
-order for rendering. Term weight is secondary and not relied on.
+## Runtime Behavior
+1. On listing display, module injects enabled virtual fields (`key_aspects`, relevance 3, relevance 2).
+2. Paragraphs are collected from paragraph reference fields and filtered by `field_relevance2`.
+3. Order is determined by hostname-matched `subsites` term and its ordered `field_key_aspects` references.
+4. Paragraphs render in view mode `3`/`2` (fallback `default` when missing).
+5. Presave keeps `field_relevance2` and per-bundle relevance summary fields synchronized.
 
-Caching
-Render output varies by hostname and includes cache context `url.site`. Cacheable
-dependencies include the Listing node, the active subsite term, referenced key
-aspects terms, and rendered paragraphs.
+## Concerns
+- Debug/operations risk: `hook_entity_presave()` logs verbose `notice` messages per listing and paragraph (`PR DEBUG`), which can flood logs and degrade performance on active editorial sites.
+- Structural coupling: Logic is tightly bound to hardcoded bundles/fields/vocabularies (`listing`, `subsites`, `key_aspects`, `field_paragraph_bundle`, `field_relevance`, `field_relevance2`).
+- Access posture: Taxonomy lookups use `accessCheck(FALSE)` for hostname/key-aspect resolution, which broadens data visibility assumptions.
+- Side-effect complexity: Presave mutates paragraph relevance and node-level summary fields, increasing risk of unintended data drift if field naming conventions change.
+- Maintainability: Module-level settings UI hooks into display multistep internals, which may break with upstream admin UI changes.
+- Frontend assumptions: Anchor links for key aspects target `#<paragraph_bundle>` IDs; collisions/duplicates can create ambiguous navigation targets.
+- Testing: No automated tests for hostname mapping, fallback behavior, presave synchronization, or key-aspect display settings.
 
-Configuration
-1) Create or edit a `subsites` term for each hostname.
-2) Set `field_hostname` to the request host(s) (host only, no scheme).
-3) Fill `field_key_aspects` with `key_aspects` terms in the desired order.
-4) Ensure each `key_aspects` term has `field_paragraph_bundle` set.
-5) Set paragraph `field_relevance2` values to `2` or `3`.
-
-Fallbacks
-- If no subsite term matches the hostname, the module tries `field_hostname =
-  "default"`.
-- If a paragraph view mode "2" or "3" does not exist for a bundle, rendering
-  falls back to the "default" view mode.
+## Maintenance Notes
+- Remove or gate presave debug logging before non-prototype environments.
+- Add tests for:
+  - hostname -> subsite resolution and default fallback
+  - relevance filtering by `field_relevance2`
+  - key-aspect ordering and output mode settings
+  - presave synchronization of paragraph/node relevance fields

@@ -2,3 +2,8 @@ taxonomy-icons:
   css:
     base:
       css/nomads_taxonomy_icons.css: {}
+  js:
+    js/nomads_taxonomy_icons.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

@@ -1,0 +1,4 @@
+services:
+  plugin.manager.entity_reference_selection:
+    class: Drupal\nomads_listing_wizard\EntityReferenceSelection\SafeSelectionPluginManager
+    parent: default_plugin_manager

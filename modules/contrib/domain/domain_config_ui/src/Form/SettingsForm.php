@@ -33,13 +33,9 @@ class SettingsForm extends ConfigFormBase {
       '#config_target' => 'domain_config_ui.settings:remember_domain',
       '#description' => $this->t('Keeps last selected domain when loading new configuration forms.'),
     ];
-    $form['pages'] = [
-      '#title' => $this->t('Enabled configuration forms'),
-      '#type' => 'details',
-      '#open' => TRUE,
-    ];
-    $form['pages']['path_pages'] = [
+    $form['path_pages'] = [
       '#type' => 'textarea',
+      '#title' => $this->t('Enabled configuration forms'),
       '#rows' => 5,
       '#columns' => 40,
       '#config_target' => 'domain_config_ui.settings:path_pages',
@@ -58,7 +54,7 @@ class SettingsForm extends ConfigFormBase {
     $exists = [];
     foreach ($path_array as $path) {
       if (in_array($path, $exists, TRUE)) {
-        $form_state->setError($form['pages']['path_pages'], $this->t('Duplicate paths cannot be added'));
+        $form_state->setError($form['path_pages'], $this->t('Duplicate paths cannot be added'));
       }
       $exists[] = $path;
     }

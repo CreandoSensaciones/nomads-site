@@ -1,7 +1,7 @@
 name: Price Range Widget
 type: module
-description: Tweaks the min/max price inputs for listings.
-package: Nomads Widgets
+description: 'Enhances listing min/max Commerce price form widgets by grouping range inputs and synchronizing currency selectors.'
+package: 'Nomads Forms'
 core_version_requirement: ^10 || ^11
 dependencies:
   - nomads_listing:nomads_listing

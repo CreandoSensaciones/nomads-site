@@ -1,7 +1,7 @@
 name: 'Nomads hosting period virtual field'
 type: module
-description: 'Provides a hosting period virtual field for hosting paragraphs.'
-package: Custom
+description: 'Adds a paragraph extra display field that combines minimum hosting and typical hosting period values for the hosting paragraph bundle.'
+package: 'Nomads Display'
 core_version_requirement: ^11
 
 dependencies:

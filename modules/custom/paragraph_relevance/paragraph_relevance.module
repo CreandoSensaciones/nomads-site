@@ -18,7 +18,11 @@ use Symfony\Component\Routing\Exception\RouteNotFoundException;
 /**
  * Implements hook_form_alter().
  */
-function paragraph_relevance_form_alter(array &$form, FormStateInterface $form_state, $form_id): void {
+function paragraph_relevance_form_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
+  paragraph_relevance_inject_group_attrs($form);
+  paragraph_relevance_attach_relevance_ui_wrappers($form);
+  paragraph_relevance_attach_sync_library($form, $form_state);
+
   if (paragraph_relevance_is_listing_form($form_state, $form_id)) {
     $form['#attached']['library'][] = 'paragraph_relevance/relevance';
     $form['#after_build'][] = 'paragraph_relevance_after_build';
@@ -37,6 +41,277 @@ function paragraph_relevance_form_alter(array &$form, FormStateInterface $form_s
   }
 
   paragraph_relevance_open_default_form_alter($form, $form_state, $form_id);
+}
+
+/**
+ * Attaches relevance engine behavior on forms (including AJAX rebuilds).
+ */
+function paragraph_relevance_attach_sync_library(array &$form, FormStateInterface $form_state): void {
+  if (!isset($form['#attached']) || !is_array($form['#attached'])) {
+    $form['#attached'] = [];
+  }
+  if (!isset($form['#attached']['library']) || !is_array($form['#attached']['library'])) {
+    $form['#attached']['library'] = [];
+  }
+  if (!in_array('paragraph_relevance/relevance_engine', $form['#attached']['library'], TRUE)) {
+    $form['#attached']['library'][] = 'paragraph_relevance/relevance_engine';
+  }
+}
+
+/**
+ * Injects relevance wrapper attrs on Field Group HTML elements by selector.
+ */
+function paragraph_relevance_inject_group_attrs(array &$element): void {
+  if (
+    isset($element['#attributes']) &&
+    is_array($element['#attributes']) &&
+    !empty($element['#attributes']['data-drupal-selector'])
+  ) {
+    $selector = (string) $element['#attributes']['data-drupal-selector'];
+    if (preg_match('/^edit-field-([a-z0-9_]+)-widget-\d+-subform-group-relevance$/', $selector, $matches)) {
+      $element['#attributes']['data-paragraph-relevance-group'] = $matches[1];
+
+      if (!isset($element['#attributes']['class'])) {
+        $element['#attributes']['class'] = [];
+      }
+      elseif (is_string($element['#attributes']['class'])) {
+        $element['#attributes']['class'] = preg_split('/\s+/', trim($element['#attributes']['class'])) ?: [];
+      }
+      elseif (!is_array($element['#attributes']['class'])) {
+        $element['#attributes']['class'] = [];
+      }
+
+      if (!in_array('relevance-ui', $element['#attributes']['class'], TRUE)) {
+        $element['#attributes']['class'][] = 'relevance-ui';
+      }
+    }
+  }
+
+  foreach ($element as $key => &$child) {
+    if (!is_string($key) || $key === '' || $key[0] === '#') {
+      continue;
+    }
+    if (!is_array($child)) {
+      continue;
+    }
+    paragraph_relevance_inject_group_attrs($child);
+  }
+}
+
+/**
+ * Adds a stable relevance UI wrapper to paragraph subforms.
+ */
+function paragraph_relevance_attach_relevance_ui_wrappers(array &$element): void {
+  paragraph_relevance_apply_relevance_ui_wrapper($element);
+
+  foreach ($element as $key => &$child) {
+    if (!is_string($key) || $key === '' || $key[0] === '#') {
+      continue;
+    }
+    if (!is_array($child)) {
+      continue;
+    }
+    paragraph_relevance_attach_relevance_ui_wrappers($child);
+  }
+}
+
+/**
+ * Applies the relevance UI wrapper to one paragraph subform element.
+ */
+function paragraph_relevance_apply_relevance_ui_wrapper(array &$element): void {
+  if (
+    !isset($element['field_relevance'], $element['field_relevance2']) ||
+    !is_array($element['field_relevance']) ||
+    !is_array($element['field_relevance2'])
+  ) {
+    return;
+  }
+
+  $bundle = paragraph_relevance_detect_paragraph_bundle($element);
+  if ($bundle === NULL || $bundle === '') {
+    return;
+  }
+
+  paragraph_relevance_mark_relevance_ui_field($element['field_relevance'], 'desired');
+  paragraph_relevance_mark_relevance_ui_field($element['field_relevance2'], 'effective');
+
+  if (paragraph_relevance_apply_relevance_ui_to_existing_group($element, $bundle)) {
+    return;
+  }
+
+  $wrapper_key = 'paragraph_relevance_ui_wrapper';
+  if (!isset($element[$wrapper_key]) || !is_array($element[$wrapper_key])) {
+    $weight = min(
+      (float) ($element['field_relevance']['#weight'] ?? 0),
+      (float) ($element['field_relevance2']['#weight'] ?? 0),
+    );
+    $element[$wrapper_key] = [
+      '#type' => 'container',
+      '#weight' => $weight - 0.001,
+    ];
+  }
+
+  paragraph_relevance_set_relevance_ui_wrapper_attributes($element[$wrapper_key], $bundle);
+
+  if (!isset($element[$wrapper_key]['field_relevance']) && isset($element['field_relevance'])) {
+    $element[$wrapper_key]['field_relevance'] = $element['field_relevance'];
+    unset($element['field_relevance']);
+  }
+  if (!isset($element[$wrapper_key]['field_relevance2']) && isset($element['field_relevance2'])) {
+    $element[$wrapper_key]['field_relevance2'] = $element['field_relevance2'];
+    unset($element['field_relevance2']);
+  }
+}
+
+/**
+ * Detects the paragraph bundle machine name from a paragraph subform element.
+ */
+function paragraph_relevance_detect_paragraph_bundle(array $element): ?string {
+  foreach (['#paragraph', '#entity', '#object'] as $property) {
+    if (!isset($element[$property]) || !is_object($element[$property])) {
+      continue;
+    }
+    $entity = $element[$property];
+    if ($entity instanceof EntityInterface && $entity->getEntityTypeId() === 'paragraph') {
+      return $entity->bundle();
+    }
+    if (method_exists($entity, 'getEntityTypeId') && $entity->getEntityTypeId() === 'paragraph' && method_exists($entity, 'bundle')) {
+      return (string) $entity->bundle();
+    }
+  }
+
+  $entity_type = (string) ($element['#entity_type'] ?? $element['#entity_type_id'] ?? '');
+  if ($entity_type === 'paragraph') {
+    foreach (['#paragraph_type', '#bundle', '#bundle_name'] as $property) {
+      if (!empty($element[$property]) && is_string($element[$property])) {
+        return $element[$property];
+      }
+    }
+  }
+
+  if (!empty($element['#paragraph_type']) && is_string($element['#paragraph_type'])) {
+    return $element['#paragraph_type'];
+  }
+
+  foreach (['#array_parents', '#parents'] as $property) {
+    if (empty($element[$property]) || !is_array($element[$property])) {
+      continue;
+    }
+    $bundle = paragraph_relevance_detect_paragraph_bundle_from_parents($element[$property]);
+    if ($bundle !== NULL && $bundle !== '') {
+      return $bundle;
+    }
+  }
+
+  return NULL;
+}
+
+/**
+ * Infers a paragraph bundle from nested form parent keys.
+ */
+function paragraph_relevance_detect_paragraph_bundle_from_parents(array $parents): ?string {
+  $count = count($parents);
+  for ($i = 0; $i < $count; $i++) {
+    if (!is_string($parents[$i])) {
+      continue;
+    }
+    if (!preg_match('/^field_([a-z0-9_]+)$/', $parents[$i], $matches)) {
+      continue;
+    }
+
+    // Paragraph subforms are typically nested under field_x > delta > subform.
+    for ($j = $i + 1; $j < min($i + 5, $count); $j++) {
+      if ((string) $parents[$j] === 'subform') {
+        return $matches[1];
+      }
+    }
+  }
+
+  return NULL;
+}
+
+/**
+ * Applies wrapper attributes to an existing Field Group wrapper if present.
+ */
+function paragraph_relevance_apply_relevance_ui_to_existing_group(array &$element, string $bundle): bool {
+  if (empty($element['#fieldgroups']) || !is_array($element['#fieldgroups'])) {
+    return FALSE;
+  }
+
+  foreach ($element['#fieldgroups'] as $group_name => $group_definition) {
+    $children = paragraph_relevance_get_field_group_children($group_definition);
+    if (
+      !in_array('field_relevance', $children, TRUE) ||
+      !in_array('field_relevance2', $children, TRUE)
+    ) {
+      continue;
+    }
+    if (!isset($element[$group_name]) || !is_array($element[$group_name])) {
+      continue;
+    }
+
+    paragraph_relevance_set_relevance_ui_wrapper_attributes($element[$group_name], $bundle);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * Extracts child element names from a Field Group definition.
+ */
+function paragraph_relevance_get_field_group_children($group_definition): array {
+  $children = [];
+
+  if (is_object($group_definition) && isset($group_definition->children) && is_array($group_definition->children)) {
+    $children = $group_definition->children;
+  }
+  elseif (is_array($group_definition) && isset($group_definition['children']) && is_array($group_definition['children'])) {
+    $children = $group_definition['children'];
+  }
+
+  return array_values(array_filter($children, 'is_string'));
+}
+
+/**
+ * Adds wrapper-level classes and data attributes used by CSS and JS.
+ */
+function paragraph_relevance_set_relevance_ui_wrapper_attributes(array &$wrapper, string $bundle): void {
+  if (!isset($wrapper['#attributes']) || !is_array($wrapper['#attributes'])) {
+    $wrapper['#attributes'] = [];
+  }
+  if (!isset($wrapper['#attributes']['class']) || !is_array($wrapper['#attributes']['class'])) {
+    $wrapper['#attributes']['class'] = [];
+  }
+
+  if (!in_array('relevance-ui', $wrapper['#attributes']['class'], TRUE)) {
+    $wrapper['#attributes']['class'][] = 'relevance-ui';
+  }
+
+  $wrapper['#attributes']['data-paragraph-relevance-group'] = $bundle;
+}
+
+/**
+ * Adds stable child-level selectors for desired/effective relevance widgets.
+ */
+function paragraph_relevance_mark_relevance_ui_field(array &$field, string $role): void {
+  if (!isset($field['#attributes']) || !is_array($field['#attributes'])) {
+    $field['#attributes'] = [];
+  }
+  if (!isset($field['#attributes']['class']) || !is_array($field['#attributes']['class'])) {
+    $field['#attributes']['class'] = [];
+  }
+
+  foreach (['relevance-ui__field', 'relevance-ui__field--' . $role] as $class) {
+    if (!in_array($class, $field['#attributes']['class'], TRUE)) {
+      $field['#attributes']['class'][] = $class;
+    }
+  }
+
+  $field['#attributes']['data-paragraph-relevance-role'] = $role;
+  if ($role === 'effective') {
+    $field['#attributes']['data-paragraph-relevance-readonly-ui'] = '1';
+  }
 }
 
 /**
@@ -233,6 +508,59 @@ function paragraph_relevance_entity_view(array &$build, EntityInterface $entity,
   }
 
   $build['#attached']['library'][] = 'paragraph_relevance/relevance_paragraph_base_layout';
+}
+
+/**
+ * Implements hook_preprocess_field_group_html_element().
+ */
+function paragraph_relevance_preprocess_field_group_html_element(array &$variables): void {
+  if (
+    empty($variables['element']) ||
+    !is_array($variables['element']) ||
+    empty($variables['element']['#attributes']) ||
+    !is_array($variables['element']['#attributes'])
+  ) {
+    return;
+  }
+
+  $attributes = &$variables['element']['#attributes'];
+  $selector = (string) ($attributes['data-drupal-selector'] ?? '');
+  if ($selector === '') {
+    return;
+  }
+
+  if (!preg_match('/^edit-field-([a-z0-9_]+)-widget-\d+-subform-group-relevance$/', $selector, $matches)) {
+    return;
+  }
+
+  $bundle = $matches[1];
+  $attributes['data-paragraph-relevance-group'] = $bundle;
+
+  if (!isset($attributes['class'])) {
+    $attributes['class'] = [];
+  }
+  elseif (is_string($attributes['class'])) {
+    $attributes['class'] = preg_split('/\s+/', trim($attributes['class'])) ?: [];
+  }
+  elseif (!is_array($attributes['class'])) {
+    $attributes['class'] = [];
+  }
+
+  if (!in_array('relevance-ui', $attributes['class'], TRUE)) {
+    $attributes['class'][] = 'relevance-ui';
+  }
+
+  if (!isset($variables['attributes'])) {
+    $variables['attributes'] = new Attribute();
+  }
+  elseif (is_array($variables['attributes'])) {
+    $variables['attributes'] = new Attribute($variables['attributes']);
+  }
+
+  if ($variables['attributes'] instanceof Attribute) {
+    $variables['attributes']->setAttribute('data-paragraph-relevance-group', $bundle);
+    $variables['attributes']->addClass('relevance-ui');
+  }
 }
 
 /**
@@ -489,6 +817,22 @@ function paragraph_relevance_entity_presave(EntityInterface $entity): void {
       $entity->set($paragraph_field, []);
     }
   }
+
+  paragraph_relevance_sync_listing_paragraph_effective_relevance($entity);
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function paragraph_relevance_entity_insert(EntityInterface $entity): void {
+  paragraph_relevance_sync_parent_listing_from_paragraph_entity($entity);
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function paragraph_relevance_entity_update(EntityInterface $entity): void {
+  paragraph_relevance_sync_parent_listing_from_paragraph_entity($entity);
 }
 
 /**
@@ -519,6 +863,121 @@ function paragraph_relevance_is_listing_form(FormStateInterface $form_state, str
   }
 
   return in_array($form_id, $allowed_forms, TRUE);
+}
+
+/**
+ * Sync parent listing relevance field from a saved relevance paragraph.
+ */
+function paragraph_relevance_sync_parent_listing_from_paragraph_entity(EntityInterface $entity): void {
+  if ($entity->getEntityTypeId() !== 'paragraph' || !method_exists($entity, 'hasField')) {
+    return;
+  }
+  if (!$entity->hasField('field_relevance2')) {
+    return;
+  }
+  if (!method_exists($entity, 'getParentEntity')) {
+    return;
+  }
+
+  $parent = $entity->getParentEntity();
+  if (!$parent instanceof EntityInterface) {
+    return;
+  }
+  if ($parent->getEntityTypeId() !== 'node' || !method_exists($parent, 'bundle')) {
+    return;
+  }
+  if ($parent->bundle() !== 'listing' || $parent->isNew()) {
+    return;
+  }
+
+  if (paragraph_relevance_parent_listing_sync_in_progress()) {
+    return;
+  }
+
+  paragraph_relevance_with_parent_listing_sync_guard(function () use ($parent): void {
+    paragraph_relevance_sync_listing_paragraph_effective_relevance($parent);
+    $parent->save();
+  });
+}
+
+/**
+ * Copy paragraph field_relevance2 values into listing field_<bundle>_relevance fields.
+ */
+function paragraph_relevance_sync_listing_paragraph_effective_relevance(EntityInterface $listing): void {
+  if ($listing->getEntityTypeId() !== 'node' || !method_exists($listing, 'bundle')) {
+    return;
+  }
+  if ($listing->bundle() !== 'listing' || !method_exists($listing, 'getFieldDefinitions')) {
+    return;
+  }
+
+  foreach ($listing->getFieldDefinitions() as $field_name => $definition) {
+    if (!method_exists($definition, 'getType') || $definition->getType() !== 'entity_reference_revisions') {
+      continue;
+    }
+    if (!method_exists($definition, 'getSetting') || $definition->getSetting('target_type') !== 'paragraph') {
+      continue;
+    }
+    if (!$listing->hasField($field_name) || $listing->get($field_name)->isEmpty()) {
+      continue;
+    }
+
+    foreach ($listing->get($field_name)->referencedEntities() as $paragraph) {
+      if (!$paragraph instanceof EntityInterface || !method_exists($paragraph, 'bundle')) {
+        continue;
+      }
+      if (!$paragraph->hasField('field_relevance2')) {
+        continue;
+      }
+
+      $parent_relevance_field = 'field_' . strtr((string) $paragraph->bundle(), ['-' => '_']) . '_relevance';
+      if (!$listing->hasField($parent_relevance_field)) {
+        continue;
+      }
+
+      $value = paragraph_relevance_extract_value($paragraph->get('field_relevance2')->getValue());
+      if (paragraph_relevance_relevance_is_empty($value)) {
+        $listing->set($parent_relevance_field, []);
+      }
+      else {
+        $listing->set($parent_relevance_field, $value);
+      }
+    }
+  }
+}
+
+/**
+ * Run a callback while preventing recursive parent listing sync saves.
+ */
+function paragraph_relevance_with_parent_listing_sync_guard(callable $callback): void {
+  paragraph_relevance_parent_listing_sync_guard_depth(1);
+  try {
+    $callback();
+  }
+  finally {
+    paragraph_relevance_parent_listing_sync_guard_depth(-1);
+  }
+}
+
+/**
+ * Whether a parent listing sync save is already in progress.
+ */
+function paragraph_relevance_parent_listing_sync_in_progress(): bool {
+  return paragraph_relevance_parent_listing_sync_guard_depth() > 0;
+}
+
+/**
+ * Shared recursion guard depth for parent listing sync operations.
+ */
+function paragraph_relevance_parent_listing_sync_guard_depth(int $delta = 0): int {
+  static $depth = 0;
+
+  $depth += $delta;
+  if ($depth < 0) {
+    $depth = 0;
+  }
+
+  return $depth;
 }
 
 /**

@@ -1,7 +1,7 @@
 name: Magical Links
 type: module
-description: 'Providing a widget and formatter for external links.'
-package: 'Nomads Widgets'
+description: 'Provides a link widget and formatter that use taxonomy-driven icon/prefix definitions for icon-assisted entry and grouped display.'
+package: 'Nomads Forms'
 core_version_requirement: '^10 || ^11'
 dependencies:
   - drupal:link

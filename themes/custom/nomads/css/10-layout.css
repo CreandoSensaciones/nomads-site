@@ -17,8 +17,8 @@
 
 .node--type-listing.node--view-mode-full > .node__content {
   --nomads-listing-gap: 16px;
-  --nomads-left-width: 25%;
-  --nomads-right-width: 25%;
+  --nomads-left-width: 22%;
+  --nomads-right-width: 28%;
   --nomads-breakpoint: 900px;
 }
 
@@ -80,12 +80,35 @@
   }
 }
 
+/* ========== Paragraphs ========== */
+
+.paragraph--viewmode-vm-3 {
+    margin-top: 30px;
+    padding: 10px;
+}
+.paragraph--viewmode-vm-3.relevance-paragraph.col2 {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 770px;
+    grid-template-areas:
+        "title title"
+        "left right";
+    gap: 16px;
+}
+.paragraph--viewmode-vm-3.relevance-paragraph.col3 {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 510px 510px;
+    grid-template-areas:
+        "title title title"
+        "left center right";
+    gap: 10px;
+}
+
 
 /* ========== Teaser ========== */
 
 .node--type-listing.node--view-mode-teaser {
   width: 1200px;
-  margin: 10px auto;
+  margin: 40px auto;
   padding: 7px;
 }
 .node--type-listing.node--view-mode-teaser .teaser-inner-wrapper {
@@ -94,23 +117,17 @@
 }
 
 
-/* Teaser: force 4 columns with fixed widths: 200 / 300 / 300 / 200 */
+/* Teaser  */
 .node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper > .node__content {
   display: grid;
-  grid-template-columns: 400px 500px 250px;
+  grid-template-columns: 400px 500px 300px;
   gap: 16px;              /* adjust */
   align-items: start;     /* top align */
+  overflow: hidden;
 }
 
 /* Make sure the 4 column wrappers behave as grid items */
-.node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper > .node__content
-  > .teaser-column-left-2,
-.node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper > .node__content
-  > .teaser-column-left-1,
-.node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper > .node__content
-  > .teaser-column-right-1,
-.node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper > .node__content
-  > .teaser-column-right-2 {
+.node--type-listing.node--view-mode-teaser .teaser-column {
   min-width: 0;           /* prevents overflow from long content */
 }
 
@@ -176,7 +193,7 @@
 
 /* Listing title region minimum height */
 #title-container {
-  min-height: 180px;
+  min-height: 150px;
 }
 
 #title-container .field--name-field-organization-ref {
@@ -198,3 +215,107 @@ article .field--name-field-description {
 }
 
 
+
+
+
+.node--type-listing.node--view-mode-full > .node__content > #title-container{
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) 200px;
+  grid-template-rows: auto auto;
+  column-gap: 32px;
+  align-items: center;
+  width: 100%;
+}
+
+/* LEFT COLUMN – organizer */
+#title-container .field--name-field-organization-ref{
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  justify-self: start;
+  align-self: center;
+}
+
+/* CENTER COLUMN – title */
+#title-container .field--name-field-country {
+  grid-column: 2;
+  grid-row: 1;
+  text-align: center;
+  width: 100%;
+}
+/* CENTER COLUMN – title */
+#title-container .field--name-title{
+  grid-column: 2;
+  grid-row: 2;
+  text-align: center;
+  width: 100%;
+}
+
+/* CENTER COLUMN – subtitle */
+#title-container .field--name-field-subtitle{
+  grid-column: 2;
+  grid-row: 3;
+  text-align: center;
+  width: 100%;
+}
+
+/* RIGHT COLUMN – local tasks */
+#title-container .column-right{
+  grid-column: 3;
+  grid-row: 1 / span 3;
+  justify-self: end;
+  align-self: center;
+}
+
+/* remove default heading margins */
+#title-container h1,
+#title-container h3 {
+  margin: 0;
+}
+
+#left-sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  max-height: 850px;
+  align-items: center;             /* horizontal: center content */
+  text-align: center;   
+}
+#right-sidebar {
+  padding-left: 20px;
+}
+
+.field--name-field-description p {
+  text-align:justify !important;
+  line-height: 1.5em;
+}
+
+.paragraph-left-column .icon-placeholder {
+  display: block;
+  float: left;
+  width: 130px;
+  height: 80px;
+}
+.paragraph--viewmode-vm-3 .paragraph-left-column {
+  padding-top: 30px;
+}
+.paragraph--viewmode-vm-3 .paragraph-right-column {
+}
+
+div #paragraphs-container .paragraph-relevance-vfield--relevant {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 40px;
+  row-gap: 60px;  
+}
+
+@media (max-width: 1100px) {
+  div #paragraphs-container .paragraph-relevance-vfield--relevant {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .div #paragraphs-container .paragraph-relevance-vfield--relevant {
+    grid-template-columns: 1fr;
+  }
+}

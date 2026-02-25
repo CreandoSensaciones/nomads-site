@@ -1,26 +1,10 @@
 .nomads-taxonomy-icons__icon img {
-  width: 48px;
+  width: 32px;
   height: auto;
 }
 
-.nomads-taxonomy-icons__item--pill {
-  display: inline-block;
-  vertical-align: middle;
-}
-
-.nomads-taxonomy-icons--grouped {
-  display: inline-block;
-  width: fit-content;
-  max-width: 100%;
-  text-align: center;
-}
-
-.nomads-taxonomy-icons--grouped .nomads-taxonomy-icons__items {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 8px 12px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  justify-content: center;
+.nomads-taxonomy-icons__icon .nomads-taxonomy-icons__missing-svg {
+  display: block;
+  width: 32px;
+  height: 32px;
 }

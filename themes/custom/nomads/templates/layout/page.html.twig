@@ -1,3 +1,9 @@
+{% set current_path = nomads_current_path|default('') %}
+{% set front_active = current_path == '/front' %}
+{% set list_active = current_path == '/list' or current_path starts with '/list/' %}
+{% set map_active = current_path == '/map' or current_path starts with '/map/' %}
+{% set cal_active = current_path == '/cal' or current_path starts with '/cal/' %}
+
 <header class="nomads-navbar nomads-breakout" role="banner">
   <div class="nomads-navbar__inner nomads-inner nomads-inner--constrained">
     <div class="nomads-navbar__brand-wrap nomads-navbar__dropdownwrap nomads-navbar__dropdownwrap--domains">
@@ -29,16 +35,19 @@
 
     <nav class="nomads-navbar__actions" aria-label="Primary actions">
       <div class="nomads-navbar__group nomads-navbar__group--views">
-        <a class="nomads-navbar__icon" href="/front" aria-label="Front">
+        <a class="nomads-navbar__icon create-listing use-ajax" title="test" href="/listing/wizard" data-dialog-type="modal" data-dialog-options="{&quot;width&quot;:1100}">
+          <img src="{{ '/' ~ directory ~ '/assets/navbar/icon-create.svg' }}" alt="" />
+        </a>
+        <a class="nomads-navbar__icon search-icon{{ front_active ? ' active' : '' }}" href="/front" aria-label="Front">
           <img src="{{ '/' ~ directory ~ '/assets/navbar/icon-front.svg' }}" alt="" />
         </a>
-        <a class="nomads-navbar__icon" href="/list" aria-label="List">
+        <a class="nomads-navbar__icon search-icon{{ list_active ? ' active' : '' }}" href="/list" aria-label="List">
           <img src="{{ '/' ~ directory ~ '/assets/navbar/icon-list.svg' }}" alt="" />
         </a>
-        <a class="nomads-navbar__icon" href="/map" aria-label="Map">
+        <a class="nomads-navbar__icon search-icon{{ map_active ? ' active' : '' }}" href="/map" aria-label="Map">
           <img src="{{ '/' ~ directory ~ '/assets/navbar/icon-map.svg' }}" alt="" />
         </a>
-        <a class="nomads-navbar__icon" href="/cal" aria-label="Calendar">
+        <a class="nomads-navbar__icon search-icon{{ cal_active ? ' active' : '' }}" href="/cal" aria-label="Calendar">
           <img src="{{ '/' ~ directory ~ '/assets/navbar/icon-cal.svg' }}" alt="" />
         </a>
       </div>

@@ -9,6 +9,7 @@
     "title title"
     "left right";
   gap: 16px;
+  row-gap: 0;
 }
 
 .paragraph--viewmode-vm-3.relevance-paragraph.col2 > .nomads-paragraph-header {
@@ -30,7 +31,13 @@
     "title title title"
     "left center right";
   gap: 16px;
+  row-gap: 0;
 }
+.paragraph--viewmode-vm-3 .nomads-paragraph-header {
+  height: 0;
+  position: relative;
+}
+
 
 .paragraph--viewmode-vm-3.relevance-paragraph.col3 > .nomads-paragraph-header {
   grid-area: title;

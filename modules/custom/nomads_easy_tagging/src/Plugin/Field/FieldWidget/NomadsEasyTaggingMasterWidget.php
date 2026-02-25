@@ -102,6 +102,7 @@ class NomadsEasyTaggingMasterWidget extends WidgetBase implements ContainerFacto
         $selected_ids[] = (int) $item->target_id;
       }
     }
+    $selected_ids = $this->resolver->sanitizePublishedTermIds($selected_ids);
 
     $parents = array_merge($form['#parents'], [$this->fieldDefinition->getName()]);
     $name_prefix = $this->buildNamePrefix($parents);
@@ -121,6 +122,10 @@ class NomadsEasyTaggingMasterWidget extends WidgetBase implements ContainerFacto
         'data-constraints-url' => $constraints_url,
         'data-children-url' => $children_url,
         'data-unified-vids' => implode(',', $vocabulary_ids),
+        // Compatibility markers used by nomads_term_dependees behavior.
+        'data-nomads-term-target' => '1',
+        'data-nomads-term-dependees-enabled' => '1',
+        'data-nomads-term-vids' => implode(',', $vocabulary_ids),
         'data-type-field-name' => $type_field_info['field_name'],
         'data-type-vids' => implode(',', $type_field_info['vids']),
         'data-cardinality' => $this->getCardinalityValue(),
@@ -129,6 +134,10 @@ class NomadsEasyTaggingMasterWidget extends WidgetBase implements ContainerFacto
         'library' => ['nomads_easy_tagging/widget'],
       ],
     ];
+
+    if (\Drupal::moduleHandler()->moduleExists('nomads_term_dependees')) {
+      $element['ui']['#attached']['library'][] = 'nomads_term_dependees/constraints';
+    }
 
     $element['ui']['sections'] = $this->buildSections($vocabulary_ids, $selected_ids);
 
@@ -214,12 +223,11 @@ class NomadsEasyTaggingMasterWidget extends WidgetBase implements ContainerFacto
       ],
     ];
 
-    $term_storage = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
     $vocabulary_storage = \Drupal::entityTypeManager()->getStorage('taxonomy_vocabulary');
 
     foreach ($vocabulary_ids as $vid) {
-      if (!$this->vocabularyHasHierarchy($term_storage, $vid)) {
-        $terms = $term_storage->loadTree($vid, 0, NULL, TRUE);
+      if (!$this->vocabularyHasHierarchy($vid)) {
+        $terms = $this->resolver->getPublishedTermsForVocabulary($vid);
         $cards_payload = [];
         foreach ($terms as $term) {
           if ($term instanceof TermInterface) {
@@ -263,35 +271,112 @@ class NomadsEasyTaggingMasterWidget extends WidgetBase implements ContainerFacto
             'data-root-items' => Json::encode($cards_payload),
             'data-view' => 'root',
           ],
-        ] + $this->buildCardsElements($cards_payload, $selected_ids, FALSE, 0);
+        ] + $this->buildCardsElements($cards_payload, $selected_ids, 0);
 
         continue;
       }
 
-      $top_level_terms = $term_storage->loadTree($vid, 0, 1, TRUE);
+      $top_level_terms = $this->resolver->getPublishedTopLevelTerms($vid, 0, 1);
+      $top_level_payload = [];
+      foreach ($top_level_terms as $top_level_term) {
+        if ($top_level_term instanceof TermInterface) {
+          $top_level_payload[] = $this->resolver->buildTermCardData($top_level_term);
+        }
+      }
+
+      $render_as_category_labels = FALSE;
+      foreach ($top_level_payload as $top_level_item) {
+        if (!empty($top_level_item['is_category_label'])) {
+          $render_as_category_labels = TRUE;
+          break;
+        }
+      }
+
+      if (!$render_as_category_labels) {
+        $section_key = 'vocab_hier_' . $vid;
+        $elements[$section_key] = [
+          '#type' => 'container',
+          '#attributes' => [
+            'class' => ['nomads-easy-tagging__section'],
+            'data-branch-tid' => '0',
+            'data-branch-type' => 'default',
+          ],
+        ];
+
+        $vocabulary_label = '';
+        $vocabulary = $vocabulary_storage->load($vid);
+        if ($vocabulary) {
+          $vocabulary_label = (string) $vocabulary->label();
+        }
+
+        if ($vocabulary_label !== '') {
+          $elements[$section_key]['heading'] = [
+            '#type' => 'html_tag',
+            '#tag' => 'h3',
+            '#value' => Html::escape($vocabulary_label),
+            '#attributes' => [
+              'class' => ['nomads-easy-tagging__heading'],
+            ],
+          ];
+        }
+
+        $elements[$section_key]['back'] = [
+          '#type' => 'html_tag',
+          '#tag' => 'button',
+          '#value' => $this->t('Back'),
+          '#attributes' => [
+            'class' => ['nomads-easy-tagging__back'],
+            'type' => 'button',
+            'data-back' => '1',
+            'style' => 'display: none;',
+          ],
+        ];
+
+        $elements[$section_key]['cards'] = [
+          '#type' => 'container',
+          '#attributes' => [
+            'class' => ['nomads-easy-tagging__cards'],
+            'data-parent-tid' => '0',
+            'data-parent-limit' => '',
+            'data-root-items' => Json::encode($top_level_payload),
+            'data-current-items' => Json::encode($top_level_payload),
+            'data-view' => 'root',
+          ],
+        ] + $this->buildCardsElements($top_level_payload, $selected_ids, 0);
+
+        continue;
+      }
+
       foreach ($top_level_terms as $branch_term) {
         if (!$branch_term instanceof TermInterface) {
           continue;
         }
 
+        $branch_term_payload = $this->resolver->buildTermCardData($branch_term);
         $branch_label = (string) $branch_term->label();
-        $is_category = $this->isCategoryBranch($branch_label);
 
         $children_payload = $this->resolver->getChildren((int) $branch_term->id());
         $cards_elements = $this->buildCardsElements(
           $children_payload['children'],
           $selected_ids,
-          $is_category,
           (int) $branch_term->id()
         );
+
+        $section_classes = ['nomads-easy-tagging__section'];
+        if (empty($branch_term_payload['shows_initially'])) {
+          $section_classes[] = 'nomads-easy-tagging__section--initially-hidden';
+        }
 
         $section_key = 'branch_' . $branch_term->id();
         $elements[$section_key] = [
           '#type' => 'container',
           '#attributes' => [
-            'class' => ['nomads-easy-tagging__section'],
+            'class' => $section_classes,
             'data-branch-tid' => (string) $branch_term->id(),
-            'data-branch-type' => $is_category ? 'category' : 'default',
+            'data-branch-type' => 'category',
+            'data-nomads-category-label' => '1',
+            'data-nomads-term-tid' => (string) $branch_term->id(),
+            'data-nomads-shows-initially' => !empty($branch_term_payload['shows_initially']) ? '1' : '0',
           ],
         ];
 
@@ -339,6 +424,7 @@ class NomadsEasyTaggingMasterWidget extends WidgetBase implements ContainerFacto
             'data-parent-tid' => (string) $branch_term->id(),
             'data-parent-limit' => (string) ($children_payload['parent_children_limit'] ?? ''),
             'data-root-items' => Json::encode($children_payload['children']),
+            'data-current-items' => Json::encode($children_payload['children']),
             'data-view' => 'root',
           ],
         ] + $cards_elements;
@@ -351,10 +437,10 @@ class NomadsEasyTaggingMasterWidget extends WidgetBase implements ContainerFacto
   /**
    * Determine if a vocabulary has hierarchical terms.
    */
-  protected function vocabularyHasHierarchy($term_storage, string $vid): bool {
-    $tree = $term_storage->loadTree($vid, 0, 2, FALSE);
-    foreach ($tree as $item) {
-      if (!empty($item->depth)) {
+  protected function vocabularyHasHierarchy(string $vid): bool {
+    $top_level_terms = $this->resolver->getPublishedTopLevelTerms($vid, 0, 1);
+    foreach ($top_level_terms as $term) {
+      if ($term instanceof TermInterface && $this->resolver->getChildren((int) $term->id())['children']) {
         return TRUE;
       }
     }
@@ -365,7 +451,7 @@ class NomadsEasyTaggingMasterWidget extends WidgetBase implements ContainerFacto
   /**
    * Build markup for cards.
    */
-  protected function buildCardsElements(array $children, array $selected_ids, bool $is_category_root, int $parent_tid): array {
+  protected function buildCardsElements(array $children, array $selected_ids, int $parent_tid): array {
     $selected_lookup = array_flip($selected_ids);
     $elements = [];
 
@@ -378,9 +464,6 @@ class NomadsEasyTaggingMasterWidget extends WidgetBase implements ContainerFacto
       $classes = ['nomads-easy-tagging__card'];
       if (isset($selected_lookup[$term_id])) {
         $classes[] = 'is-selected';
-      }
-      if ($is_category_root) {
-        $classes[] = 'is-category-root-card';
       }
 
       $label = (string) ($child['label'] ?? '');
@@ -400,7 +483,8 @@ class NomadsEasyTaggingMasterWidget extends WidgetBase implements ContainerFacto
           'data-parent-tid' => (string) $parent_tid,
           'data-has-children' => !empty($child['has_children']) ? '1' : '0',
           'data-limit' => isset($child['children_limit']) && $child['children_limit'] !== NULL ? (string) $child['children_limit'] : '',
-          'data-category-root' => $is_category_root ? '1' : '0',
+          'data-branch-mode' => (string) ($child['branch_mode'] ?? 'ignore'),
+          'data-dependees' => !empty($child['dependee_tids']) ? implode(',', array_map('intval', $child['dependee_tids'])) : '',
         ],
       ];
 
@@ -428,13 +512,6 @@ class NomadsEasyTaggingMasterWidget extends WidgetBase implements ContainerFacto
     }
 
     return $elements;
-  }
-
-  /**
-   * Identify the category branch by label.
-   */
-  protected function isCategoryBranch(string $label): bool {
-    return strtolower(trim($label)) === 'category';
   }
 
   /**

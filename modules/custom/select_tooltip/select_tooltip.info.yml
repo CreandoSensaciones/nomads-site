@@ -1,5 +1,5 @@
 name: Select Tooltip
 type: module
-description: Adds tooltips for select options using double minus labels.
-package: Nomads Widgets
+description: 'Adds tooltip parsing for select/radio/checkbox labels using "--" markers and provides Pretty-radio uncheck/toggle behavior.'
+package: 'Nomads Forms'
 core_version_requirement: ^10 || ^11
