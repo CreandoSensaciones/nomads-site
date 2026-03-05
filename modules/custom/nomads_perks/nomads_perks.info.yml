@@ -1,0 +1,5 @@
+name: 'Nomads Perks'
+type: module
+description: 'Adds a listing virtual display field for the perks teaser pill.'
+package: 'Nomads Features'
+core_version_requirement: ^11

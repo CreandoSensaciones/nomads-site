@@ -1,0 +1,5 @@
+name: Nomads Geo Widget
+type: module
+description: Provides a country -> places taxonomy term reference widget.
+core_version_requirement: ^11
+package: Nomads Forms

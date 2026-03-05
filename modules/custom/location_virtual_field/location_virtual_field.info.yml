@@ -1,0 +1,9 @@
+name: 'Location virtual field'
+type: module
+description: 'Adds a listing extra display field that renders location country information from location paragraphs.'
+package: 'Nomads Display'
+core_version_requirement: ^11
+
+dependencies:
+  - paragraphs:paragraphs
+  - nomads_taxonomy_breadcrumb:nomads_taxonomy_breadcrumb

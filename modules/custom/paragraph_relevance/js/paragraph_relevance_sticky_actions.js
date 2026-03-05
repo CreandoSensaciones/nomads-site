@@ -11,7 +11,7 @@
 
   function bindStickyActions(form) {
     var menu = form.querySelector('.vertical-tabs__menu');
-    var actions = form.querySelector('.layout-region--footer .form-actions');
+    var actions = form.querySelector('.layout-region--footer .form-actions, .form-actions#edit-actions, #edit-actions.form-actions');
     if (!menu || !actions) {
       return;
     }

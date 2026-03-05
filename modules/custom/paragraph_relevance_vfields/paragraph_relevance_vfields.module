@@ -73,48 +73,8 @@ function paragraph_relevance_vfields_entity_view(array &$build, EntityInterface 
  * Implements hook_entity_presave().
  */
 function paragraph_relevance_vfields_entity_presave(EntityInterface $entity): void {
-  if ($entity->getEntityTypeId() !== 'node' || !method_exists($entity, 'bundle') || $entity->bundle() !== 'listing') {
-    return;
-  }
-
-  $paragraphs = paragraph_relevance_vfields_collect_paragraphs($entity);
-  if (!$paragraphs) {
-    return;
-  }
-
-  $max_by_bundle = [];
-  foreach ($paragraphs as $paragraph) {
-    $loaded = $paragraph->id()
-      ? \Drupal::entityTypeManager()->getStorage('paragraph')->load($paragraph->id())
-      : NULL;
-    $src_entity = $loaded ?: $paragraph;
-    $dst_entity = $paragraph;
-    $src = $src_entity->hasField('field_relevance') ? $src_entity->get('field_relevance')->value : 'MISSING';
-    $dst = $dst_entity->hasField('field_relevance2') ? $dst_entity->get('field_relevance2')->value : 'MISSING';
-    if (!$src_entity->hasField('field_relevance')) {
-      continue;
-    }
-    $value = (int) ($src_entity->get('field_relevance')->value ?? 0);
-    if ($dst_entity->hasField('field_relevance2')) {
-      $dst_entity->set('field_relevance2', $value);
-    }
-
-    $bundle = (string) $dst_entity->bundle();
-    if ($bundle === '') {
-      continue;
-    }
-    $max_by_bundle[$bundle] = isset($max_by_bundle[$bundle])
-      ? max($max_by_bundle[$bundle], $value)
-      : $value;
-  }
-
-  foreach ($max_by_bundle as $bundle => $max_value) {
-    $field_name = 'field_' . $bundle . '_relevance';
-    if (!$entity->hasField($field_name)) {
-      continue;
-    }
-    $entity->set($field_name, $max_value);
-  }
+  // Intentionally no-op to avoid save-time mutation of listing paragraph data.
+  return;
 }
 
 /**
@@ -472,6 +432,12 @@ function paragraph_relevance_vfields_form_entity_view_display_edit_form_alter(ar
       '#default_value' => (bool) ($settings['ignore_crew_and_audience'] ?? $defaults['ignore_crew_and_audience']),
       '#description' => t('Do not render key aspect terms with labels "Crew" or "Audience".'),
     ];
+    $form['fields']['key_aspects']['plugin']['settings_edit_form']['settings']['top_label'] = [
+      '#type' => 'textfield',
+      '#title' => t('Top label'),
+      '#default_value' => (string) ($settings['top_label'] ?? $defaults['top_label']),
+      '#description' => t('Optional heading rendered as H3 above all key aspect groups.'),
+    ];
 
     $form['fields']['key_aspects']['plugin']['settings_edit_form']['actions'] = [
       '#type' => 'actions',
@@ -625,6 +591,21 @@ function paragraph_relevance_vfields_build_key_aspects(EntityInterface $listing,
       ],
     ],
   ];
+
+  $top_label = trim((string) ($settings['top_label'] ?? ''));
+  if ($top_label !== '') {
+    $build['top_label'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'h3',
+      '#value' => $top_label,
+      '#attributes' => [
+        'class' => [
+          'nomads-icon-formatter__title',
+          'paragraph-relevance-key-aspects__top-label',
+        ],
+      ],
+    ];
+  }
 
   $has_output = FALSE;
   foreach ($groups as $group) {
@@ -782,6 +763,7 @@ function paragraph_relevance_vfields_key_aspects_groups(): array {
 function paragraph_relevance_vfields_key_aspects_default_settings(): array {
   return [
     'ignore_crew_and_audience' => FALSE,
+    'top_label' => '',
     'core_focus' => [
       'output' => 'icon',
       'label' => 'Core focus',
@@ -829,6 +811,10 @@ function paragraph_relevance_vfields_key_aspects_output_options(): array {
  */
 function paragraph_relevance_vfields_key_aspects_settings_summary(array $settings, array $options): array {
   $summary = [];
+  $top_label = trim((string) ($settings['top_label'] ?? ''));
+  $summary[] = t('Top label: @value', [
+    '@value' => $top_label !== '' ? $top_label : t('None'),
+  ]);
   $summary[] = t('Ignore crew and audience: @value', [
     '@value' => !empty($settings['ignore_crew_and_audience']) ? t('Yes') : t('No'),
   ]);
@@ -884,6 +870,9 @@ function paragraph_relevance_vfields_apply_key_aspects_settings(EntityViewDispla
   }
 
   $normalized['ignore_crew_and_audience'] = !empty($settings_values['ignore_crew_and_audience']);
+  $normalized['top_label'] = isset($settings_values['top_label'])
+    ? trim((string) $settings_values['top_label'])
+    : '';
 
   $display->setThirdPartySetting('paragraph_relevance_vfields', 'key_aspects', $normalized);
 }

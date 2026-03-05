@@ -8,14 +8,18 @@
 - Reads price inputs from:
   - `field_min_price`
   - `field_max_price`
+  - `field_min_price_week`
+  - `field_max_price_field` (fallback: `field_max_price_week`)
   - `field_min_price_month`
   - `field_max_price_month`
 - Builds grouped output for:
   - per-day prices
+  - per-week prices
   - per-month prices
+- Renders up to two groups at once. If day/week/month all have data, output keeps day + month.
 - Supports two output modes per group:
   - `range` (`min - max`)
-  - `starting_at` (`min` only)
+  - `single` (one value when min=max, min-only, or max-only)
 - Renders with Twig template `nomads-price-range.html.twig`.
 - Attaches module CSS library `nomads_prices_virtual_fields/price-range`.
 
@@ -26,7 +30,7 @@
 3. In the **Disabled** section, enable **Price Range** (machine name: `nomads_prices_virtual_fields_price_range`).
 4. Place it in the desired region and save.
 
-The output is generated only when at least one minimum price exists (day or month).
+The output is generated when at least one day/week/month price group has data.
 
 ## Files
 
@@ -61,5 +65,5 @@ The output is generated only when at least one minimum price exists (day or mont
 - If reusing on other bundles, add explicit configuration mapping instead of duplicating hardcoded field names.
 - Add tests for:
   - extra-field visibility by view mode
-  - day/month `range` vs `starting_at` behavior
+  - day/week/month group selection and `range` vs `single` behavior
   - translation + cache metadata behavior

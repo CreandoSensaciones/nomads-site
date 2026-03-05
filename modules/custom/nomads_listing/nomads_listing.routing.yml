@@ -1,22 +1,34 @@
 nomads_listing.node_text_edit:
-  path: '/node/{node}/edit-texts'
+  path: '/node/{node}/edit/text'
   defaults:
-    _entity_form: 'node.text'
-    _title: 'Edit texts'
+    _controller: '\Drupal\nomads_listing\Controller\ListingFormModeEditController::editText'
+    _title: 'Edit Listing (Text)'
   requirements:
-    _custom_access: '\Drupal\nomads_listing\Access\ListingTextFormAccess::access'
+    _entity_access: 'node.update'
   options:
     parameters:
       node:
         type: entity:node
 
 nomads_listing.node_images_edit:
-  path: '/node/{node}/manage-images'
+  path: '/node/{node}/edit/images'
   defaults:
-    _entity_form: 'node.images'
-    _title: 'Manage images'
+    _controller: '\Drupal\nomads_listing\Controller\ListingFormModeEditController::editImages'
+    _title: 'Edit Listing (Images)'
   requirements:
-    _custom_access: '\Drupal\nomads_listing\Access\ListingTextFormAccess::access'
+    _entity_access: 'node.update'
+  options:
+    parameters:
+      node:
+        type: entity:node
+
+nomads_listing.node_offers_edit:
+  path: '/node/{node}/edit/offers'
+  defaults:
+    _controller: '\Drupal\nomads_listing\Controller\ListingFormModeEditController::editOffers'
+    _title: 'Edit Listing (Offers)'
+  requirements:
+    _entity_access: 'node.update'
   options:
     parameters:
       node:

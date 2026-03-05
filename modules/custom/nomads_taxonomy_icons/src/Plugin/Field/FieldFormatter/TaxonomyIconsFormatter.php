@@ -220,7 +220,13 @@ class TaxonomyIconsFormatter extends FormatterBase implements ContainerFactoryPl
       return [];
     }
 
-    $entries = $this->sortEntriesByVocabularyTree($entries);
+    $field_name = $items->getFieldDefinition()->getName();
+    if ($field_name === 'field_type') {
+      $entries = $this->sortEntriesByDelta($entries);
+    }
+    else {
+      $entries = $this->sortEntriesByVocabularyTree($entries);
+    }
 
     if ($first_level_categories) {
       $grouped_elements = $this->buildGroupedElements(
@@ -1041,6 +1047,21 @@ class TaxonomyIconsFormatter extends FormatterBase implements ContainerFactoryPl
         return $a_pos <=> $b_pos;
       }
 
+      return ((int) ($a['delta'] ?? 0)) <=> ((int) ($b['delta'] ?? 0));
+    });
+
+    return array_values($entries);
+  }
+
+  /**
+   * Sort entries by field item delta.
+   */
+  protected function sortEntriesByDelta(array $entries): array {
+    if (count($entries) < 2) {
+      return $entries;
+    }
+
+    uasort($entries, static function (array $a, array $b): int {
       return ((int) ($a['delta'] ?? 0)) <=> ((int) ($b['delta'] ?? 0));
     });
 

@@ -1,5 +1,5 @@
 name: Nomads Logo Formatter
 type: module
 description: Provides a field formatter that renders a logo image or a fallback title circle.
-package: Custom
+package: Nomads Display
 core_version_requirement: ^11

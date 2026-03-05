@@ -58,14 +58,7 @@ function nomads_prices_virtual_fields_theme() {
       'template' => 'nomads-price-range',
       'variables' => [
         'label' => NULL,
-        'day_prefix' => NULL,
-        'day_min' => NULL,
-        'day_max' => NULL,
-        'day_mode' => NULL,
-        'month_prefix' => NULL,
-        'month_min' => NULL,
-        'month_max' => NULL,
-        'month_mode' => NULL,
+        'groups' => [],
       ],
     ],
   ];

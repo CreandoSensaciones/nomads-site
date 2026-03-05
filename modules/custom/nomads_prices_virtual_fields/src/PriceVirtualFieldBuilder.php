@@ -41,35 +41,54 @@ class PriceVirtualFieldBuilder {
 
     $day_min = $this->getPriceFromField($entity, 'field_min_price');
     $day_max = $this->getPriceFromField($entity, 'field_max_price');
+    $week_min = $this->getPriceFromField($entity, 'field_min_price_week');
+    $week_max = $this->getFirstPriceFromFields($entity, [
+      'field_max_price_field',
+      'field_max_price_week',
+    ]);
     $month_min = $this->getPriceFromField($entity, 'field_min_price_month');
     $month_max = $this->getPriceFromField($entity, 'field_max_price_month');
 
     $day_group = $this->buildGroupData($day_min, $day_max, $this->t('Per day'));
+    $week_group = $this->buildGroupData($week_min, $week_max, $this->t('Per week'));
     $month_group = $this->buildGroupData($month_min, $month_max, $this->t('Per month'));
 
-    if (!$day_group && !$month_group) {
+    $groups = array_filter([
+      'day' => $day_group,
+      'week' => $week_group,
+      'month' => $month_group,
+    ]);
+
+    if (empty($groups)) {
       return NULL;
     }
 
     $label = $this->t('Price Range');
-    if ($day_group && !$month_group) {
+    if (count($groups) === 1 && isset($groups['day'])) {
       $label = $this->t('Price Range per day');
     }
-    elseif ($month_group && !$day_group) {
+    elseif (count($groups) === 1 && isset($groups['week'])) {
+      $label = $this->t('Price Range per week');
+    }
+    elseif (count($groups) === 1 && isset($groups['month'])) {
       $label = $this->t('Price Range per month');
+    }
+
+    // At most two visible segments. If all 3 groups have data, keep day+month.
+    if (isset($groups['day'], $groups['week'], $groups['month'])) {
+      $groups = [
+        'day' => $groups['day'],
+        'month' => $groups['month'],
+      ];
+    }
+    elseif (count($groups) > 2) {
+      $groups = array_slice($groups, 0, 2, TRUE);
     }
 
     $build = [
       '#theme' => 'nomads_price_range',
       '#label' => $label,
-      '#day_prefix' => $day_group['prefix'] ?? NULL,
-      '#day_min' => $day_group['min'] ?? NULL,
-      '#day_max' => $day_group['max'] ?? NULL,
-      '#day_mode' => $day_group['mode'] ?? NULL,
-      '#month_prefix' => $month_group['prefix'] ?? NULL,
-      '#month_min' => $month_group['min'] ?? NULL,
-      '#month_max' => $month_group['max'] ?? NULL,
-      '#month_mode' => $month_group['mode'] ?? NULL,
+      '#groups' => array_values($groups),
       '#attached' => [
         'library' => [
           'nomads_prices_virtual_fields/price-range',
@@ -92,11 +111,18 @@ class PriceVirtualFieldBuilder {
     if (!$min && !$max) {
       return NULL;
     }
-    if (!$min && $max) {
-      return NULL;
-    }
 
     if ($min && $max) {
+      $min_number = (string) $min->getNumber();
+      $max_number = (string) $max->getNumber();
+      if ($min_number === $max_number && $min->getCurrencyCode() === $max->getCurrencyCode()) {
+        return [
+          'prefix' => $prefix,
+          'value' => $this->formatPrice($min),
+          'mode' => 'single',
+        ];
+      }
+
       return [
         'prefix' => $prefix,
         'min' => $this->formatPrice($min),
@@ -105,12 +131,27 @@ class PriceVirtualFieldBuilder {
       ];
     }
 
+    $single_value = $min ?: $max;
+
     return [
       'prefix' => $prefix,
-      'min' => $this->formatPrice($min),
-      'max' => NULL,
-      'mode' => 'starting_at',
+      'value' => $single_value ? $this->formatPrice($single_value) : NULL,
+      'mode' => 'single',
     ];
+  }
+
+  /**
+   * Extracts the first available Price object from a list of field names.
+   */
+  protected function getFirstPriceFromFields(FieldableEntityInterface $entity, array $field_names): ?Price {
+    foreach ($field_names as $field_name) {
+      $price = $this->getPriceFromField($entity, $field_name);
+      if ($price) {
+        return $price;
+      }
+    }
+
+    return NULL;
   }
 
   /**

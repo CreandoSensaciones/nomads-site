@@ -11,6 +11,8 @@ use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\file\FileInterface;
+use Drupal\media\MediaInterface;
 
 #[FieldFormatter(
   id: 'nomads_logo_or_title_circle',
@@ -29,6 +31,7 @@ class NomadsLogoOrTitleCircleFormatter extends FormatterBase {
     return [
       'size' => 64,
       'use_initials' => FALSE,
+      'image_style' => '',
     ] + parent::defaultSettings();
   }
 
@@ -54,6 +57,15 @@ class NomadsLogoOrTitleCircleFormatter extends FormatterBase {
       '#description' => $this->t('If checked, show up to 2 initials from the title instead of full title.'),
     ];
 
+    $image_style_options = function_exists('image_style_options') ? image_style_options(FALSE) : [];
+    $element['image_style'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Image style'),
+      '#default_value' => $this->getSetting('image_style'),
+      '#options' => ['' => $this->t('- None (original image) -')] + $image_style_options,
+      '#description' => $this->t('Optional image style applied to logo images.'),
+    ];
+
     return $element;
   }
 
@@ -69,6 +81,19 @@ class NomadsLogoOrTitleCircleFormatter extends FormatterBase {
       ? $this->t('Fallback text: initials')
       : $this->t('Fallback text: full title');
 
+    $image_style = (string) $this->getSetting('image_style');
+    if ($image_style !== '') {
+      $style_label = $image_style;
+      $style = \Drupal::entityTypeManager()->getStorage('image_style')->load($image_style);
+      if ($style) {
+        $style_label = $style->label();
+      }
+      $summary[] = $this->t('Image style: @style', ['@style' => $style_label]);
+    }
+    else {
+      $summary[] = $this->t('Image style: None');
+    }
+
     return $summary;
   }
 
@@ -83,8 +108,27 @@ class NomadsLogoOrTitleCircleFormatter extends FormatterBase {
     $entity_url = $entity->hasLinkTemplate('canonical') ? $entity->toUrl() : NULL;
 
     if (!$items->isEmpty()) {
+      $size = max(16, min(256, (int) $this->getSetting('size')));
+      $image_style = (string) $this->getSetting('image_style');
       foreach ($items as $delta => $item) {
-        $logo = $item->view();
+        $logo = $this->buildLogoImage($item, $title, $size, $image_style);
+
+        if ($logo === NULL) {
+          $display_text = $this->buildFallbackText($title);
+          $logo = [
+            '#type' => 'inline_template',
+            '#template' => '<span class="{{ classes|join(" ") }}" title="{{ title }}">{{ text }}</span>',
+            '#context' => [
+              'classes' => [
+                'nomads-logo',
+                'nomads-logo--fallback',
+                'nomads-logo--fallback-size-' . $size,
+              ],
+              'title' => $title,
+              'text' => $display_text,
+            ],
+          ];
+        }
 
         $elements[$delta] = [
           '#type' => 'container',
@@ -94,7 +138,7 @@ class NomadsLogoOrTitleCircleFormatter extends FormatterBase {
           'logo_wrapper' => [
             '#type' => 'container',
             '#attributes' => [
-              'class' => ['nomads-logo', 'nomads-logo--has-image'],
+              'class' => ['nomads-logo', $this->isImageRenderable($logo) ? 'nomads-logo--has-image' : 'nomads-logo--fallback'],
             ],
             'image' => $entity_url !== NULL ? [
               '#type' => 'link',
@@ -163,6 +207,68 @@ class NomadsLogoOrTitleCircleFormatter extends FormatterBase {
     ];
 
     return $elements;
+  }
+
+  /**
+   * Builds the rendered logo image from entity reference/image field items.
+   */
+  protected function buildLogoImage(mixed $item, string $title, int $size, string $image_style = ''): ?array {
+    $file = NULL;
+    $alt = $title;
+
+    if ($item?->entity instanceof MediaInterface) {
+      $media = $item->entity;
+      $media_type = $media->bundle->entity ?? NULL;
+      $source_field_definition = $media_type ? $media->getSource()->getSourceFieldDefinition($media_type) : NULL;
+      $source_field = $source_field_definition?->getName();
+      if ($source_field && $media->hasField($source_field) && !$media->get($source_field)->isEmpty()) {
+        $source_item = $media->get($source_field)->first();
+        if ($source_item?->entity instanceof FileInterface) {
+          $file = $source_item->entity;
+          $alt = trim((string) ($source_item->alt ?? '')) !== '' ? (string) $source_item->alt : $title;
+        }
+      }
+    }
+    elseif ($item?->entity instanceof FileInterface) {
+      $file = $item->entity;
+      $alt = trim((string) ($item->alt ?? '')) !== '' ? (string) $item->alt : $title;
+    }
+
+    if (!$file instanceof FileInterface) {
+      return NULL;
+    }
+
+    if ($image_style !== '') {
+      return [
+        '#theme' => 'image_style',
+        '#style_name' => $image_style,
+        '#uri' => $file->getFileUri(),
+        '#alt' => $alt,
+        '#attributes' => [
+          'loading' => 'lazy',
+          'width' => $size,
+          'height' => $size,
+        ],
+      ];
+    }
+
+    return [
+      '#theme' => 'image',
+      '#uri' => $file->getFileUri(),
+      '#alt' => $alt,
+      '#attributes' => [
+        'loading' => 'lazy',
+      ],
+      '#width' => $size,
+      '#height' => $size,
+    ];
+  }
+
+  /**
+   * Determines if the render array is image output.
+   */
+  protected function isImageRenderable(array $renderable): bool {
+    return in_array(($renderable['#theme'] ?? ''), ['image', 'image_style'], TRUE);
   }
 
   /**

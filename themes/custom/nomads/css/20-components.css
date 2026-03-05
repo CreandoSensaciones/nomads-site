@@ -5,6 +5,34 @@
    Notes for Codex: Edit only this file when changing component styling.
    Last updated: 2026-02-04 */
 
+
+.paragraph-relevance-key-aspects__group,
+.paragraph-relevance-key-aspects__group  div {
+    display: inline-block;
+}
+
+
+article.node--type-listing.node--view-mode-teaser  div.teaser-action-calls .nomads-pill {
+  font-size: 9pt;
+}
+div.teaser-action-calls .perk-teaser.nomads-pill {
+  background: #fff;
+  color:#015180;
+  border: 2px solid #015180;
+  font-weight: 600;
+  padding: 2px 6px;
+}
+
+
+.paragraph--viewmode-vm-3.relevance-paragraph .paragraph-left-column .field--name-field-country {
+  margin: 15px 0 0 200px;
+}
+.paragraph--viewmode-vm-3.relevance-paragraph .paragraph-left-column .field--name-field-date {
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
 #hero-gallery img { 
   border-radius: 8px;
 }
@@ -140,16 +168,6 @@
 
 /* ========== Paragraphs general ========== */
 
-#paragraphs-container .paragraph-relevance-vfield {
-  display: flex;
-  flex-direction: column;
-  gap: 60px;
-}
-#paragraphs-container {
-  display: flex;
-  flex-direction: column;
-  gap: 60px;
-}
 
 
 /* ------- Paragraph Header ------ */
@@ -226,7 +244,8 @@
   text-align: left;
 }
 .paragraph--viewmode-vm-3 h2 {
-  margin: 0 0 20px 100px;
+  margin: 15px 0 20px 100px;
+  text-indent: 170px;
 }
 
 .paragraph--viewmode-vm-3.nomads-paragraph-modal-link-wrapper {
@@ -975,23 +994,87 @@ article.node--type-listing.node--view-mode-teaser .field--name-title h2 {
   margin-bottom: 5px;
 }
 article.node--type-listing.node--view-mode-teaser .field--name-field-subtitle {
-  margin-bottom: 8px;
-  font-size: 10pt;
+  margin-bottom: 12px;
+  font-size: 11pt;
 }
 article.node--type-listing.node--view-mode-teaser .nomads-taxonomy-breadcrumb,
 article.node--type-listing.node--view-mode-teaser .nomads-taxonomy-breadcrumb a
  {
-  font-size: 8pt;
+  font-size: 10pt;
   color: #999;
   font-weight: 600;
   text-transform: uppercase;
   text-decoration: none;
-  margin-bottom: -3px;
+  margin-bottom: 3px;
 }
-article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects h3 {
-  font-size: 9pt;
+article.node--type-listing.node--view-mode-teaser .nomads-taxonomy-breadcrumb .country a {
+  color: #555;
+}
+/* Multi-bundle layout: evenly spaced columns across full width */
+.location-date.location-date--multi-bundles > div {
+  display: flex;
+  justify-content: space-evenly; /* equal gaps, edges flush */
+  width: 100%;
+}
+
+/* Optional: if you want the same gap to also exist at left/right edges,
+   use space-evenly instead of space-between */
+.location-date.location-date--multi-bundles.location-date--space-evenly > div {
+  justify-content: space-evenly;
+}
+
+/* Bundle becomes a 2-line stack: location on top, date centered below */
+.location-date.location-date--multi-bundles .bundle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;   /* centers date and location text */
+  text-align: center;
+  line-height: 1;
+  white-space: nowrap;   /* keep "Apr - May" on one line */
+}
+
+/* Make the top line visually dominant */
+.location-date.location-date--multi-bundles .bundle .location {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+/* Slightly smaller date */
+.location-date.location-date--multi-bundles .bundle .date {
+  font-size: 0.7rem;
+  opacity: 0.75;
+}
+
+/* Prevent links from breaking the centering */
+.location-date.location-date--multi-bundles .bundle .location a {
+  display: inline-block;
+}
+
+/* If you want bundles to share width equally (nice symmetry), enable this */
+.location-date.location-date--multi-bundles.location-date--equal-columns > div {
+  justify-content: space-between;
+  gap: 0;                 /* keep math clean */
+}
+.location-date.location-date--multi-bundles.location-date--equal-columns .bundle {
+  flex: 1 1 0;
+}
+
+/* If you want a consistent inner padding (without affecting equal gaps),
+   add it to the wrapper (not to the inner flex container). */
+.location-date.location-date--multi-bundles {
+  padding-left: 12px;
+  padding-right: 12px;
+  box-sizing: border-box;
+}
+
+
+
+
+
+article.node--type-listing.node--view-mode-teaser h3 {
+  font-size: 8pt;
   text-transform: uppercase;
-  margin: 5px auto 2px auto;
+  margin: 3px auto 1px auto;
 }
 article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects .nomads-pill {
   background: #019baf;
@@ -1008,6 +1091,16 @@ article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspec
 }
 .node--type-listing.node--view-mode-teaser .field--name-field-subtitle {
   text-align: center;
+}
+
+.splide__slide.slide--text {
+  display: flex;
+  align-items: center;
+}
+
+.splide-text-slide {
+  width: 100%;
+  padding: 16px;
 }
 
 /* ----- Tags ----- */
@@ -1118,7 +1211,6 @@ article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspec
 .paragraph-center-column > .field--name-field-surroundings .nomads-pills {
   text-align: center;
 }
-
 
 
 

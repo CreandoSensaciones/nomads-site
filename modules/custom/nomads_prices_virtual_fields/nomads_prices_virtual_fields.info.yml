@@ -1,6 +1,6 @@
 name: 'Nomads Prices Virtual Fields'
 type: module
-description: 'Provides display-only virtual price-range field output for hosting paragraphs by combining Commerce min/max day and month price fields.'
+description: 'Provides display-only virtual price-range field output for hosting paragraphs by combining Commerce min/max day, week, and month price fields.'
 package: 'Nomads Display'
 core_version_requirement: ^11
 

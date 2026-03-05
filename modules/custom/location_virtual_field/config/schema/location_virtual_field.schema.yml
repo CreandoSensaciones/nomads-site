@@ -1,0 +1,10 @@
+core.entity_view_display.*.*.*.third_party.location_virtual_field:
+  type: mapping
+  label: 'Location virtual field display settings'
+  mapping:
+    link_terms:
+      type: boolean
+      label: 'Link terms'
+    max_bundles:
+      type: integer
+      label: 'Maximal number of bundles'

@@ -1,0 +1,6 @@
+services:
+  location_virtual_field.builder:
+    class: Drupal\location_virtual_field\LocationExtraFieldBuilder
+    arguments:
+      - '@entity_type.manager'
+      - '@string_translation'

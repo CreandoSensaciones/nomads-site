@@ -101,6 +101,7 @@
         "title title title"
         "left center right";
     gap: 10px;
+    row-gap: 0;
 }
 
 
@@ -112,7 +113,7 @@
   padding: 7px;
 }
 .node--type-listing.node--view-mode-teaser .teaser-inner-wrapper {
-  height: 250px;
+  height: 266px;
   overflow: hidden;
 }
 
@@ -151,7 +152,7 @@
 }
 
 .nomads-inner--constrained {
-  max-width: 1600px;
+  max-width: 1560px;
   margin: 0 auto;
   padding-left: 16px;
   padding-right: 16px;
@@ -292,11 +293,11 @@ article .field--name-field-description {
 .paragraph-left-column .icon-placeholder {
   display: block;
   float: left;
-  width: 130px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
 }
 .paragraph--viewmode-vm-3 .paragraph-left-column {
-  padding-top: 30px;
+  /* padding-top: 30px; */
 }
 .paragraph--viewmode-vm-3 .paragraph-right-column {
 }
@@ -318,4 +319,28 @@ div #paragraphs-container .paragraph-relevance-vfield--relevant {
   .div #paragraphs-container .paragraph-relevance-vfield--relevant {
     grid-template-columns: 1fr;
   }
+}
+
+#paragraphs-container .paragraph-relevance-vfield {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+}
+#paragraphs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+}
+
+#paragraphs-container .field--name-field-location-date {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+}
+
+.paragraph--viewmode-vm-3 .paragraph-center-column,
+.paragraph--viewmode-vm-3 .paragraph-left-column,
+.paragraph--viewmode-vm-3 .paragraph-right-column {
+  max-height: 510px;
+  overflow: hidden;
 }

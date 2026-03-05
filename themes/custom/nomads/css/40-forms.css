@@ -17,6 +17,23 @@
 
 
 
+.node-listing-form .vertical-tabs__pane .details-description {
+  margin-right: 220px;
+}
+.node-listing-form .vertical-tabs__pane .details-description p:first-of-type {
+  margin-right: 350px;
+}
+.relevance-paragraph .paragraph-top {
+  margin: 0;
+  height: 0;
+}
+
+
+
+
+fieldset.no-label label {
+  display: none;
+}
 
    button.nomads-easy-tagging__back {
     padding: 2px 7px;
@@ -495,7 +512,7 @@ form .geolocation-map-wrapper {
 details.relevance-paragraph {
   position: relative;
 }
-.relevance-paragraph .paragraphs-tabs-wrapper > div > table {
+.paragraphs-tabs-wrapper > div > table {
   width: 100%;
 }
 
@@ -568,9 +585,7 @@ div.inline-widgets.col3 {
   gap: 16px;
   align-items: start;
 }
-fieldset.no-label label {
-  display: none;
-}
+
 
 /* Make sure the heading spans across all 3 columns */
 .inline-widgets > h3 {
@@ -660,4 +675,19 @@ fieldset.no-label label {
 .relevance-ui .field--name-field-relevance2 .pretty-element.is-active label {
   background-color: #52CEDE;
   color: #000;
+}
+
+
+#group-price-range .form-type-commerce-number .description {
+  display: none;
+}
+.fieldset-hosting-capacity .field--type-integer {
+  text-align: center;
+}
+.fieldset-hosting-capacity .field--type-integer label {
+  font-weight: 600;
+  margin-right: 15px;
+}
+.fieldset-hosting-capacity .field--type-integer input {
+  width: 100px;
 }

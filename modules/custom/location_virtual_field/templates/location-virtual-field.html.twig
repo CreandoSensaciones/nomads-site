@@ -1,0 +1,13 @@
+{#
+/**
+ * @file
+ * Location virtual field output.
+ */
+#}
+{% set classes = wrapper_classes|default([]) %}
+<div class="{{ classes|join(' ') }}">
+  {% if label and label_display != 'hidden' %}
+    <div class="field__label">{{ label }}</div>
+  {% endif %}
+  {{ content }}
+</div>

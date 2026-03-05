@@ -47,9 +47,11 @@
         "drupal/manage_display": "^3.0",
         "drupal/masonry": "^4.1",
         "drupal/masonry_views": "^4.1",
+        "drupal/maxlength": "^3.1",
         "drupal/office_hours": "*",
         "drupal/optgroup_taxonomy_select": "^1.5",
         "drupal/paragraphs_class": "^1.0@alpha",
+        "drupal/paragraphs_edit": "^3.0",
         "drupal/physical": "^1.5",
         "drupal/select_or_other": "^4.2",
         "drupal/shs": "^2.0",
@@ -138,6 +140,7 @@
         }
     },
     "require-dev": {
+        "drupal/devel": "^5",
         "phpunit/phpunit": "^12.5"
     },
     "autoload": {

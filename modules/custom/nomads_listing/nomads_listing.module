@@ -17,3 +17,14 @@ function nomads_listing_entity_type_build(array &$entity_types): void {
     $entity_types['node']->set('enable_base_field_custom_preprocess_skipping', TRUE);
   }
 }
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function nomads_listing_menu_local_tasks_alter(array &$data, $route_name, \Drupal\Core\Cache\RefinableCacheableDependencyInterface &$cacheability): void {
+  if (!isset($data['tabs'][0]['entity.node.delete_form'])) {
+    return;
+  }
+
+  $data['tabs'][0]['entity.node.delete_form']['#weight'] = 999;
+}

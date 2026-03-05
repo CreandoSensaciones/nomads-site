@@ -75,15 +75,18 @@
   padding: 0;
   cursor: pointer;
 }
-.nomads-navbar__icon.search-icon {
+.nomads-navbar__icon.search-icon,
+.nomads-navbar__icon.create-listing {
   opacity: 0.5;
 }
 .nomads-navbar__icon:hover,
-.nomads-navbar__icon.active {
+.nomads-navbar__icon.active,
+.nomads-navbar__icon.create-listing:hover,
+.nomads-navbar__icon.create-listing:active {
   opacity: 1;
 }
 .nomads-navbar__icon.create-listing {
-  margin-right: 30px;
+  /* margin-right: 30px; */
 }
 
 .nomads-navbar__icon img {

@@ -7,12 +7,11 @@ viewBox="0 0 10000 10000"
  xmlns:xodm="http://www.corel.com/coreldraw/odm/2003">
  <g id="Ebene_x0020_1">
   <metadata id="CorelCorpID_0Corel-Layer"/>
-  <rect fill="#66C3D0" stroke="black" stroke-width="200" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="22.9256" x="2000" y="5900" width="6000" height="2000"/>
-  <circle fill="#FEFEFE" stroke="black" stroke-width="200" stroke-miterlimit="22.9256" cx="1800" cy="8100" r="1546"/>
+  <circle fill="#66C3D0" stroke="black" stroke-width="200" stroke-miterlimit="22.9256" cx="2177" cy="7723" r="1923"/>
   <g>
-   <path fill="black" d="M1583 7884l0 -684c0,-40 33,-73 73,-73l287 0c40,0 73,33 73,73l0 684 -433 0zm433 438l0 677c0,40 -33,73 -73,73l-287 0c-40,0 -73,-33 -73,-73l0 -683 433 5zm756 -366l0 287c0,40 -33,73 -73,73l-1799 0c-40,0 -73,-33 -73,-73l0 -287c0,-40 33,-73 73,-73l1799 0c40,0 73,33 73,73z"/>
-   <path id="1" fill="none" stroke="#2B2A29" stroke-width="21" stroke-miterlimit="22.9256" d="M1583 7884l0 -684c0,-40 33,-73 73,-73l287 0c40,0 73,33 73,73l0 684m0 438l0 677c0,40 -33,73 -73,73l-287 0c-40,0 -73,-33 -73,-73l0 -683m1189 -360l0 287c0,40 -33,73 -73,73l-1799 0c-40,0 -73,-33 -73,-73l0 -287c0,-40 33,-73 73,-73l1799 0c40,0 73,33 73,73z"/>
+   <path fill="black" d="M1887 7434l0 -916c0,-54 44,-98 98,-98l385 0c54,0 98,44 98,98l0 916 -580 0zm580 586l0 907c0,54 -44,98 -98,98l-385 0c-54,0 -98,-44 -98,-98l0 -914 580 7zm1012 -490l0 385c0,54 -44,98 -98,98l-2409 0c-54,0 -98,-44 -98,-98l0 -385c0,-54 44,-98 98,-98l2409 0c54,0 98,44 98,98z"/>
+   <path id="1" fill="none" stroke="#2B2A29" stroke-width="21" stroke-miterlimit="22.9256" d="M1887 7434l0 -916c0,-54 44,-98 98,-98l385 0c54,0 98,44 98,98l0 916m0 586l0 907c0,54 -44,98 -98,98l-385 0c-54,0 -98,-44 -98,-98l0 -914m1592 -483l0 385c0,54 -44,98 -98,98l-2409 0c-54,0 -98,-44 -98,-98l0 -385c0,-54 44,-98 98,-98l2409 0c54,0 98,44 98,98z"/>
   </g>
-  <path fill="#FEFEFE" fill-rule="nonzero" stroke="black" stroke-width="200" stroke-linejoin="round" stroke-miterlimit="22.9256" d="M4303 7000c783,-1000 1914,-2612 3187,-2437l0 424 2260 -848 -2260 -848 0 424c-1704,-20 -2829,1917 -3187,3285l0 0z"/>
+  <path fill="#FEFEFE" fill-rule="nonzero" stroke="black" stroke-width="200" stroke-linejoin="round" stroke-miterlimit="22.9256" d="M2900 6910c977,-1000 2390,-2612 3979,-2437l0 424 2821 -848 -2821 -848 0 424c-2127,-20 -3531,1917 -3979,3286l0 0z"/>
  </g>
 </svg>

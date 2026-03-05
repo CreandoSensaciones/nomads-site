@@ -1,0 +1,55 @@
+<?php
+
+/**
+ * @file
+ * Nomads Perks module.
+ */
+
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function nomads_perks_entity_extra_field_info(): array {
+  return [
+    'node' => [
+      'listing' => [
+        'display' => [
+          'perk_teaser' => [
+            'label' => t('Perk teaser'),
+            'description' => t('Renders the listing perks teaser text.'),
+            'weight' => 0,
+            'visible' => FALSE,
+          ],
+        ],
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_entity_view().
+ */
+function nomads_perks_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, string $view_mode): void {
+  if ($entity->getEntityTypeId() !== 'node' || !method_exists($entity, 'bundle') || $entity->bundle() !== 'listing') {
+    return;
+  }
+
+  $view_display = \Drupal::service('entity_display.repository')->getViewDisplay('node', 'listing', $view_mode);
+  $component = $view_display->getComponent('perk_teaser');
+  if (empty($component) || ($component['region'] ?? 'hidden') === 'hidden') {
+    return;
+  }
+
+  $build['perk_teaser'] = [
+    '#type' => 'html_tag',
+    '#tag' => 'span',
+    '#value' => t('Up to 33% member perks'),
+    '#attributes' => [
+      'class' => ['nomads-pill', 'perk-teaser'],
+    ],
+    '#weight' => $component['weight'] ?? 0,
+    '#region' => $component['region'] ?? 'content',
+  ];
+}

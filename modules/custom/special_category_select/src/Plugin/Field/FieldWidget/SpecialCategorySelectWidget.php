@@ -266,19 +266,25 @@ class SpecialCategorySelectWidget extends WidgetBase {
     $key_exists = NULL;
     $values = NestedArray::getValue($form_state->getUserInput(), $path, $key_exists);
 
-    if ($key_exists) {
-      $values = self::normalizeInputValues($values);
-      $values = $this->massageFormValues($values, $form, $form_state);
-      $items->setValue($values);
-      $items->filterEmptyItems();
-
-      $field_state = static::getWidgetState($form['#parents'], $field_name, $form_state);
-      foreach ($items as $delta => $item) {
-        $field_state['original_deltas'][$delta] = $item->_original_delta ?? $delta;
-        unset($item->_original_delta, $item->_weight, $item->_actions);
-      }
-      static::setWidgetState($form['#parents'], $field_name, $form_state, $field_state);
+    if (!$key_exists) {
+      $values = NestedArray::getValue($form_state->getValues(), $path, $key_exists);
     }
+    if (!$key_exists) {
+      return;
+    }
+
+    $values = is_array($values) ? $values : [];
+    $values = self::normalizeInputValues($values);
+    $values = $this->massageFormValues($values, $form, $form_state);
+    $items->setValue($values);
+    $items->filterEmptyItems();
+
+    $field_state = static::getWidgetState($form['#parents'], $field_name, $form_state);
+    foreach ($items as $delta => $item) {
+      $field_state['original_deltas'][$delta] = $item->_original_delta ?? $delta;
+      unset($item->_original_delta, $item->_weight, $item->_actions);
+    }
+    static::setWidgetState($form['#parents'], $field_name, $form_state, $field_state);
   }
 
   /**
@@ -307,7 +313,27 @@ class SpecialCategorySelectWidget extends WidgetBase {
     $value_map = [];
     foreach ($values as $value) {
       if (is_array($value) && isset($value['target_id']) && $value['target_id'] !== '') {
-        $value_map[(string) $value['target_id']] = $value;
+        $target_id = (int) $value['target_id'];
+        if ($target_id > 0) {
+          $value_map[(string) $target_id] = ['target_id' => $target_id];
+        }
+      }
+    }
+
+    // Fallback for degraded JS submissions where target_id inputs are missing:
+    // recover selected terms from the helper _cf_values payload.
+    if (empty($value_map) && isset($values['_cf_values']) && is_string($values['_cf_values'])) {
+      $raw_tokens = preg_split('/[\s,]+/', $values['_cf_values']) ?: [];
+      foreach ($raw_tokens as $token) {
+        $token = trim((string) $token);
+        if ($token === '' || !ctype_digit($token)) {
+          continue;
+        }
+        $target_id = (int) $token;
+        if ($target_id <= 0) {
+          continue;
+        }
+        $value_map[(string) $target_id] = ['target_id' => $target_id];
       }
     }
 
