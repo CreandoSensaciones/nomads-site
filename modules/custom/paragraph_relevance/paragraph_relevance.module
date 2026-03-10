@@ -777,7 +777,7 @@ function paragraph_relevance_after_build(array $form, FormStateInterface $form_s
     ? $form_object->getEntity()
     : NULL;
 
-  $source_field_names = ['field_type', 'field_tags', 'field_default_tags'];
+  $source_field_names = paragraph_relevance_source_field_names($entity);
   $source_elements = [];
   foreach ($source_field_names as $source_field_name) {
     $source_paths = paragraph_relevance_collect_field_paths($form, $source_field_name);
@@ -872,20 +872,23 @@ function paragraph_relevance_listing_submit(array &$form, FormStateInterface $fo
  * Implements hook_entity_presave().
  */
 function paragraph_relevance_entity_presave(EntityInterface $entity): void {
-  // Intentionally no-op.
-  // Pruning of empty paragraphs is done in the node form submit handler using
-  // submitted form values, because paragraph entities may look empty during
-  // node presave (AJAX widgets / Paragraphs autosave timing), which can cause
-  // real user-entered paragraphs to be removed.
-  return;
+  // Keep pruning disabled (handled on submit), but sync relevance to listing
+  // bundle fields on every listing save.
+  if (
+    $entity->getEntityTypeId() === 'node' &&
+    method_exists($entity, 'bundle') &&
+    $entity->bundle() === 'listing'
+  ) {
+    paragraph_relevance_with_listing_save_guard($entity, function () use ($entity): void {
+      paragraph_relevance_sync_listing_paragraph_effective_relevance($entity);
+    });
+  }
 }
 
 /**
  * Implements hook_entity_insert().
  */
 function paragraph_relevance_entity_insert(EntityInterface $entity): void {
-  // Disabled for now: parent autosave during paragraph save can clobber
-  // in-progress listing form submissions and drop paragraph references.
   return;
 }
 
@@ -893,8 +896,6 @@ function paragraph_relevance_entity_insert(EntityInterface $entity): void {
  * Implements hook_entity_update().
  */
 function paragraph_relevance_entity_update(EntityInterface $entity): void {
-  // Disabled for now: parent autosave during paragraph save can clobber
-  // in-progress listing form submissions and drop paragraph references.
   return;
 }
 
@@ -929,45 +930,6 @@ function paragraph_relevance_is_listing_form(FormStateInterface $form_state, str
 }
 
 /**
- * Sync parent listing relevance field from a saved relevance paragraph.
- */
-function paragraph_relevance_sync_parent_listing_from_paragraph_entity(EntityInterface $entity): void {
-  if ($entity->getEntityTypeId() !== 'paragraph' || !method_exists($entity, 'hasField')) {
-    return;
-  }
-  if (!$entity->hasField('field_relevance2')) {
-    return;
-  }
-  if (!method_exists($entity, 'getParentEntity')) {
-    return;
-  }
-
-  $parent = $entity->getParentEntity();
-  if (!$parent instanceof EntityInterface) {
-    return;
-  }
-  if ($parent->getEntityTypeId() !== 'node' || !method_exists($parent, 'bundle')) {
-    return;
-  }
-  if ($parent->bundle() !== 'listing' || $parent->isNew()) {
-    return;
-  }
-
-  if (paragraph_relevance_listing_save_in_progress($parent)) {
-    return;
-  }
-
-  if (paragraph_relevance_parent_listing_sync_in_progress()) {
-    return;
-  }
-
-  paragraph_relevance_with_parent_listing_sync_guard(function () use ($parent): void {
-    paragraph_relevance_sync_listing_paragraph_effective_relevance($parent);
-    $parent->save();
-  });
-}
-
-/**
  * Copy paragraph field_relevance2 values into listing field_<bundle>_relevance fields.
  */
 function paragraph_relevance_sync_listing_paragraph_effective_relevance(EntityInterface $listing): void {
@@ -977,6 +939,8 @@ function paragraph_relevance_sync_listing_paragraph_effective_relevance(EntityIn
   if ($listing->bundle() !== 'listing' || !method_exists($listing, 'getFieldDefinitions')) {
     return;
   }
+
+  $bundle_relevance_values = [];
 
   foreach ($listing->getFieldDefinitions() as $field_name => $definition) {
     if (!method_exists($definition, 'getType') || $definition->getType() !== 'entity_reference_revisions') {
@@ -1003,48 +967,140 @@ function paragraph_relevance_sync_listing_paragraph_effective_relevance(EntityIn
       }
 
       $value = paragraph_relevance_extract_value($paragraph->get('field_relevance2')->getValue());
-      if (paragraph_relevance_relevance_is_empty($value)) {
-        $listing->set($parent_relevance_field, []);
+      $current_value = $bundle_relevance_values[$parent_relevance_field] ?? NULL;
+
+      if ($current_value === NULL) {
+        $bundle_relevance_values[$parent_relevance_field] = $value;
       }
       else {
-        $listing->set($parent_relevance_field, $value);
+        $bundle_relevance_values[$parent_relevance_field] = paragraph_relevance_pick_higher_relevance($current_value, $value);
       }
+    }
+  }
+
+  $minimum_relevance_by_field = paragraph_relevance_collect_defaults_tags_min_relevance($listing);
+  foreach ($minimum_relevance_by_field as $field_name => $minimum) {
+    $current_value = $bundle_relevance_values[$field_name] ?? NULL;
+    $bundle_relevance_values[$field_name] = paragraph_relevance_enforce_minimum_relevance($current_value, $minimum);
+  }
+
+  foreach ($bundle_relevance_values as $field_name => $value) {
+    if (!$listing->hasField($field_name)) {
+      continue;
+    }
+
+    if (paragraph_relevance_relevance_is_empty($value)) {
+      $listing->set($field_name, []);
+    }
+    else {
+      $listing->set($field_name, $value);
     }
   }
 }
 
 /**
- * Run a callback while preventing recursive parent listing sync saves.
+ * Returns the higher of two relevance values.
  */
-function paragraph_relevance_with_parent_listing_sync_guard(callable $callback): void {
-  paragraph_relevance_parent_listing_sync_guard_depth(1);
-  try {
-    $callback();
+function paragraph_relevance_pick_higher_relevance($first, $second): ?string {
+  if (paragraph_relevance_relevance_is_empty($first)) {
+    return paragraph_relevance_relevance_is_empty($second) ? NULL : (string) $second;
   }
-  finally {
-    paragraph_relevance_parent_listing_sync_guard_depth(-1);
+  if (paragraph_relevance_relevance_is_empty($second)) {
+    return (string) $first;
   }
+
+  $first_number = is_numeric((string) $first) ? (float) $first : NULL;
+  $second_number = is_numeric((string) $second) ? (float) $second : NULL;
+  if ($first_number !== NULL && $second_number !== NULL) {
+    return (string) max($first_number, $second_number);
+  }
+
+  return (string) $second;
 }
 
 /**
- * Whether a parent listing sync save is already in progress.
+ * Enforces a minimum relevance value when both values are numeric.
  */
-function paragraph_relevance_parent_listing_sync_in_progress(): bool {
-  return paragraph_relevance_parent_listing_sync_guard_depth() > 0;
+function paragraph_relevance_enforce_minimum_relevance($value, $minimum): ?string {
+  $minimum = paragraph_relevance_relevance_is_empty($minimum) ? NULL : (string) $minimum;
+  if ($minimum === NULL) {
+    return paragraph_relevance_relevance_is_empty($value) ? NULL : (string) $value;
+  }
+
+  if (paragraph_relevance_relevance_is_empty($value)) {
+    return $minimum;
+  }
+
+  $value_number = is_numeric((string) $value) ? (float) $value : NULL;
+  $minimum_number = is_numeric($minimum) ? (float) $minimum : NULL;
+  if ($value_number !== NULL && $minimum_number !== NULL) {
+    return (string) max($value_number, $minimum_number);
+  }
+
+  return (string) $value;
 }
 
 /**
- * Shared recursion guard depth for parent listing sync operations.
+ * Builds minimum relevance requirements from listing defaults-tags terms.
+ *
+ * If at least two selected terms reference a key aspect that maps to a
+ * paragraph bundle, the corresponding listing field_<bundle>_relevance gets a
+ * minimum relevance of 1.
  */
-function paragraph_relevance_parent_listing_sync_guard_depth(int $delta = 0): int {
-  static $depth = 0;
-
-  $depth += $delta;
-  if ($depth < 0) {
-    $depth = 0;
+function paragraph_relevance_collect_defaults_tags_min_relevance(EntityInterface $listing): array {
+  $defaults_tags_field = '';
+  if ($listing->hasField('field_defaults_tags')) {
+    $defaults_tags_field = 'field_defaults_tags';
+  }
+  elseif ($listing->hasField('field_defualts_tags')) {
+    // Backward compatibility for misspelled field names.
+    $defaults_tags_field = 'field_defualts_tags';
   }
 
-  return $depth;
+  if ($defaults_tags_field === '' || $listing->get($defaults_tags_field)->isEmpty()) {
+    return [];
+  }
+
+  $bundle_counts = [];
+  foreach ($listing->get($defaults_tags_field)->referencedEntities() as $term) {
+    if (!$term instanceof EntityInterface || !$term->hasField('field_key_aspects') || $term->get('field_key_aspects')->isEmpty()) {
+      continue;
+    }
+
+    $term_bundles = [];
+    foreach ($term->get('field_key_aspects')->referencedEntities() as $key_aspect) {
+      if (!$key_aspect instanceof EntityInterface) {
+        continue;
+      }
+      $term_bundles = array_merge($term_bundles, paragraph_relevance_collect_term_bundles($key_aspect));
+    }
+
+    $term_bundles = array_values(array_unique(array_filter($term_bundles)));
+    foreach ($term_bundles as $bundle) {
+      $normalized_bundle = strtr((string) $bundle, ['-' => '_']);
+      if ($normalized_bundle === '') {
+        continue;
+      }
+      if (!isset($bundle_counts[$normalized_bundle])) {
+        $bundle_counts[$normalized_bundle] = 0;
+      }
+      $bundle_counts[$normalized_bundle]++;
+    }
+  }
+
+  $minimums = [];
+  foreach ($bundle_counts as $bundle => $count) {
+    if ($count < 2) {
+      continue;
+    }
+
+    $field_name = 'field_' . $bundle . '_relevance';
+    if ($listing->hasField($field_name)) {
+      $minimums[$field_name] = '1';
+    }
+  }
+
+  return $minimums;
 }
 
 /**
@@ -1550,20 +1606,43 @@ function paragraph_relevance_collect_group_paths(array $form, array $parents = [
 }
 
 /**
- * Collect selected term IDs from field_type in the form or entity.
+ * Collect selected term IDs from listing taxonomy source fields.
  */
 function paragraph_relevance_collect_selected_term_ids(?FormStateInterface $form_state, ?EntityInterface $entity): array {
   $term_ids = [];
+  $source_fields = paragraph_relevance_source_field_names($entity);
 
-  if ($form_state) {
-    $term_ids = paragraph_relevance_extract_term_ids($form_state->getValue('field_type'));
+  foreach ($source_fields as $field_name) {
+    if ($form_state) {
+      $term_ids = array_merge($term_ids, paragraph_relevance_extract_term_ids($form_state->getValue($field_name)));
+    }
+
+    if ($entity && $entity->hasField($field_name)) {
+      $term_ids = array_merge($term_ids, paragraph_relevance_extract_term_ids($entity->get($field_name)->getValue()));
+    }
   }
 
-  if (!$term_ids && $entity && $entity->hasField('field_type')) {
-    $term_ids = paragraph_relevance_extract_term_ids($entity->get('field_type')->getValue());
+  return array_values(array_unique(array_filter(array_map('intval', $term_ids))));
+}
+
+/**
+ * Resolve existing taxonomy-term source fields used for paragraph visibility.
+ */
+function paragraph_relevance_source_field_names(?EntityInterface $entity): array {
+  $candidates = ['field_type', 'field_tags', 'field_default_tags', 'field_defaults_tags'];
+
+  if (!$entity) {
+    return $candidates;
   }
 
-  return $term_ids;
+  $fields = [];
+  foreach ($candidates as $field_name) {
+    if ($entity->hasField($field_name)) {
+      $fields[] = $field_name;
+    }
+  }
+
+  return $fields;
 }
 
 /**

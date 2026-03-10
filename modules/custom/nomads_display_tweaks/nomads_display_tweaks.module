@@ -1,0 +1,263 @@
+<?php
+
+/**
+ * @file
+ * Display tweaks for field and formatter output.
+ */
+
+use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Render\Markup;
+
+/**
+ * Implements hook_entity_view_alter().
+ */
+function nomads_display_tweaks_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display): void {
+  nomads_display_tweaks_wrap_prefix_suffix_values($build);
+}
+
+/**
+ * Implements hook_preprocess_field().
+ */
+function nomads_display_tweaks_preprocess_field(array &$variables): void {
+  if (empty($variables['items']) || !is_array($variables['items'])) {
+    return;
+  }
+
+  $field_type = (string) ($variables['field_type'] ?? '');
+  $is_physical_field = in_array($field_type, ['physical_measurement', 'physical_dimensions'], TRUE);
+
+  $element = $variables['element'] ?? [];
+  [$prefixes, $suffixes] = nomads_display_tweaks_get_field_affix_candidates($element);
+  if (!$prefixes && !$suffixes && !$is_physical_field) {
+    return;
+  }
+
+  foreach ($variables['items'] as &$item) {
+    if (!isset($item['content']['#markup'])) {
+      continue;
+    }
+
+    $markup = (string) $item['content']['#markup'];
+    $updated = $markup;
+
+    $prefix = nomads_display_tweaks_match_affix($updated, $prefixes, TRUE);
+    if ($prefix !== NULL && !str_contains($updated, 'class="prefix"')) {
+      $updated = '<span class="prefix">' . $prefix . '</span>' . substr($updated, strlen($prefix));
+    }
+
+    $suffix = nomads_display_tweaks_match_affix($updated, $suffixes, FALSE);
+    if ($suffix !== NULL && !str_contains($updated, 'class="suffix"')) {
+      $updated = substr($updated, 0, -strlen($suffix)) . '<span class="suffix">' . $suffix . '</span>';
+    }
+
+    if ($is_physical_field && !str_contains($updated, 'class="suffix"')) {
+      $updated = nomads_display_tweaks_wrap_physical_unit_suffix($updated);
+    }
+
+    if ($updated !== $markup) {
+      $item['content']['#markup'] = Markup::create($updated);
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_range_formatter_range_combined().
+ */
+function nomads_display_tweaks_preprocess_range_formatter_range_combined(array &$variables): void {
+  foreach (['field_prefix', 'value_prefix'] as $key) {
+    if (array_key_exists($key, $variables)) {
+      $variables[$key] = nomads_display_tweaks_wrap_markup_value($variables[$key], 'prefix');
+    }
+  }
+
+  foreach (['value_suffix', 'field_suffix'] as $key) {
+    if (array_key_exists($key, $variables)) {
+      $variables[$key] = nomads_display_tweaks_wrap_markup_value($variables[$key], 'suffix');
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_range_formatter_range_separate().
+ */
+function nomads_display_tweaks_preprocess_range_formatter_range_separate(array &$variables): void {
+  foreach (['field_prefix', 'from_prefix', 'to_prefix'] as $key) {
+    if (array_key_exists($key, $variables)) {
+      $variables[$key] = nomads_display_tweaks_wrap_markup_value($variables[$key], 'prefix');
+    }
+  }
+
+  foreach (['from_suffix', 'to_suffix', 'field_suffix'] as $key) {
+    if (array_key_exists($key, $variables)) {
+      $variables[$key] = nomads_display_tweaks_wrap_markup_value($variables[$key], 'suffix');
+    }
+  }
+}
+
+/**
+ * Recursively wraps known prefix and suffix render values for field output.
+ */
+function nomads_display_tweaks_wrap_prefix_suffix_values(array &$element, ?string $field_type = NULL): void {
+  if (!empty($element['#field_type']) && is_string($element['#field_type'])) {
+    $field_type = $element['#field_type'];
+  }
+
+  $prefix_keys = [
+    '#prefix',
+    '#field_prefix',
+    '#from_prefix',
+    '#to_prefix',
+    '#value_prefix',
+  ];
+  $suffix_keys = [
+    '#suffix',
+    '#field_suffix',
+    '#from_suffix',
+    '#to_suffix',
+    '#value_suffix',
+  ];
+
+  foreach ($prefix_keys as $key) {
+    if (array_key_exists($key, $element)) {
+      $element[$key] = nomads_display_tweaks_wrap_markup_value($element[$key], 'prefix');
+    }
+  }
+
+  foreach ($suffix_keys as $key) {
+    if (array_key_exists($key, $element)) {
+      $element[$key] = nomads_display_tweaks_wrap_markup_value($element[$key], 'suffix');
+    }
+  }
+
+  if (
+    in_array($field_type, ['physical_measurement', 'physical_dimensions'], TRUE)
+    && isset($element['#markup'])
+  ) {
+    $markup = (string) $element['#markup'];
+    if (!str_contains($markup, 'class="suffix"')) {
+      $updated = nomads_display_tweaks_wrap_physical_unit_suffix($markup);
+      if ($updated !== $markup) {
+        $element['#markup'] = Markup::create($updated);
+      }
+    }
+  }
+
+  if (
+    in_array($field_type, ['integer', 'decimal', 'float', 'range_integer', 'range_decimal', 'range_float', 'physical_measurement', 'physical_dimensions'], TRUE)
+    && isset($element['#markup'])
+  ) {
+    $markup = (string) $element['#markup'];
+    if (!str_contains($markup, 'class="suffix"')) {
+      $updated = nomads_display_tweaks_wrap_trailing_text_suffix($markup);
+      if ($updated !== $markup) {
+        $element['#markup'] = Markup::create($updated);
+      }
+    }
+  }
+
+  foreach ($element as $key => &$child) {
+    if ((is_string($key) && str_starts_with($key, '#')) || !is_array($child)) {
+      continue;
+    }
+    nomads_display_tweaks_wrap_prefix_suffix_values($child, $field_type);
+  }
+}
+
+/**
+ * Wraps a string-like value in a span with the requested class.
+ */
+function nomads_display_tweaks_wrap_markup_value($value, string $class) {
+  if ($value === NULL || $value === '' || is_array($value)) {
+    return $value;
+  }
+
+  if (
+    !is_scalar($value)
+    && !$value instanceof MarkupInterface
+    && !(is_object($value) && method_exists($value, '__toString'))
+  ) {
+    return $value;
+  }
+
+  $string = (string) $value;
+  if (trim($string) === '') {
+    return $value;
+  }
+
+  // Prevent duplicate wrapping when another layer already applied it.
+  if (preg_match('/class=(["\']).*?\b' . preg_quote($class, '/') . '\b.*?\1/', $string)) {
+    return $value;
+  }
+
+  return Markup::create('<span class="' . $class . '">' . $string . '</span>');
+}
+
+/**
+ * Gets possible prefix/suffix candidates from field storage settings.
+ */
+function nomads_display_tweaks_get_field_affix_candidates(array $element): array {
+  $items = $element['#items'] ?? NULL;
+  if (!$items || !method_exists($items, 'getFieldDefinition')) {
+    return [[], []];
+  }
+
+  $settings = $items->getFieldDefinition()->getSettings();
+  if (!is_array($settings)) {
+    return [[], []];
+  }
+
+  $prefixes = isset($settings['prefix']) ? explode('|', (string) $settings['prefix']) : [];
+  $suffixes = isset($settings['suffix']) ? explode('|', (string) $settings['suffix']) : [];
+
+  $prefixes = array_values(array_filter(array_unique($prefixes), static fn ($value) => $value !== ''));
+  $suffixes = array_values(array_filter(array_unique($suffixes), static fn ($value) => $value !== ''));
+
+  // Match the most specific value first.
+  usort($prefixes, static fn ($a, $b) => strlen($b) <=> strlen($a));
+  usort($suffixes, static fn ($a, $b) => strlen($b) <=> strlen($a));
+
+  return [$prefixes, $suffixes];
+}
+
+/**
+ * Finds an affix that matches the beginning or end of the string.
+ */
+function nomads_display_tweaks_match_affix(string $value, array $candidates, bool $is_prefix): ?string {
+  foreach ($candidates as $candidate) {
+    if ($candidate === '') {
+      continue;
+    }
+    if ($is_prefix && str_starts_with($value, $candidate)) {
+      return $candidate;
+    }
+    if (!$is_prefix && str_ends_with($value, $candidate)) {
+      return $candidate;
+    }
+  }
+
+  return NULL;
+}
+
+/**
+ * Wraps the trailing unit label on physical field output.
+ */
+function nomads_display_tweaks_wrap_physical_unit_suffix(string $markup): string {
+  if (preg_match('/^(.*\S)(\s+[^\s<]+)$/u', $markup, $matches)) {
+    return $matches[1] . '<span class="suffix">' . $matches[2] . '</span>';
+  }
+
+  return $markup;
+}
+
+/**
+ * Wraps text suffixes that trail a numeric value (for numeric field output).
+ */
+function nomads_display_tweaks_wrap_trailing_text_suffix(string $markup): string {
+  if (preg_match('/^(.*\d)(\s+[^\d<][^<]*)$/u', $markup, $matches)) {
+    return $matches[1] . '<span class="suffix">' . $matches[2] . '</span>';
+  }
+
+  return $markup;
+}

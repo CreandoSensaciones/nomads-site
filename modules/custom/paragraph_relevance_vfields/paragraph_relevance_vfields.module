@@ -60,11 +60,11 @@ function paragraph_relevance_vfields_entity_view(array &$build, EntityInterface 
     $build['key_aspects'] = paragraph_relevance_vfields_build_key_aspects($entity, $display);
   }
 
-  if ($display->getComponent('core_focus_paragraphs_3') !== NULL) {
+  if ($view_mode !== 'teaser' && $display->getComponent('core_focus_paragraphs_3') !== NULL) {
     $build['core_focus_paragraphs_3'] = paragraph_relevance_vfields_build($entity, 3);
   }
 
-  if ($display->getComponent('relevant_paragraphs_2') !== NULL) {
+  if ($view_mode !== 'teaser' && $display->getComponent('relevant_paragraphs_2') !== NULL) {
     $build['relevant_paragraphs_2'] = paragraph_relevance_vfields_build($entity, 2);
   }
 }
@@ -296,10 +296,7 @@ function paragraph_relevance_vfields_collect_key_aspect_sections(EntityInterface
     if ($bundle === '') {
       continue;
     }
-    if (!$paragraph->hasField('field_relevance2')) {
-      continue;
-    }
-    $relevance_value = (int) ($paragraph->get('field_relevance2')->value ?? 0);
+    $relevance_value = paragraph_relevance_vfields_extract_paragraph_relevance_value($paragraph);
     if ($relevance_value !== $target_relevance) {
       continue;
     }
@@ -438,6 +435,14 @@ function paragraph_relevance_vfields_form_entity_view_display_edit_form_alter(ar
       '#default_value' => (string) ($settings['top_label'] ?? $defaults['top_label']),
       '#description' => t('Optional heading rendered as H3 above all key aspect groups.'),
     ];
+    $form['fields']['key_aspects']['plugin']['settings_edit_form']['settings']['max_items'] = [
+      '#type' => 'number',
+      '#title' => t('Max items'),
+      '#default_value' => (int) ($settings['max_items'] ?? $defaults['max_items']),
+      '#min' => 0,
+      '#step' => 1,
+      '#description' => t('Maximum total key aspect items to render across Core focus, Important Aspect, and Minor relevance. Use 0 for unlimited.'),
+    ];
 
     $form['fields']['key_aspects']['plugin']['settings_edit_form']['actions'] = [
       '#type' => 'actions',
@@ -522,6 +527,7 @@ function paragraph_relevance_vfields_build_key_aspects(EntityInterface $listing,
     ->addCacheContexts(['url.site']);
 
   $key_aspect_terms = paragraph_relevance_vfields_key_aspect_terms($cacheability);
+  $key_aspect_terms = paragraph_relevance_vfields_append_missing_key_aspect_terms($listing, $key_aspect_terms, $cacheability);
   if (!$key_aspect_terms) {
     $build = ['#access' => FALSE];
     $cacheability->applyTo($build);
@@ -530,14 +536,12 @@ function paragraph_relevance_vfields_build_key_aspects(EntityInterface $listing,
 
   $settings = paragraph_relevance_vfields_key_aspects_settings($display);
   $groups = paragraph_relevance_vfields_key_aspects_groups();
+  $max_items = max(0, (int) ($settings['max_items'] ?? 0));
 
   $group_items = [];
   foreach ($groups as $group) {
     $group_items[$group['key']] = [];
   }
-
-  $paragraphs = paragraph_relevance_vfields_collect_paragraphs($listing, $cacheability);
-  $paragraphs_by_bundle = paragraph_relevance_vfields_group_paragraphs_by_bundle($paragraphs);
 
   foreach ($key_aspect_terms as $term) {
     $term_label = trim((string) $term->label());
@@ -545,34 +549,26 @@ function paragraph_relevance_vfields_build_key_aspects(EntityInterface $listing,
       continue;
     }
 
-    $bundle = trim((string) ($term->get('field_paragraph_bundle')->value ?? ''));
-    if ($bundle === '' || empty($paragraphs_by_bundle[$bundle])) {
+    $bundle = paragraph_relevance_vfields_resolve_key_aspect_bundle($term);
+    if ($bundle === '') {
       continue;
     }
 
-    foreach ($paragraphs_by_bundle[$bundle] as $paragraph) {
-      if (paragraph_relevance_vfields_is_ignored_paragraph($paragraph)) {
-        continue;
-      }
-      if (!$paragraph->hasField('field_relevance2')) {
-        continue;
-      }
-      $relevance_value = (int) ($paragraph->get('field_relevance2')->value ?? 0);
-      if (!isset($groups[$relevance_value])) {
-        continue;
-      }
+    $relevance_value = paragraph_relevance_vfields_listing_bundle_relevance($listing, $bundle);
+    if (!isset($groups[$relevance_value])) {
+      continue;
+    }
 
-      $group_key = $groups[$relevance_value]['key'];
-      $output = (string) ($settings[$group_key]['output'] ?? 'icon');
-      $anchor = (bool) ($settings[$group_key]['anchor'] ?? FALSE);
-      if ($output === 'none') {
-        continue;
-      }
+    $group_key = $groups[$relevance_value]['key'];
+    $output = (string) ($settings[$group_key]['output'] ?? 'icon');
+    $anchor = (bool) ($settings[$group_key]['anchor'] ?? FALSE);
+    if ($output === 'none') {
+      continue;
+    }
 
-      $item = paragraph_relevance_vfields_build_key_aspect_item($paragraph, $output, $anchor, $cacheability);
-      if ($item) {
-        $group_items[$group_key][] = $item;
-      }
+    $item = paragraph_relevance_vfields_build_key_aspect_item_from_bundle($bundle, (string) $term->label(), $output, $anchor, $cacheability);
+    if ($item) {
+      $group_items[$group_key][] = $item;
     }
   }
 
@@ -608,6 +604,7 @@ function paragraph_relevance_vfields_build_key_aspects(EntityInterface $listing,
   }
 
   $has_output = FALSE;
+  $rendered_items_total = 0;
   foreach ($groups as $group) {
     $key = $group['key'];
     $output = (string) ($settings[$key]['output'] ?? 'icon');
@@ -617,6 +614,20 @@ function paragraph_relevance_vfields_build_key_aspects(EntityInterface $listing,
     }
     if (empty($group_items[$key])) {
       continue;
+    }
+
+    $items_for_group = $group_items[$key];
+    if ($max_items > 0) {
+      $remaining = $max_items - $rendered_items_total;
+      if ($remaining <= 0) {
+        break;
+      }
+      if (count($items_for_group) > $remaining) {
+        $items_for_group = array_slice($items_for_group, 0, $remaining);
+      }
+      if (empty($items_for_group)) {
+        continue;
+      }
     }
 
     $label = (string) ($settings[$key]['label'] ?? $group['label']);
@@ -657,7 +668,7 @@ function paragraph_relevance_vfields_build_key_aspects(EntityInterface $listing,
         'class' => $items_classes,
       ],
     ];
-    foreach ($group_items[$key] as $delta => $item) {
+    foreach ($items_for_group as $delta => $item) {
       $group_build['items'][$delta] = [
         '#type' => 'container',
         '#attributes' => [
@@ -672,6 +683,7 @@ function paragraph_relevance_vfields_build_key_aspects(EntityInterface $listing,
 
     $build[$key] = $group_build;
     $has_output = TRUE;
+    $rendered_items_total += count($items_for_group);
   }
 
   if (!$has_output) {
@@ -685,16 +697,19 @@ function paragraph_relevance_vfields_build_key_aspects(EntityInterface $listing,
 }
 
 /**
- * Build a render array for a single key aspect item.
+ * Build a render array for a single key aspect item from paragraph bundle.
  */
-function paragraph_relevance_vfields_build_key_aspect_item(ParagraphInterface $paragraph, string $output, bool $anchor, CacheableMetadata $cacheability): array {
-  $cacheability->addCacheableDependency($paragraph);
-  $paragraph_type = $paragraph->getParagraphType();
-  if ($paragraph_type) {
+function paragraph_relevance_vfields_build_key_aspect_item_from_bundle(string $bundle, string $fallback_label, string $output, bool $anchor, CacheableMetadata $cacheability): array {
+  $paragraph_type = paragraph_relevance_vfields_load_paragraph_type($bundle);
+  if ($paragraph_type instanceof EntityInterface) {
     $cacheability->addCacheableDependency($paragraph_type);
   }
 
-  $label = $paragraph_type ? (string) $paragraph_type->label() : (string) $paragraph->bundle();
+  $label = $paragraph_type ? (string) $paragraph_type->label() : trim($fallback_label);
+  if ($label === '') {
+    $label = $bundle;
+  }
+
   $icon_url = '';
   if ($paragraph_type && method_exists($paragraph_type, 'getIconFile')) {
     $icon = $paragraph_type->getIconFile();
@@ -713,7 +728,7 @@ function paragraph_relevance_vfields_build_key_aspect_item(ParagraphInterface $p
         'label' => $label,
       ],
     ];
-    return paragraph_relevance_vfields_wrap_anchor($item, $paragraph, $anchor);
+    return paragraph_relevance_vfields_wrap_anchor($item, $bundle, $anchor);
   }
 
   if ($output === 'pill') {
@@ -724,7 +739,7 @@ function paragraph_relevance_vfields_build_key_aspect_item(ParagraphInterface $p
         'label' => $label,
       ],
     ];
-    return paragraph_relevance_vfields_wrap_anchor($item, $paragraph, $anchor);
+    return paragraph_relevance_vfields_wrap_anchor($item, $bundle, $anchor);
   }
 
   $item = [
@@ -734,7 +749,7 @@ function paragraph_relevance_vfields_build_key_aspect_item(ParagraphInterface $p
       'label' => $label,
     ],
   ];
-  return paragraph_relevance_vfields_wrap_anchor($item, $paragraph, $anchor);
+  return paragraph_relevance_vfields_wrap_anchor($item, $bundle, $anchor);
 }
 
 /**
@@ -764,6 +779,7 @@ function paragraph_relevance_vfields_key_aspects_default_settings(): array {
   return [
     'ignore_crew_and_audience' => FALSE,
     'top_label' => '',
+    'max_items' => 0,
     'core_focus' => [
       'output' => 'icon',
       'label' => 'Core focus',
@@ -814,6 +830,10 @@ function paragraph_relevance_vfields_key_aspects_settings_summary(array $setting
   $top_label = trim((string) ($settings['top_label'] ?? ''));
   $summary[] = t('Top label: @value', [
     '@value' => $top_label !== '' ? $top_label : t('None'),
+  ]);
+  $max_items = max(0, (int) ($settings['max_items'] ?? 0));
+  $summary[] = t('Max items: @value', [
+    '@value' => $max_items > 0 ? $max_items : t('Unlimited'),
   ]);
   $summary[] = t('Ignore crew and audience: @value', [
     '@value' => !empty($settings['ignore_crew_and_audience']) ? t('Yes') : t('No'),
@@ -873,6 +893,9 @@ function paragraph_relevance_vfields_apply_key_aspects_settings(EntityViewDispla
   $normalized['top_label'] = isset($settings_values['top_label'])
     ? trim((string) $settings_values['top_label'])
     : '';
+  $normalized['max_items'] = isset($settings_values['max_items'])
+    ? max(0, (int) $settings_values['max_items'])
+    : max(0, (int) ($defaults['max_items'] ?? 0));
 
   $display->setThirdPartySetting('paragraph_relevance_vfields', 'key_aspects', $normalized);
 }
@@ -880,13 +903,12 @@ function paragraph_relevance_vfields_apply_key_aspects_settings(EntityViewDispla
 /**
  * Wrap a key aspect item in an anchor link when enabled.
  */
-function paragraph_relevance_vfields_wrap_anchor(array $item, ParagraphInterface $paragraph, bool $anchor): array {
+function paragraph_relevance_vfields_wrap_anchor(array $item, string $bundle, bool $anchor): array {
   if (!$anchor) {
     return $item;
   }
 
-  $bundle = (string) $paragraph->bundle();
-  if ($bundle === '') {
+  if (trim($bundle) === '') {
     return $item;
   }
 
@@ -919,4 +941,199 @@ function paragraph_relevance_vfields_ignored_paragraph_bundles(): array {
     'reference',
     'paragraph_type_reference',
   ];
+}
+
+/**
+ * Gets listing bundle relevance from field_<bundle>_relevance.
+ */
+function paragraph_relevance_vfields_listing_bundle_relevance(EntityInterface $listing, string $bundle): int {
+  $field_name = 'field_' . strtr(trim($bundle), ['-' => '_']) . '_relevance';
+  if ($field_name === 'field__relevance' || !$listing->hasField($field_name) || $listing->get($field_name)->isEmpty()) {
+    return 0;
+  }
+
+  $raw = trim((string) ($listing->get($field_name)->value ?? ''));
+  if ($raw === '') {
+    return 0;
+  }
+  if (is_numeric($raw)) {
+    return (int) $raw;
+  }
+  if (preg_match('/-?\d+/', $raw, $matches)) {
+    return (int) $matches[0];
+  }
+  return 0;
+}
+
+/**
+ * Resolve the key-aspect bundle identifier for relevance field mapping.
+ */
+function paragraph_relevance_vfields_resolve_key_aspect_bundle(TermInterface $term): string {
+  $bundle = trim((string) ($term->get('field_paragraph_bundle')->value ?? ''));
+  if ($bundle !== '') {
+    return $bundle;
+  }
+
+  return paragraph_relevance_vfields_normalize_bundle_key((string) $term->label());
+}
+
+/**
+ * Append missing key-aspect terms inferred from listing relevance fields.
+ */
+function paragraph_relevance_vfields_append_missing_key_aspect_terms(EntityInterface $listing, array $terms, CacheableMetadata $cacheability): array {
+  $active_bundles = paragraph_relevance_vfields_listing_active_relevance_bundles($listing);
+  if ($active_bundles === []) {
+    return $terms;
+  }
+
+  $existing_bundles = [];
+  $existing_term_ids = [];
+  foreach ($terms as $term) {
+    if (!$term instanceof TermInterface) {
+      continue;
+    }
+    $existing_term_ids[(int) $term->id()] = TRUE;
+    $bundle = paragraph_relevance_vfields_resolve_key_aspect_bundle($term);
+    if ($bundle !== '') {
+      $existing_bundles[$bundle] = TRUE;
+    }
+  }
+
+  $missing_bundles = array_values(array_filter($active_bundles, static fn(string $bundle): bool => !isset($existing_bundles[$bundle])));
+  if ($missing_bundles === []) {
+    return $terms;
+  }
+
+  /** @var \Drupal\taxonomy\TermStorageInterface $storage */
+  $storage = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
+  $all_terms = $storage->loadByProperties(['vid' => 'key_aspects']);
+
+  $by_bundle = [];
+  $by_label_key = [];
+  foreach ($all_terms as $candidate) {
+    if (!$candidate instanceof TermInterface) {
+      continue;
+    }
+    $cacheability->addCacheableDependency($candidate);
+
+    $candidate_bundle = trim((string) ($candidate->get('field_paragraph_bundle')->value ?? ''));
+    if ($candidate_bundle !== '' && !isset($by_bundle[$candidate_bundle])) {
+      $by_bundle[$candidate_bundle] = $candidate;
+    }
+
+    $label_key = paragraph_relevance_vfields_normalize_bundle_key((string) $candidate->label());
+    if ($label_key !== '' && !isset($by_label_key[$label_key])) {
+      $by_label_key[$label_key] = $candidate;
+    }
+  }
+
+  foreach ($missing_bundles as $bundle) {
+    $candidate = $by_bundle[$bundle] ?? $by_label_key[$bundle] ?? NULL;
+    if (!$candidate instanceof TermInterface) {
+      continue;
+    }
+    $candidate_id = (int) $candidate->id();
+    if (isset($existing_term_ids[$candidate_id])) {
+      continue;
+    }
+    $terms[] = $candidate;
+    $existing_term_ids[$candidate_id] = TRUE;
+  }
+
+  return $terms;
+}
+
+/**
+ * Collect bundle keys from listing relevance fields with positive values.
+ *
+ * @return string[]
+ *   Bundle keys such as "culture" for field_culture_relevance.
+ */
+function paragraph_relevance_vfields_listing_active_relevance_bundles(EntityInterface $listing): array {
+  if (!method_exists($listing, 'getFieldDefinitions')) {
+    return [];
+  }
+
+  $bundles = [];
+  foreach ($listing->getFieldDefinitions() as $field_name => $definition) {
+    if (!preg_match('/^field_(.+)_relevance$/', (string) $field_name, $matches)) {
+      continue;
+    }
+    if (!$listing->hasField($field_name) || $listing->get($field_name)->isEmpty()) {
+      continue;
+    }
+
+    $raw = trim((string) ($listing->get($field_name)->value ?? ''));
+    if ($raw === '') {
+      continue;
+    }
+    $value = is_numeric($raw) ? (int) $raw : ((preg_match('/-?\d+/', $raw, $m) ? (int) $m[0] : 0));
+    if ($value <= 0) {
+      continue;
+    }
+
+    $bundle = paragraph_relevance_vfields_normalize_bundle_key((string) $matches[1]);
+    if ($bundle !== '') {
+      $bundles[$bundle] = TRUE;
+    }
+  }
+
+  return array_keys($bundles);
+}
+
+/**
+ * Normalize a bundle key used in relevance field name comparisons.
+ */
+function paragraph_relevance_vfields_normalize_bundle_key(string $value): string {
+  $value = strtolower(trim($value));
+  if ($value === '') {
+    return '';
+  }
+  $value = str_replace([' ', '-'], '_', $value);
+  $value = preg_replace('/[^a-z0-9_]+/', '_', $value) ?? '';
+  return trim((string) preg_replace('/_+/', '_', $value), '_');
+}
+
+/**
+ * Loads paragraph type entity by bundle machine name.
+ */
+function paragraph_relevance_vfields_load_paragraph_type(string $bundle): ?EntityInterface {
+  $bundle = trim($bundle);
+  if ($bundle === '') {
+    return NULL;
+  }
+
+  static $cache = [];
+  if (array_key_exists($bundle, $cache)) {
+    return $cache[$bundle];
+  }
+
+  $cache[$bundle] = \Drupal::entityTypeManager()->getStorage('paragraphs_type')->load($bundle);
+  return $cache[$bundle];
+}
+
+/**
+ * Extract relevance as a normalized integer from paragraph relevance fields.
+ */
+function paragraph_relevance_vfields_extract_paragraph_relevance_value(ParagraphInterface $paragraph): int {
+  foreach (['field_relevance2', 'field_relevance'] as $field_name) {
+    if (!$paragraph->hasField($field_name) || $paragraph->get($field_name)->isEmpty()) {
+      continue;
+    }
+
+    $raw = trim((string) ($paragraph->get($field_name)->value ?? ''));
+    if ($raw === '') {
+      continue;
+    }
+
+    if (is_numeric($raw)) {
+      return (int) $raw;
+    }
+
+    if (preg_match('/-?\d+/', $raw, $matches)) {
+      return (int) $matches[0];
+    }
+  }
+
+  return 0;
 }

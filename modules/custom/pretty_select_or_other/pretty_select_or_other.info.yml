@@ -1,0 +1,8 @@
+name: 'Pretty Select or Other'
+type: module
+description: 'Adds a Select or Other widget variant that applies Pretty Checkboxes/Radios styling.'
+package: 'Nomads Forms'
+core_version_requirement: '^11'
+dependencies:
+  - drupal:select_or_other
+  - drupal:pcr

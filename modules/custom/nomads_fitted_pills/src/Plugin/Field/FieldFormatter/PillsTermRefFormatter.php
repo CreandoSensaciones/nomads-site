@@ -34,6 +34,7 @@ class PillsTermRefFormatter extends FittedPillsFormatterBase {
   public static function defaultSettings(): array {
     return [
       'link' => TRUE,
+      'max_items' => 0,
     ] + parent::defaultSettings();
   }
 
@@ -53,6 +54,13 @@ class PillsTermRefFormatter extends FittedPillsFormatterBase {
         '#default_value' => $this->getSetting('link'),
         '#description' => $this->t('Link pills to the taxonomy term page.'),
       ],
+      'max_items' => [
+        '#type' => 'number',
+        '#title' => $this->t('Max items'),
+        '#default_value' => (int) $this->getSetting('max_items'),
+        '#min' => 0,
+        '#description' => $this->t('Maximum pills to render. Use 0 for unlimited.'),
+      ],
     ];
   }
 
@@ -63,6 +71,9 @@ class PillsTermRefFormatter extends FittedPillsFormatterBase {
     return [
       $this->t('Show tooltip: @value', ['@value' => $this->getSetting('show_tooltip') ? $this->t('Yes') : $this->t('No')]),
       $this->t('Link: @value', ['@value' => $this->getSetting('link') ? $this->t('Yes') : $this->t('No')]),
+      $this->t('Max items: @value', [
+        '@value' => ((int) $this->getSetting('max_items') <= 0) ? $this->t('Unlimited') : (int) $this->getSetting('max_items'),
+      ]),
     ];
   }
 
@@ -100,6 +111,11 @@ class PillsTermRefFormatter extends FittedPillsFormatterBase {
 
     if ($pill_items === []) {
       return [];
+    }
+
+    $max_items = max(0, (int) $this->getSetting('max_items'));
+    if ($max_items > 0) {
+      $pill_items = array_slice($pill_items, 0, $max_items);
     }
 
     $build = [

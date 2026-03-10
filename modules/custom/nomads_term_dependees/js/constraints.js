@@ -72,7 +72,10 @@
           write: (tids) => {
             writeHiddenSelected(hidden, tids);
           },
-          allTids: () => collectCardTids(root),
+          allTids: () => uniqueInts([
+            ...collectCardTids(root),
+            ...readHiddenSelected(hidden),
+          ]),
           disableTid: (tid, disabled) => {
             root.querySelectorAll(`.nomads-easy-tagging__card[data-tid="${tid}"]`).forEach((card) => {
               card.classList.toggle('is-no-combine-disabled', disabled);

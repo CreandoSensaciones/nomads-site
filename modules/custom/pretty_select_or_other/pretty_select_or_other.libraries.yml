@@ -1,0 +1,5 @@
+widget:
+  version: 1.x
+  css:
+    theme:
+      css/pretty_select_or_other.widget.css: {}

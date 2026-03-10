@@ -79,6 +79,41 @@
     return uniqueInts(selected);
   }
 
+  function collectSelectedFromFieldName(form, fieldName) {
+    if (!form || !fieldName) {
+      return [];
+    }
+
+    var selectors = [
+      '[name="' + fieldName + '"]',
+      '[name^="' + fieldName + '["]'
+    ];
+    var selected = [];
+
+    form.querySelectorAll(selectors.join(', ')).forEach(function (control) {
+      var tag = (control.tagName || '').toLowerCase();
+      var type = (control.type || '').toLowerCase();
+
+      if (tag === 'select') {
+        Array.prototype.forEach.call(control.selectedOptions || [], function (option) {
+          selected = selected.concat(readTermIdsFromValue(option.value));
+        });
+        return;
+      }
+
+      if (type === 'checkbox' || type === 'radio') {
+        if (control.checked) {
+          selected = selected.concat(readTermIdsFromValue(control.value));
+        }
+        return;
+      }
+
+      selected = selected.concat(readTermIdsFromValue(control.value));
+    });
+
+    return uniqueInts(selected);
+  }
+
   function findGroupMenuItem(group) {
     var form = group.closest('form');
     if (!form) {
@@ -213,11 +248,17 @@
   function applyVisibility(form) {
     var settings = drupalSettings.paragraphRelevance || {};
     var termBundleMap = settings.termBundles || {};
+    var sourceFields = Array.isArray(settings.sourceFields) ? settings.sourceFields : [];
 
     var selected = [];
     form.querySelectorAll('[data-paragraph-relevance-source]').forEach(function (source) {
       selected = selected.concat(collectSelectedFromSource(source));
     });
+
+    sourceFields.forEach(function (fieldName) {
+      selected = selected.concat(collectSelectedFromFieldName(form, fieldName));
+    });
+
     selected = uniqueInts(selected);
 
     var visibleBundles = computeVisibleBundles(selected, termBundleMap);

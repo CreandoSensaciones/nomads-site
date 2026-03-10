@@ -1,0 +1,5 @@
+name: Nomads Display Tweaks
+type: module
+description: 'Display tweaks for field and formatter output.'
+package: 'Nomads Display'
+core_version_requirement: ^10 || ^11

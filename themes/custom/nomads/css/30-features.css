@@ -14,3 +14,81 @@ Debug region outlines (disabled in production)
 .region-bottom { outline: 3px solid cyan; }
 .region-footer { outline: 3px solid blue; }
 */
+
+
+/* ========== Hero Gallery ========== */
+
+#hero-gallery img { 
+  border-radius: 8px;
+}
+
+
+/* ========== Local tasks Pill ========== */
+
+  /* Big pill select */
+.nomads-title-local-tasks__select{
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  display: inline-block;
+  width: 100%;
+  max-width: 150px;          /* adjust */
+  height: 40px;              /* “big pill” */
+  padding: 0 54px 0 18px;    /* space for arrow on right */
+
+  border-radius: 9999px;
+  border: 1px solid rgba(0,0,0,.18);
+  background: #fff;
+
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 40px;         /* keeps text vertically centered */
+  cursor: pointer;
+
+  box-sizing: border-box;
+}
+
+/* Hover + focus */
+.nomads-title-local-tasks__select:hover{
+  border-color: rgba(0,0,0,.30);
+}
+
+.nomads-title-local-tasks__select:focus{
+  outline: none;
+  border-color: rgba(0,0,0,.45);
+  box-shadow: 0 0 0 4px rgba(18,183,200,.18); /* matches your brand-ish cyan */
+}
+
+/* Wrapper: add a custom dropdown arrow */
+.nomads-title-local-tasks__select-wrap{
+  position: relative;
+  display: inline-block;
+  max-height: 50px;
+}
+
+/* Arrow (no SVG needed) */
+.nomads-title-local-tasks__select-wrap::after{
+  content: "";
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid rgba(0,0,0,.55);
+  border-bottom: 2px solid rgba(0,0,0,.55);
+  transform: translateY(-60%) rotate(45deg);
+  pointer-events: none;
+}
+
+/* Optional: nicer disabled state */
+.nomads-title-local-tasks__select:disabled{
+  opacity: .55;
+  cursor: not-allowed;
+}
+› /* FOUC prevention, reserve space */
+  html:not(.nomads-ready) .nomads-title-local-tasks__select-wrap{
+    min-height: 50px;     /* match your pill height */
+    width: 100%;          /* or your fixed width */
+  }
+

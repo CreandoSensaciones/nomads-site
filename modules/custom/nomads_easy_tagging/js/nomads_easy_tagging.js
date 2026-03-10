@@ -621,22 +621,13 @@
     bindBackButton(widget, section, selectedInput, typeFieldName);
   };
 
-  const removeOpenSectionByTid = (widget, termId) => {
-    const tid = String(termId || '');
-    if (!tid) {
-      return;
-    }
-    const section = widget.querySelector(`.nomads-easy-tagging__section--dynamic[data-opened-by-tid="${tid}"]`);
-    if (section) {
-      section.remove();
-    }
-  };
-
   const syncOpenSectionsWithSelection = (widget, selectedIds) => {
     const selectedLookup = new Set((selectedIds || []).map((id) => String(id)));
     widget.querySelectorAll('.nomads-easy-tagging__section--dynamic[data-opened-by-tid]').forEach((section) => {
       const openedByTid = section.dataset.openedByTid || '';
-      if (!selectedLookup.has(openedByTid)) {
+      const hasSelectedDescendant = Array.from(section.querySelectorAll('.nomads-easy-tagging__card[data-tid]'))
+        .some((card) => selectedLookup.has(String(card.dataset.tid || '')));
+      if (!selectedLookup.has(openedByTid) && !hasSelectedDescendant) {
         section.remove();
       }
     });
@@ -673,13 +664,6 @@
     heading.className = 'nomads-easy-tagging__heading';
     heading.textContent = sourceCard.querySelector('.nomads-easy-tagging__card-label')?.textContent || '';
     section.appendChild(heading);
-
-    const backButton = document.createElement('button');
-    backButton.type = 'button';
-    backButton.className = 'nomads-easy-tagging__back';
-    backButton.dataset.back = '1';
-    backButton.textContent = 'Back';
-    section.appendChild(backButton);
 
     const dynamicCardsContainer = document.createElement('div');
     dynamicCardsContainer.className = 'nomads-easy-tagging__cards';
@@ -719,6 +703,52 @@
 
     initializeSection(widget, section, selectedInput, typeFieldName);
     return section;
+  };
+
+  const restoreOpenSectionsFromSelection = async (widget, selectedInput, typeFieldName) => {
+    if (!widget || !selectedInput) {
+      return;
+    }
+
+    for (let depth = 0; depth < 10; depth += 1) {
+      const selectedLookup = new Set(parseSelected(selectedInput).map((id) => String(id)));
+      const toOpen = Array.from(
+        widget.querySelectorAll('.nomads-easy-tagging__card[data-has-children="1"][data-branch-mode][data-tid]')
+      ).filter((card) => {
+        const termId = String(card.dataset.tid || '');
+        if (!termId || !selectedLookup.has(termId)) {
+          return false;
+        }
+        const branchMode = (card.dataset.branchMode || 'ignore').toLowerCase();
+        if (branchMode !== 'open') {
+          return false;
+        }
+        return !widget.querySelector(`.nomads-easy-tagging__section--dynamic[data-opened-by-tid="${termId}"]`);
+      });
+
+      if (!toOpen.length) {
+        break;
+      }
+
+      for (const card of toOpen) {
+        const section = card.closest('.nomads-easy-tagging__section');
+        const termId = parseInt(card.dataset.tid || '0', 10);
+        if (!section || !termId) {
+          continue;
+        }
+
+        try {
+          const payload = await fetchChildren(widget, termId);
+          if (!payload) {
+            continue;
+          }
+          createDynamicSection(widget, section, card, selectedInput, typeFieldName, payload);
+        }
+        catch (error) {
+          // Ignore failed restore calls and continue with remaining sections.
+        }
+      }
+    }
   };
 
   const handleCardClick = async (card, root) => {
@@ -781,7 +811,6 @@
         selectedIds.splice(selectedIndex, 1);
         setSelected(selectedInput, selectedIds);
         card.classList.remove('is-selected');
-        removeOpenSectionByTid(root, termId);
         syncOpenSectionsWithSelection(root, selectedIds);
         refreshConstraints(root, selectedInput, typeFieldName);
         return;
@@ -914,12 +943,16 @@
           });
         }
 
+        bindCategoryStepFlow(widget);
+
         if (selectedInput) {
           syncOpenSectionsWithSelection(widget, parseSelected(selectedInput));
-          refreshConstraints(widget, selectedInput, typeFieldName);
+          restoreOpenSectionsFromSelection(widget, selectedInput, typeFieldName)
+            .finally(() => {
+              syncOpenSectionsWithSelection(widget, parseSelected(selectedInput));
+              refreshConstraints(widget, selectedInput, typeFieldName);
+            });
         }
-
-        bindCategoryStepFlow(widget);
       });
     },
   };

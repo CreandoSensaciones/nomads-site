@@ -15,6 +15,10 @@
   cursor: default !important;
 }
 
+.relevance-ui .field--name-field-relevance .fieldset-wrapper,
+.relevance-ui .field--name-field-relevance2 .fieldset-wrapper {
+  display: contents;
+}
 .relevance-ui .field--name-field-relevance .form-radios,
 .relevance-ui .field--name-field-relevance2 .form-radios {
   display: grid;

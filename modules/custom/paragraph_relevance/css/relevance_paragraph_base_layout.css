@@ -2,15 +2,31 @@
   width: 100%;
 }
 
+.paragraph--viewmode-vm-3 {
+    margin-top: 30px;
+    padding: 10px;
+}
+
+
 .paragraph--viewmode-vm-3.relevance-paragraph.col2 {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 770px;
   grid-template-areas:
     "title title"
     "left right";
   gap: 16px;
   row-gap: 0;
 }
+.paragraph--viewmode-vm-3.relevance-paragraph.col3 {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 510px 510px;
+    grid-template-areas:
+        "title title title"
+        "left center right";
+    gap: 10px;
+    row-gap: 0;
+}
+
 
 .paragraph--viewmode-vm-3.relevance-paragraph.col2 > .nomads-paragraph-header {
   grid-area: title;

@@ -12,6 +12,9 @@ core.entity_view_display.*.*.*.third_party.paragraph_relevance_vfields:
         top_label:
           type: label
           label: 'Top label'
+        max_items:
+          type: integer
+          label: 'Max items'
         core_focus:
           type: mapping
           label: 'Core focus settings'

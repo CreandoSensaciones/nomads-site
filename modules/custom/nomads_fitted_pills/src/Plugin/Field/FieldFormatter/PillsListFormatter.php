@@ -22,12 +22,28 @@ class PillsListFormatter extends FittedPillsFormatterBase {
   /**
    * {@inheritdoc}
    */
+  public static function defaultSettings(): array {
+    return [
+      'max_items' => 0,
+    ] + parent::defaultSettings();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function settingsForm(array $form, FormStateInterface $form_state): array {
     return [
       'show_tooltip' => [
         '#type' => 'checkbox',
         '#title' => $this->t('Show tooltip'),
         '#default_value' => $this->getSetting('show_tooltip'),
+      ],
+      'max_items' => [
+        '#type' => 'number',
+        '#title' => $this->t('Max items'),
+        '#default_value' => (int) $this->getSetting('max_items'),
+        '#min' => 0,
+        '#description' => $this->t('Maximum pills to render. Use 0 for unlimited.'),
       ],
     ];
   }
@@ -38,6 +54,9 @@ class PillsListFormatter extends FittedPillsFormatterBase {
   public function settingsSummary(): array {
     return [
       $this->t('Show tooltip: @value', ['@value' => $this->getSetting('show_tooltip') ? $this->t('Yes') : $this->t('No')]),
+      $this->t('Max items: @value', [
+        '@value' => ((int) $this->getSetting('max_items') <= 0) ? $this->t('Unlimited') : (int) $this->getSetting('max_items'),
+      ]),
     ];
   }
 
@@ -78,6 +97,11 @@ class PillsListFormatter extends FittedPillsFormatterBase {
 
     if ($pill_items === []) {
       return [];
+    }
+
+    $max_items = max(0, (int) $this->getSetting('max_items'));
+    if ($max_items > 0) {
+      $pill_items = array_slice($pill_items, 0, $max_items);
     }
 
     $build = [

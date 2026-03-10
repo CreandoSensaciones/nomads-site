@@ -224,6 +224,9 @@ function field_subtitle_apply_to_element(array &$element, string $subtitle): voi
   $target['#attached']['library'][] = 'field_subtitle/field_subtitle';
 
   $existing_prefix = $target['#field_prefix'] ?? '';
+  if (is_array($existing_prefix) && isset($existing_prefix['field_subtitle'])) {
+    return;
+  }
   if (is_string($existing_prefix) && str_contains($existing_prefix, 'field-subtitle-text')) {
     return;
   }
@@ -232,13 +235,27 @@ function field_subtitle_apply_to_element(array &$element, string $subtitle): voi
   }
   $subtitle_markup = '<span class="form-item__prefix"><span class="field-subtitle-text">'
     . Html::escape($subtitle) . '</span></span>';
-  if (is_string($existing_prefix) && $existing_prefix !== '') {
+
+  // Keep array-based field prefixes intact (e.g. media_library_widget
+  // fieldset prefixes like empty_selection and weight_toggle).
+  if (is_array($existing_prefix)) {
+    $target['#field_prefix'] = [
+      'field_subtitle' => [
+        '#markup' => $subtitle_markup,
+      ],
+    ] + $existing_prefix;
+  }
+  elseif (is_string($existing_prefix) && $existing_prefix !== '') {
     $subtitle_markup = $existing_prefix . $subtitle_markup;
+    $target['#field_prefix'] = Markup::create($subtitle_markup);
   }
   elseif ($existing_prefix instanceof Markup) {
     $subtitle_markup = $existing_prefix->__toString() . $subtitle_markup;
+    $target['#field_prefix'] = Markup::create($subtitle_markup);
   }
-  $target['#field_prefix'] = Markup::create($subtitle_markup);
+  else {
+    $target['#field_prefix'] = Markup::create($subtitle_markup);
+  }
 
   if ($target !== $element) {
     if (!isset($element['#attached']['library']) || !in_array('field_subtitle/field_subtitle', $element['#attached']['library'], TRUE)) {

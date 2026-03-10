@@ -6,187 +6,46 @@
    Last updated: 2026-02-04 */
 
 
+
+
+
+/* ========== Listing Node - full - Data Visualisation ========== */#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ========== Paragraphs general ========== */
+
 .paragraph-relevance-key-aspects__group,
 .paragraph-relevance-key-aspects__group  div {
     display: inline-block;
 }
 
 
-article.node--type-listing.node--view-mode-teaser  div.teaser-action-calls .nomads-pill {
-  font-size: 9pt;
-}
-div.teaser-action-calls .perk-teaser.nomads-pill {
-  background: #fff;
-  color:#015180;
-  border: 2px solid #015180;
-  font-weight: 600;
-  padding: 2px 6px;
-}
-
-
-.paragraph--viewmode-vm-3.relevance-paragraph .paragraph-left-column .field--name-field-country {
-  margin: 15px 0 0 200px;
-}
-.paragraph--viewmode-vm-3.relevance-paragraph .paragraph-left-column .field--name-field-date {
-  font-size: 16px;
-  font-weight: 600;
-  text-align: center;
-}
-
-#hero-gallery img { 
-  border-radius: 8px;
-}
-/* ========== Local tasks Pill ========== */
-
-  /* Big pill select */
-.nomads-title-local-tasks__select{
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-
-  display: inline-block;
-  width: 100%;
-  max-width: 150px;          /* adjust */
-  height: 40px;              /* “big pill” */
-  padding: 0 54px 0 18px;    /* space for arrow on right */
-
-  border-radius: 9999px;
-  border: 1px solid rgba(0,0,0,.18);
-  background: #fff;
-
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 40px;         /* keeps text vertically centered */
-  cursor: pointer;
-
-  box-sizing: border-box;
-}
-
-/* Hover + focus */
-.nomads-title-local-tasks__select:hover{
-  border-color: rgba(0,0,0,.30);
-}
-
-.nomads-title-local-tasks__select:focus{
-  outline: none;
-  border-color: rgba(0,0,0,.45);
-  box-shadow: 0 0 0 4px rgba(18,183,200,.18); /* matches your brand-ish cyan */
-}
-
-/* Wrapper: add a custom dropdown arrow */
-.nomads-title-local-tasks__select-wrap{
-  position: relative;
-  display: inline-block;
-  max-height: 50px;
-}
-
-/* Arrow (no SVG needed) */
-.nomads-title-local-tasks__select-wrap::after{
-  content: "";
-  position: absolute;
-  right: 18px;
-  top: 50%;
-  width: 10px;
-  height: 10px;
-  border-right: 2px solid rgba(0,0,0,.55);
-  border-bottom: 2px solid rgba(0,0,0,.55);
-  transform: translateY(-60%) rotate(45deg);
-  pointer-events: none;
-}
-
-/* Optional: nicer disabled state */
-.nomads-title-local-tasks__select:disabled{
-  opacity: .55;
-  cursor: not-allowed;
-}
-› /* FOUC prevention, reserve space */
-  html:not(.nomads-ready) .nomads-title-local-tasks__select-wrap{
-    min-height: 50px;     /* match your pill height */
-    width: 100%;          /* or your fixed width */
-  }
-
-
-
-
-
-/* ========== Listing Node - Data Visualisation ========== */
-
-/* ------- Paragraph Relevance / Key aspects ------- */
-
-.node--type-listing.node--view-mode-full .paragraph-relevance-key-aspects__group {
-  margin-top: 30px;
-}
-
-/* Paragraph relevance group labels (h3) */
-.nomads-icon-formatter--paragraph-relevance .nomads-icon-formatter__title {
-  font-size: 13pt;
-}
-
-/* Paragraph relevance icon box alignment */
-.nomads-icon-formatter--paragraph-relevance .nomads-icon-formatter__icon {
-  width: 60px;
-  height: 60px;
-  margin: 8px 10px 0 10px;
-}
-
-.nomads-icon-formatter--paragraph-relevance .nomads-icon-formatter__icon img {
-  width: 60px;
-  max-height: 60px;
-}
-
-.nomads-icon-formatter--paragraph-relevance .paragraph-relevance-key-aspects__group--core_focus .nomads-icon-formatter__icon {
-  width: 80px;
-  height: 80px;
-}
-
- .nomads-icon-formatter--paragraph-relevance .paragraph-relevance-key-aspects__group--core_focus .nomads-icon-formatter__icon img {
-  width: 80px;
-  max-height: 80px;
-}
-
- .nomads-icon-formatter--paragraph-relevance .paragraph-relevance-key-aspects__group--core_focus .nomads-icon-formatter__label {
-  font-size: 9pt;
- }
-
- .paragraph-relevance-key-aspects__label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  justify-content: center;
-}
-
-.paragraph-relevance-key-aspects__label::before,
-.paragraph-relevance-key-aspects__label::after {
-  content: "";
-  width: 70px;
-  height: 2px;
-  background: #cfcfcf;
-}
-
-
-
-/* ========== Paragraphs general ========== */
-
-
-
 /* ------- Paragraph Header ------ */
-/* Defaults for view mode 3 */
+/* Defaults */
 .nomads-paragraph-header {
   width: 100%;
 }
-
 .nomads-paragraph-icon {
   width: 100px;
   height: auto;
 }
-
 .nomads-paragraph-icon img {
   width: 100px;
   height: auto;
   display: block;
 }
-
 .nomads-paragraph-label {
   font-family: Candara, "Segoe UI", Arial, sans-serif;
   font-weight: 700;
@@ -200,11 +59,9 @@ div.teaser-action-calls .perk-teaser.nomads-pill {
   line-height: 1;
   white-space: nowrap;
 }
-
 .nomads-paragraph-title {
   margin: 0;
 }
-
 .nomads-paragraph-title h2,
 .nomads-paragraph-title h3 {
   margin: 0;
@@ -214,19 +71,58 @@ div.teaser-action-calls .perk-teaser.nomads-pill {
 
 
 
-/* ========== Paragraphs view mode 3 ========== */
+/* ---------- Paragraph Relevance ---------- */
 
-.paragraph--viewmode-vm-3.relevance-paragraph.col2 {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 770px;
-    grid-template-areas:
-        "title title"
-        "left right";
-    gap: 10px;
-  row-gap: 0;
+
+.node--type-listing.node--view-mode-full .paragraph-relevance-key-aspects__group {
+  margin-top: 30px;
+}
+/* Paragraph relevance group labels (h3) */
+.node--type-listing.node--view-mode-full.nomads-icon-formatter--paragraph-relevance .nomads-icon-formatter__title {
+  font-size: 13pt;
+}
+/* Paragraph relevance icon box alignment */
+.node--type-listing.node--view-mode-full.nomads-icon-formatter--paragraph-relevance .nomads-icon-formatter__icon {
+  width: 60px;
+  height: 60px;
+  margin: 8px 10px 0 10px;
+}
+.node--type-listing.node--view-mode-full.nomads-icon-formatter--paragraph-relevance .nomads-icon-formatter__icon img {
+  width: 60px;
+  max-height: 60px;
 }
 
-/* ------- Paragraphs view mode 3 - Header ------- */
+.node--type-listing.node--view-mode-full .nomads-icon-formatter--paragraph-relevance .paragraph-relevance-key-aspects__group--core_focus .nomads-icon-formatter__icon {
+  width: 80px;
+  height: 80px;
+}
+.node--type-listing.node--view-mode-full .nomads-icon-formatter--paragraph-relevance .paragraph-relevance-key-aspects__group--core_focus .nomads-icon-formatter__icon img {
+  width: 80px;
+  max-height: 80px;
+}
+
+.node--type-listing.node--view-mode-full .nomads-icon-formatter--paragraph-relevance .paragraph-relevance-key-aspects__group--core_focus .nomads-icon-formatter__label {
+  font-size: 9pt;
+ }
+.node--type-listing.node--view-mode-full .paragraph-relevance-key-aspects__label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+}
+.node--type-listing.node--view-mode-full .paragraph-relevance-key-aspects__label::before,
+.node--type-listing.node--view-mode-full .paragraph-relevance-key-aspects__label::after {
+  content: "";
+  width: 70px;
+  height: 2px;
+  background: #cfcfcf;
+}
+
+
+
+
+/* ========== Paragraphs view mode 3 ========== */
 
 .paragraph--viewmode-vm-3 {
   width: auto;
@@ -247,7 +143,6 @@ div.teaser-action-calls .perk-teaser.nomads-pill {
   margin: 15px 0 20px 100px;
   text-indent: 170px;
 }
-
 .paragraph--viewmode-vm-3.nomads-paragraph-modal-link-wrapper {
   text-align: right;
   width: 100%;
@@ -266,6 +161,7 @@ div.teaser-action-calls .perk-teaser.nomads-pill {
   position: absolute;
   top: -30px;
   right: 0;
+  z-index: 500;
 }
 .paragraph--viewmode-vm-3 .nomads-paragraph-icon-wrapper {
   position: absolute;
@@ -275,11 +171,6 @@ div.teaser-action-calls .perk-teaser.nomads-pill {
 .paragraph--viewmode-vm-3 .nomads-paragraph-title {
   flex: 1 1 auto;
 }
-.paragraph--viewmode-vm-3 .data-tile .nomads-pill {
-  font-size: 10pt;
-  font-weight: 500;
-}
-
 .paragraph--viewmode-vm-3 .nomads-paragraph-icon {
   height: 100px;
 }
@@ -289,8 +180,16 @@ div.teaser-action-calls .perk-teaser.nomads-pill {
   display: block;
 }
 
+.paragraph--viewmode-vm-3.relevance-paragraph .paragraph-left-column .field--name-field-country {
+  margin: 15px 0 0 200px;
+}
+.paragraph--viewmode-vm-3.relevance-paragraph .paragraph-left-column .field--name-field-date {
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
 
-/* ========== Paragraphs View Mode 2 ========== */
+
 
 
 
@@ -338,24 +237,6 @@ div.teaser-action-calls .perk-teaser.nomads-pill {
   font-size: 12pt;
   font-weight: 400;
   margin: auto 20px auto 5px;
-}
- /* ------- Data Tile ------- */
-.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-first::before,
-.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-second::before {
-  width: 27px;
-  height: 27px;
-  flex: 0 0 20px;
-  margin: auto 1px auto 5px;
-}
-.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-first,
-.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-second {
-  font-size: 15pt;
-}
-.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-first::after,
-.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-second::after {
-  font-size: 9pt;
-  font-weight: 400;
-  margin: auto 10px auto 5px;
 }
 
 
@@ -424,7 +305,71 @@ div.teaser-action-calls .perk-teaser.nomads-pill {
   display: none;
 }
 
+
+
 /* ========== Tiles ========== */
+
+/* --------- Tiles layout -------- */
+
+/* Tile Label on top, rest shares space evenly */
+.nomads-tiles .data-tile {
+  display: flex;
+  flex-direction: column;
+  height: 250px;
+}
+.nomads-tiles .data-tile > h3 {
+  margin: 0;
+  flex: 0 0 auto;
+}
+.nomads-tiles .data-tile .tile-items {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  align-content: space-evenly;
+  height: 235px;
+}
+.nomads-tiles .data-tile .tile-items > div {
+  grid-column: 1/-1;
+  width: 240px;
+  text-align: center;
+}
+.nomads-tiles .data-tile .tile-items > div.span2 {
+  grid-column: span 2;
+}
+.nomads-tiles .data-tile .tile-items > div.span3 {
+  grid-column: span 3;
+  text-align: center;
+}
+.nomads-tiles .data-tile .tile-items > div.span4 {
+  grid-column: span 4;
+}
+.nomads-tiles .data-tile .tile-items > div.span5 {
+  grid-column: span 5;
+}
+.nomads-tiles .data-tile .tile-items > div.span6 {
+  grid-column: span 6;
+}
+.nomads-tiles .data-tile .tile-items > div.span7 {
+  grid-column: span 7;
+}
+.nomads-tiles .data-tile .tile-items > div.span8 {
+  grid-column: span 8;
+}
+
+
+
+
+/* Title spans full width */
+.data-tile > h3 {
+  grid-column: 1 / -1;
+}
+
+.data-tile .inline-field {
+  display: inline-flex;
+}
+
+
+
+/* --------- Tiles Style --------- */
 
 /* Data tile background */
 .nomads-tiles .data-tile {
@@ -432,7 +377,6 @@ div.teaser-action-calls .perk-teaser.nomads-pill {
   overflow: hidden;
   background: linear-gradient(125deg, #cff6f0, #94d9fe);
 }
-
 .nomads-tiles .tile {
   border-radius: 5px;
   border: none;
@@ -447,23 +391,109 @@ div.teaser-action-calls .perk-teaser.nomads-pill {
 }
 
 .nomads-tiles .tile .field--label-above .field__label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    justify-content: center;
-    color: #0570A1;
-    font-size: 10pt;
-    font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+  color: #0570A1;
+  font-size: 10pt;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-bottom: 3px;
 }
 
 .nomads-tiles .tile .field--label-above .field__label::before,
 .nomads-tiles .tile .field--label-above .field__label::after {
   content: "";
-  width: 50px;
+  flex: 1 1 auto;
+  min-width: 20px;
   height: 1px;
   background: #0DAFC5;
 }
+
+
+
+.nomads-tiles .tile  .prefix,
+.nomads-tiles .tile  .suffix {
+  display: inline-block;
+  font-size: 8pt;
+  font-weight: 400;
+  opacity: 0.8;
+  max-width: 30px;
+  margin-left: 3px;
+  white-space: wrap;
+}
+.nomads-tiles .tile  .prefix {
+  margin-right: 3px;
+}
+.nomads-tiles .tile  .suffix {
+  margin-left: 3px;
+  text-align: left;
+  vertical-align: top;
+}
+.nomads-tiles .field--name-field-audience-age-range {
+  white-space: nowrap;
+}
+.nomads-tiles .field--name-field-common-meals .suffix {
+  max-width: 80px;
+  margin-left: 7px;
+}
+.nomads-tiles .big-text.field {
+    font-size: 15pt;
+    font-weight: 700;
+    line-height: 1;
+}
+/* --------- Tiles - Pills ---------- */
+
+.nomads-tiles .data-tile .nomads-pill {
+  font-size: 12pt;
+  font-weight: 500;
+}
+.nomads-tiles .data-tile .items-3 .nomads-pill {
+  font-size: 10pt;
+}
+.nomads-tiles .data-tile .items-6 .nomads-pill {
+  font-size: 8pt;
+}
+.nomads-tiles .field--name-field-amenities.items-6 .nomads-pill {
+  font-size: 10pt;
+}
+.nomads-tiles .data-tile .items-9 .nomads-pill {
+}
+.nomads-tiles .data-tile .items-12 .nomads-pill {
+  font-size: 8pt;
+}
+.nomads-hosting-period__text > span:nth-of-type(2) .nomads-pill {
+  font-size: 8pt;
+}
+
+
+.nomads-tiles .data-tile .items-3 .nomads-pill {
+  font-size: 10pt;
+}
+.nomads-tiles .data-tile .items-6 .nomads-pill {
+  font-size: 8pt;
+}
+.nomads-tiles .field--name-field-amenities.items-6 .nomads-pill {
+  font-size: 10pt;
+}
+.nomads-tiles .data-tile .items-9 .nomads-pill {
+}
+.nomads-tiles .data-tile .items-12 .nomads-pill {
+  font-size: 8pt;
+}
+.nomads-hosting-period__text > span:nth-of-type(2) .nomads-pill {
+  font-size: 8pt;
+}
+
+
+
+
+
+
+
+
 
 /* ------- Tiles - Icon Label Formatter ----- */
 
@@ -471,7 +501,6 @@ div.teaser-action-calls .perk-teaser.nomads-pill {
     max-width: 24px;
     height: 24px;
 }
-
 .data-tile .nomads-icon-field-label__icon svg {
     max-width: 24px;
     max-height: 24px;
@@ -489,77 +518,40 @@ div.teaser-action-calls .perk-teaser.nomads-pill {
   line-height: 1;
 }
 
-.data-tile .inline-field {
-  display: inline-flex;
+
+
+
+
+
+
+
+
+
+
+
+.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-first::before,
+.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-second::before {
+  width: 27px;
+  height: 27px;
+  flex: 0 0 20px;
+  margin: auto 1px auto 5px;
+}
+.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-first,
+.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-second {
+  font-size: 15pt;
+}
+.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-first::after,
+.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-second::after {
+  font-size: 9pt;
+  font-weight: 400;
+  margin: auto 10px auto 5px;
 }
 
-/* ========== Data Tile layout ========== */
 
-.nomads-tiles .data-tile.one-column-justify {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  height: 250px;
-}
-.nomads-tiles .data-tile.one-field-justify .field__item  div {
-  
-}
 
-.paragraph--bundle-digital .data-tile-3 {
-  display: grid;
-  height: 250px;
-  align-content: space-between;
-  justify-items: center;  
-  grid-template-columns: fit-content(45%) fit-content(45%);
-  justify-content: center; /* centers the two-column "pair" as a unit */
-}
 
-/* Title spans full width */
-.data-tile > h3 {
-  grid-column: 1 / -1;
-}
 
-/* icon fields: each stays inside its column and centers */
-.paragraph--bundle-digital .data-tile-3 .field--name-field-coworkingspace,
-.paragraph--bundle-digital .data-tile-3 .field--name-field-coworkingspace-capacity{
-  width: auto;
-  justify-self: auto;
-}
 
-/* full-width fields */
-.paragraph--bundle-digital .data-tile-3 .field--name-field-coworkingspace-access,
-.paragraph--bundle-digital .data-tile-3 .field--name-field-coworking-features{
-  grid-column: 1 / -1;
-  width: 100%;
-}
-
-/* Put the two icon-label fields into the same row */
-.paragraph--bundle-digital .data-tile-3 .field--name-field-coworkingspace {
-  grid-column: 1;
-  width: max-content;
-}
-.paragraph--bundle-digital .data-tile-3 .field--name-field-coworkingspace-capacity {
-  grid-column: 2;
-}
-
-.paragraph--bundle-hosting .data-tile.data-tile-3{
-  display: grid;
-  height: 250px;
-  align-content: space-evenly;            /* even vertical spacing incl edges */
-  justify-content: center;                /* center the grid block */
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  justify-items: center;
-}
-
-/* 2) First 4 icon fields: 2 columns grid, centered as a block */
-.paragraph--bundle-hosting .data-tile.data-tile-3 .field--name-field-rooms { grid-column: 1; min-width: 0; }
-.paragraph--bundle-hosting .data-tile.data-tile-3 .field--name-field-capacity { grid-column: 2; min-width: 0; }
-.paragraph--bundle-hosting .data-tile.data-tile-3 .field--name-field-showers { grid-column: 3; min-width: 0; } 
-.paragraph--bundle-hosting .data-tile.data-tile-3 .field--name-field-toilets {    grid-column: 4; min-width: 0; }
-.paragraph--bundle-hosting .data-tile.data-tile-3 .field--name-field-amenities{
-  grid-column: 1 / -1;
-  width: 100%;
-}
 
 /* ========== Paragraphs view mode 2 ========== */
 
@@ -750,6 +742,9 @@ div.teaser-action-calls .perk-teaser.nomads-pill {
   display: none;
 }
 
+
+
+
 /* ========== Paragraphs view mode modal ========== */
 
 
@@ -794,6 +789,9 @@ div.teaser-action-calls .perk-teaser.nomads-pill {
   justify-content: center;
   text-align: center;
 }
+
+
+
 
 /* ========== Pills ========== */
 div .nomads-pill,
@@ -848,6 +846,8 @@ div .nomads-pill__label,
 }
 */
 
+
+
 /* ========== Field label inline ========== */
 
 .field--label-inline {
@@ -870,6 +870,8 @@ div .nomads-pill__label,
   display: inline;
 }
 
+
+
 /* ========== Data icons inline ========== */
 
 .data-icons-inline .field {
@@ -888,6 +890,8 @@ div .nomads-pill__label,
   margin: -3px 10px;
   vertical-align: middle;
 }
+
+
 
 
 /* ========== Tooltips ========== */
@@ -950,8 +954,15 @@ div .nomads-pill__label,
 }
 
 
-/* ========== Listing Teaser ========== */
 
+
+/* ========== Listing Teaser ========== */
+.teaser-column.teaser-column-center {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
 article.node--type-listing.node--view-mode-teaser {
     position: relative;
   }
@@ -977,9 +988,41 @@ article.node--type-listing.node--view-mode-teaser:hover {
   border-color: rgba(0, 0, 0, 0.10);
 }
 
-/* ----- Categories ----- */
+.teaser-action-calls .nomads-pill {
+  position: relative;
+  padding-right: 18px !important; /* space for arrow */
+}
 
-/* ------- Categories ----- */
+.teaser-action-calls .nomads-pill::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+.teaser-action-calls .nomads-pill.perk-teaser::after {
+  top: 5px;
+}
+
+article.node--type-listing.node--view-mode-teaser  div.teaser-action-calls .nomads-pill {
+  font-size: 9pt;
+}
+div.teaser-action-calls .perk-teaser.nomads-pill {
+  background: #fff;
+  color:#015180;
+  border: 2px solid #015180;
+  font-weight: 600;
+  padding: 2px 6px;
+}
+
+
+
+/* ----- Teaser Categories ----- */
+
 
 article.node--type-listing.node--view-mode-teaser .categories  {
   text-align: center;
@@ -987,15 +1030,20 @@ article.node--type-listing.node--view-mode-teaser .categories  {
 article.node--type-listing.node--view-mode-teaser .categories .nomads-icon-formatter__item {
   display: inline-block;
 }
+article.node--type-listing.node--view-mode-teaser .categories .nomads-pill {
+  background:#128bc3;
+}
 article.node--type-listing.node--view-mode-teaser .categories .nomads-pill:first-of-type {
   background: #015180;
 }
 article.node--type-listing.node--view-mode-teaser .field--name-title h2 {
-  margin-bottom: 5px;
+  margin-bottom: 0;
 }
 article.node--type-listing.node--view-mode-teaser .field--name-field-subtitle {
-  margin-bottom: 12px;
+  margin-bottom: 5px;
   font-size: 11pt;
+  max-height: 60px;
+  overflow: hidden;
 }
 article.node--type-listing.node--view-mode-teaser .nomads-taxonomy-breadcrumb,
 article.node--type-listing.node--view-mode-teaser .nomads-taxonomy-breadcrumb a
@@ -1076,11 +1124,20 @@ article.node--type-listing.node--view-mode-teaser h3 {
   text-transform: uppercase;
   margin: 3px auto 1px auto;
 }
+article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects > div {
+  display: inline-block;
+}
+article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects__items {
+  gap: 5px;
+}
 article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects .nomads-pill {
-  background: #019baf;
+  background: #01a6ab;
 }
 article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects__group--important_aspect .nomads-pill {
-  font-size: 8pt;
+  ackground: #1dc6cc;
+}
+article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects__group--minor_relevance .nomads-pill {
+  background: #3ed2d7;
 }
 
 
@@ -1103,7 +1160,9 @@ article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspec
   padding: 16px;
 }
 
-/* ----- Tags ----- */
+
+
+/* ----- Teaser Tags ----- */
 
 .node--type-listing.node--view-mode-teaser .nomads-icon-formatter__icon img {
   opacity: 0.6;
@@ -1113,21 +1172,6 @@ article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspec
 }
 
 
-
-
-
-
-
-  /* ========== Listing Teaser ========== */
-
-/* .node--view-mode-teaser:focus-within {
-  box-shadow: 0 0 0 4px rgba(18, 183, 200, 0.28), 0 14px 36px rgba(0, 0, 0, 0.12);
-  border-color: rgba(18, 183, 200, 0.55); */
-
-
-  
-
-  
 
 
 
@@ -1143,6 +1187,8 @@ article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspec
   font-size: 11pt;
   font-weight: 600;
 }
+
+
 
 /* ========= Map ========== */
 

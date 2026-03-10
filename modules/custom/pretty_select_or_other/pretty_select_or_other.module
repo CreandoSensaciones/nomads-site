@@ -1,0 +1,34 @@
+<?php
+
+/**
+ * @file
+ * Pretty Select or Other module hooks.
+ */
+
+use Drupal\pretty_select_or_other\Element\PrettySelectOrOtherButtons;
+
+/**
+ * Implements hook_element_info_alter().
+ */
+function pretty_select_or_other_element_info_alter(array &$types): void {
+  if (!isset($types['select_or_other_buttons'])) {
+    return;
+  }
+
+  $types['select_or_other_buttons']['#process'][] = [PrettySelectOrOtherButtons::class, 'process'];
+}
+
+/**
+ * Implements hook_theme_suggestions_form_element_alter().
+ */
+function pretty_select_or_other_theme_suggestions_form_element_alter(array &$suggestions, array $variables): void {
+  $element = $variables['element'] ?? [];
+  if (($element['#type'] ?? NULL) !== 'select_or_other_buttons') {
+    return;
+  }
+
+  $key = array_search('form_element__pretty_element', $suggestions, TRUE);
+  if ($key !== FALSE) {
+    unset($suggestions[$key]);
+  }
+}

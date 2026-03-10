@@ -1,0 +1,15 @@
+diff --git a/field_formatter_class.module b/field_formatter_class.module
+index c2027f2..266c87f 100644
+--- a/field_formatter_class.module
++++ b/field_formatter_class.module
+@@ -139,5 +139,9 @@ function field_formatter_class_field_widget_complete_form_alter(&$field_widget_
+   }
+ 
+   $field_widget_complete_form['widget']['#third_party_settings']['field_formatter_class'] = $thirdPartySettings;
+-  $field_widget_complete_form['widget']['#object'] = $form_state->getBuildInfo()['callback_object']->getEntity();
++  // $form_state->getBuildInfo()['callback_object'] may not be an EntityForm.
++  // For example, views_bulk_edit uses a ConfirmForm without getEntity().
++  if (!empty($context['items'])) {
++    $field_widget_complete_form['widget']['#object'] = $context['items']->getEntity();
++  }
+ }

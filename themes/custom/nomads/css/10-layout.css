@@ -37,6 +37,12 @@
     "paragraphs paragraphs paragraphs";
   align-items: stretch;
 }
+.paragraph-left-column,
+.paragraph-center-column,
+.paragraph-right-column {
+  height: 510px;
+  overflow: hidden;
+}
 
 .node--type-listing.node--view-mode-full > .node__content > #hero-gallery {
   grid-area: hero;
@@ -82,27 +88,6 @@
 
 /* ========== Paragraphs ========== */
 
-.paragraph--viewmode-vm-3 {
-    margin-top: 30px;
-    padding: 10px;
-}
-.paragraph--viewmode-vm-3.relevance-paragraph.col2 {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 770px;
-    grid-template-areas:
-        "title title"
-        "left right";
-    gap: 16px;
-}
-.paragraph--viewmode-vm-3.relevance-paragraph.col3 {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 510px 510px;
-    grid-template-areas:
-        "title title title"
-        "left center right";
-    gap: 10px;
-    row-gap: 0;
-}
 
 
 /* ========== Teaser ========== */
@@ -112,19 +97,31 @@
   margin: 40px auto;
   padding: 7px;
 }
+
 .node--type-listing.node--view-mode-teaser .teaser-inner-wrapper {
   height: 266px;
   overflow: hidden;
 }
 
-
-/* Teaser  */
 .node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper > .node__content {
   display: grid;
-  grid-template-columns: 400px 500px 300px;
-  gap: 16px;              /* adjust */
+  grid-template-columns: 400px 500px 290px;
+  gap: 5px;              /* adjust */
   align-items: start;     /* top align */
   overflow: hidden;
+}
+.node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper .teaser-column-center {
+  text-align: center;
+}
+.node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper .teaser-column-center .paragraph-relevance-key-aspects {
+  width: 100%;
+}
+
+.node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper > .node__content .teaser-column {
+  height: 266px;
+}
+.node--type-listing.node--view-mode-teaser  .field--name-field-subtitle {
+  padding: 0 20px;
 }
 
 /* Make sure the 4 column wrappers behave as grid items */
@@ -296,18 +293,26 @@ article .field--name-field-description {
   width: 100px;
   height: 100px;
 }
-.paragraph--viewmode-vm-3 .paragraph-left-column {
-  /* padding-top: 30px; */
-}
-.paragraph--viewmode-vm-3 .paragraph-right-column {
-}
 
-div #paragraphs-container .paragraph-relevance-vfield--relevant {
+div #paragraphs-container {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   column-gap: 40px;
   row-gap: 60px;  
 }
+.paragraph-relevance-vfield {
+  display: contents;
+}
+#paragraphs-container .paragraph-relevance-vfield--core .paragraph-relevance-vfield__section,
+#paragraphs-container  .field--name-field-location-date {
+  grid-column: 1 / -1;
+}
+#paragraphs-container .paragraph-relevance-vfield--relevant .paragraph-relevance-vfield__section {
+  grid-column: span 1;
+}
+
+
+
 
 @media (max-width: 1100px) {
   div #paragraphs-container .paragraph-relevance-vfield--relevant {
@@ -321,16 +326,7 @@ div #paragraphs-container .paragraph-relevance-vfield--relevant {
   }
 }
 
-#paragraphs-container .paragraph-relevance-vfield {
-  display: flex;
-  flex-direction: column;
-  gap: 60px;
-}
-#paragraphs-container {
-  display: flex;
-  flex-direction: column;
-  gap: 60px;
-}
+
 
 #paragraphs-container .field--name-field-location-date {
   display: flex;
@@ -338,9 +334,29 @@ div #paragraphs-container .paragraph-relevance-vfield--relevant {
   gap: 60px;
 }
 
-.paragraph--viewmode-vm-3 .paragraph-center-column,
-.paragraph--viewmode-vm-3 .paragraph-left-column,
-.paragraph--viewmode-vm-3 .paragraph-right-column {
+
+
+/* ========== Paragraphs view mode 3 ========== */
+
+.paragraph--viewmode-vm-3.relevance-paragraph.col2 {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 770px;
+    grid-template-areas:
+        "title title"
+        "left right";
+    gap: 10px;
+  row-gap: 0;
+}
+.paragraph--viewmode-vm-3.col3 .paragraph-center-column,
+.paragraph--viewmode-vm-3.col3 .paragraph-left-column,
+.paragraph--viewmode-vm-3.col3 .paragraph-right-column {
   max-height: 510px;
   overflow: hidden;
+  width: 510px;
+}
+.paragraph--viewmode-vm-3.col2 .paragraph-left-column,
+.paragraph--viewmode-vm-3.col2 .paragraph-right-column {
+  max-height: 510px;
+  overflow: hidden;
+  width: 770px;
 }

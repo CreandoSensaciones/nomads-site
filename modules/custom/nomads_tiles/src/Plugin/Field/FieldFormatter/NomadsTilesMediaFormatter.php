@@ -352,6 +352,14 @@ class NomadsTilesMediaFormatter extends FormatterBase implements ContainerFactor
           ],
         ],
       ];
+      $tile_build['tile_items'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => [
+            'tile-items',
+          ],
+        ],
+      ];
       if (!empty($group_classes)) {
         $tile_build['#attributes']['class'] = array_merge($tile_build['#attributes']['class'], $group_classes);
       }
@@ -418,7 +426,7 @@ class NomadsTilesMediaFormatter extends FormatterBase implements ContainerFactor
         if (!empty($field_build)) {
           $has_content = TRUE;
           $field_build['#weight'] = $child_weight;
-          $tile_build[$child] = $field_build;
+          $tile_build['tile_items'][$child] = $field_build;
         }
 
         $child_weight++;

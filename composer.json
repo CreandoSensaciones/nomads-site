@@ -15,6 +15,7 @@
         }
     ],
     "require": {
+        "cweagans/composer-patches": "^1.7",
         "composer/installers": "^2.3",
         "drupal/address": "^2.0",
         "drupal/autocomplete_deluxe": "^2.1",
@@ -70,6 +71,7 @@
     "prefer-stable": true,
     "config": {
         "allow-plugins": {
+            "cweagans/composer-patches": true,
             "composer/installers": true,
             "drupal/core-composer-scaffold": true,
             "drupal/core-recipe-unpack": true,
@@ -83,6 +85,11 @@
         "sort-packages": true
     },
     "extra": {
+        "patches": {
+            "drupal/field_formatter_class": {
+                "Fix WSOD when form object has no getEntity() (#3473891)": "patches/drupal/field_formatter_class-3473891.patch"
+            }
+        },
         "drupal-scaffold": {
             "locations": {
                 "web-root": "./"

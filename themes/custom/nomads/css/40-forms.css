@@ -445,13 +445,19 @@ fieldset#group-price-range .price-range-widget__row{
 /* ========== Pretty checkbox Radio overwrite ========== */
 
 /* PCR pretty radios + checkboxes: modern layout, wrapper will not collapse */
-.form-radios,
-.form-checkboxes {
+.pretty-select-or-other-widget .fieldset-wrapper,
+.field--widget-options-pretty .fieldset-wrapper {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 10px;
 }
+.pretty-select-or-other-widget .fieldset-wrapper > div,
+.field--widget-options-pretty .fieldset-wrapper > div {
+  display: contents;
+}
+
+
 
 /* Override PCR float layout */
 .form-radios .pretty-element,

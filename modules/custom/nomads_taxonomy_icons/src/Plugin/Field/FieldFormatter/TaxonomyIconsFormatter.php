@@ -340,9 +340,25 @@ class TaxonomyIconsFormatter extends FormatterBase implements ContainerFactoryPl
     int $max_number,
   ): array {
     $category_cache = [];
+    $parent_cache = [];
+    $selected_descendant_counts = [];
     $groups = [];
     $group_order = [];
     $top_level_entries = [];
+
+    foreach ($entries as $entry) {
+      $term = $entry['term'] ?? NULL;
+      if (!$term) {
+        continue;
+      }
+
+      $ancestor = $this->getPrimaryParentTerm($term, $parent_cache);
+      while ($ancestor) {
+        $ancestor_id = (int) $ancestor->id();
+        $selected_descendant_counts[$ancestor_id] = ($selected_descendant_counts[$ancestor_id] ?? 0) + 1;
+        $ancestor = $this->getPrimaryParentTerm($ancestor, $parent_cache);
+      }
+    }
 
     foreach ($entries as $entry) {
       $term = $entry['term'];
@@ -350,7 +366,7 @@ class TaxonomyIconsFormatter extends FormatterBase implements ContainerFactoryPl
         continue;
       }
 
-      $category_term = $this->getTopLevelTerm($term, $category_cache);
+      $category_term = $this->getGroupingCategoryTerm($term, $selected_descendant_counts, $category_cache, $parent_cache);
       if (!$category_term) {
         continue;
       }
@@ -443,7 +459,7 @@ class TaxonomyIconsFormatter extends FormatterBase implements ContainerFactoryPl
       $group_build['label'] = [
         '#type' => 'html_tag',
         '#tag' => 'h3',
-        '#value' => Html::escape($category_term->label()),
+        '#value' => $category_term->label(),
         '#attributes' => [
           'class' => [
             'nomads-icon-formatter__title',
@@ -677,7 +693,7 @@ class TaxonomyIconsFormatter extends FormatterBase implements ContainerFactoryPl
       $element['icon'] = $this->buildIconElement($term, $link_icon);
     }
 
-    $label_text = Html::escape($term->label());
+    $label_text = (string) $term->label();
     $label_value = $label_text;
     if ($link_label) {
       $label_value = [
@@ -750,6 +766,86 @@ class TaxonomyIconsFormatter extends FormatterBase implements ContainerFactoryPl
 
     $cache[$term_id] = $current ?: $term;
     return $cache[$term_id];
+  }
+
+  /**
+   * Resolve grouping owner term for category-mode rendering.
+   *
+   * Uses the nearest ancestor marked as "category_label" that has selected
+   * descendants in the current render set.
+   * Otherwise falls back to the absolute top-level ancestor.
+   */
+  protected function getGroupingCategoryTerm($term, array $selected_descendant_counts, array &$cache, array &$parent_cache) {
+    $term_id = (int) $term->id();
+    if (isset($cache[$term_id])) {
+      return $cache[$term_id];
+    }
+
+    $root = $term;
+    $current = $term;
+    while ($current) {
+      $current_id = (int) $current->id();
+      if ($this->isCategoryLabelTerm($current) && ($selected_descendant_counts[$current_id] ?? 0) > 0) {
+        $cache[$term_id] = $current;
+        return $cache[$term_id];
+      }
+
+      $root = $current;
+      $current = $this->getPrimaryParentTerm($current, $parent_cache);
+    }
+
+    $cache[$term_id] = $root ?: $term;
+    return $cache[$term_id];
+  }
+
+  /**
+   * Resolve the primary parent term used for hierarchy traversal.
+   */
+  protected function getPrimaryParentTerm($term, array &$cache) {
+    $term_id = (int) $term->id();
+    if (array_key_exists($term_id, $cache)) {
+      return $cache[$term_id];
+    }
+
+    if (!$term->hasField('parent') || $term->get('parent')->isEmpty()) {
+      $cache[$term_id] = NULL;
+      return NULL;
+    }
+
+    $parents = $term->get('parent')->referencedEntities();
+    $parent = reset($parents);
+    $cache[$term_id] = $parent ?: NULL;
+    return $cache[$term_id];
+  }
+
+  /**
+   * Check if a term carries the "category_label" setting.
+   */
+  protected function isCategoryLabelTerm($term): bool {
+    $field_names = [
+      'field_setting',
+      'field_settings',
+      'field_easy_tagging_settings',
+      'field_easy_tagging_behavior',
+    ];
+
+    foreach ($field_names as $field_name) {
+      if (!$term->hasField($field_name) || $term->get($field_name)->isEmpty()) {
+        continue;
+      }
+
+      foreach ($term->get($field_name)->getValue() as $item) {
+        if (!isset($item['value'])) {
+          continue;
+        }
+        $normalized = $this->normalizeSettingMachineName((string) $item['value']);
+        if ($normalized === 'category_label') {
+          return TRUE;
+        }
+      }
+    }
+
+    return FALSE;
   }
 
   /**
