@@ -65,10 +65,19 @@ function field_subtitle_field_widget_single_element_form_alter(array &$element, 
     return;
   }
 
-  $widget = $context['widget'] ?? NULL;
-  if ($widget && method_exists($widget, 'getPluginId') && $widget->getPluginId() === 'special_category_select') {
-    field_subtitle_apply_to_special_category_select($element, $subtitle);
+  // Single-element alters run once per delta. For multi-value fields, attach
+  // subtitles at the complete widget wrapper level so they render only once.
+  if (field_subtitle_is_multiple_field($context)) {
     return;
+  }
+
+  $widget = $context['widget'] ?? NULL;
+  if ($widget && method_exists($widget, 'getPluginId')) {
+    $plugin_id = $widget->getPluginId();
+    if (in_array($plugin_id, ['special_category_select', 'nomads_easy_tagging_master'], TRUE)) {
+      field_subtitle_apply_to_special_category_select($element, $subtitle);
+      return;
+    }
   }
 
   field_subtitle_apply_to_element($element, $subtitle);
@@ -83,8 +92,24 @@ function field_subtitle_field_widget_complete_form_alter(array &$field_widget_co
     return;
   }
 
+  if (field_subtitle_is_multiple_field($context)) {
+    field_subtitle_apply_to_element($field_widget_complete_form, $subtitle);
+    if (
+      !field_subtitle_element_has_subtitle($field_widget_complete_form)
+      && isset($field_widget_complete_form['widget'])
+      && is_array($field_widget_complete_form['widget'])
+    ) {
+      field_subtitle_apply_to_element($field_widget_complete_form['widget'], $subtitle);
+    }
+    return;
+  }
+
   if (isset($field_widget_complete_form['widget']) && is_array($field_widget_complete_form['widget'])) {
     field_subtitle_apply_to_element($field_widget_complete_form['widget'], $subtitle);
+  }
+
+  if (!field_subtitle_element_has_subtitle($field_widget_complete_form)) {
+    field_subtitle_apply_to_element($field_widget_complete_form, $subtitle);
   }
 }
 
@@ -181,8 +206,25 @@ function field_subtitle_get_field_subtitle(array $context): ?string {
 }
 
 /**
- * Enables debug messages for a specific field.
+ * Determines whether the current widget context belongs to a multi-value field.
  */
+function field_subtitle_is_multiple_field(array $context): bool {
+  $items = $context['items'] ?? NULL;
+  if ($items && method_exists($items, 'getFieldDefinition')) {
+    $field_definition = $items->getFieldDefinition();
+    if ($field_definition instanceof FieldDefinitionInterface) {
+      return $field_definition->getFieldStorageDefinition()->isMultiple();
+    }
+  }
+
+  $field_definition = $context['field_definition'] ?? NULL;
+  if ($field_definition instanceof FieldDefinitionInterface) {
+    return $field_definition->getFieldStorageDefinition()->isMultiple();
+  }
+
+  return FALSE;
+}
+
 /**
  * Applies subtitle markup and classes to a field element.
  */
@@ -268,6 +310,33 @@ function field_subtitle_apply_to_element(array &$element, string $subtitle): voi
  * Applies subtitle markup to the Special Category Select widget.
  */
 function field_subtitle_apply_to_special_category_select(array &$element, string $subtitle): void {
+  if (isset($element['ui_label']) && is_array($element['ui_label']) && isset($element['ui_label']['label']['#value'])) {
+    if (!isset($element['ui_label']['#attributes']['class']) || !is_array($element['ui_label']['#attributes']['class'])) {
+      $element['ui_label']['#attributes']['class'] = [];
+    }
+    $element['ui_label']['#attributes']['class'][] = 'field-subtitle-enabled';
+
+    if (!isset($element['#attached']['library']) || !in_array('field_subtitle/field_subtitle', $element['#attached']['library'], TRUE)) {
+      $element['#attached']['library'][] = 'field_subtitle/field_subtitle';
+    }
+
+    if (!isset($element['ui_label']['prefix'])) {
+      $element['ui_label']['prefix'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'span',
+        '#attributes' => [
+          'class' => ['field-prefix'],
+        ],
+        'content' => [
+          '#markup' => '<span class="form-item__prefix"><span class="field-subtitle-text">'
+            . Html::escape($subtitle) . '</span></span>',
+        ],
+      ];
+    }
+
+    return;
+  }
+
   if (!isset($element['ui_title']['#value'])) {
     field_subtitle_apply_to_element($element, $subtitle);
     return;

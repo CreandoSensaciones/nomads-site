@@ -16,38 +16,7 @@
    ========================================================== */
 
 
-
-.node-listing-form .vertical-tabs__pane .details-description {
-  margin-right: 220px;
-}
-.node-listing-form .vertical-tabs__pane .details-description p:first-of-type {
-  margin-right: 350px;
-}
-.relevance-paragraph .paragraph-top {
-  margin: 0;
-  height: 0;
-}
-
-
-
-
-fieldset.no-label label {
-  display: none;
-}
-
-   button.nomads-easy-tagging__back {
-    padding: 2px 7px;
-    border: 1px solid #fff;
-    border-radius: 6px;
-    background: #02324e;
-    font-weight: 400;
-     }
-
-
-
-
-
-.field-group-tabs-wrapper {
+form {
   --vt-default: linear-gradient(135deg, #0575B1 40%, #012437);
   --vt-hover: linear-gradient(135deg, #0a8bd6, #035c8f);
   --vt-selected: linear-gradient(90deg, #52CEDE 30%, #eee);
@@ -74,7 +43,13 @@ fieldset.no-label label {
 }
 
 
-
+/* #node-organizer-form {
+  background: #eee;
+  border-radius: 12px;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px;
+} */
 
 /* ========== Cleaning ========== */
 
@@ -147,9 +122,55 @@ form details.field-group-toggle .fieldset-wrapper {
 
 
 
+
+
+
+
+
+
+.node-listing-form .vertical-tabs__pane > div > .details-description {
+  margin-right: 220px;
+}
+.node-listing-form .vertical-tabs__pane  > div > .details-description p:first-of-type {
+  margin-right: 350px;
+}
+.relevance-paragraph .paragraph-top {
+  margin: 0;
+  height: 0;
+}
+
+details.vertical-tabs__pane {
+  position: relative;
+}
+.node-listing-form .vertical-tabs__pane .paragraph-type {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: block;
+  width: 500px;
+  height: 200px;
+  z-index: 500;
+}
+
+fieldset.no-label label {
+  display: none;
+}
+
+   button.nomads-easy-tagging__back {
+    padding: 2px 7px;
+    border: 1px solid #fff;
+    border-radius: 6px;
+    background: #02324e;
+    font-weight: 400;
+     }
+
+
+
+
+
 /* ---------- Field spacing / readability ---------- */
-.field-group-tabs-wrapper .form-item,
-.field-group-tabs-wrapper .form-wrapper {
+.field-group-tabs-wrapper fieldset.form-item,
+.field-group-tabs-wrapper details.form-wrapper {
   margin: 10px 0;
 }
 
@@ -162,13 +183,13 @@ form details.field-group-toggle .fieldset-wrapper {
   margin-top: 6px;
 }
 
-/* Relevance UI wrapper (desired + effective) for paragraph subforms. */
+/* Relevance UI wrapper (desired + effective) for paragraph subforms.
 .field-group-tabs-wrapper .relevance-ui {
   border: 1px solid var(--form-border);
   border-radius: var(--radius-md);
   background: linear-gradient(180deg, #fff, #f8fbff);
   padding: 10px 12px;
-}
+} */
 
 .field-group-tabs-wrapper .relevance-ui [data-paragraph-relevance-role="effective"] {
   background: rgba(5, 117, 177, 0.05);
@@ -204,14 +225,14 @@ form details.field-group-toggle .fieldset-wrapper {
 }
 
 /* Inputs */
-.field-group-tabs-wrapper input[type="text"],
-.field-group-tabs-wrapper input[type="number"],
-.field-group-tabs-wrapper input[type="email"],
-.field-group-tabs-wrapper input[type="tel"],
-.field-group-tabs-wrapper input[type="url"],
-.field-group-tabs-wrapper input[type="date"],
-.field-group-tabs-wrapper textarea,
-.field-group-tabs-wrapper select {
+form input[type="text"],
+form input[type="number"],
+form input[type="email"],
+form input[type="tel"],
+form input[type="url"],
+form input[type="date"],
+form textarea,
+form select {
   box-sizing: border-box;
   max-width: 100%;
   width: 100%;
@@ -223,14 +244,14 @@ form details.field-group-toggle .fieldset-wrapper {
   transition: border-color 140ms ease, box-shadow 140ms ease;
 }
 
-.field-group-tabs-wrapper textarea {
+form textarea {
   min-height: 140px;
   resize: vertical;
 }
 
-.field-group-tabs-wrapper input:focus,
-.field-group-tabs-wrapper textarea:focus,
-.field-group-tabs-wrapper select:focus {
+form input:focus,
+form textarea:focus,
+form select:focus {
   outline: none;
   border-color: var(--form-accent);
   box-shadow: 0 0 0 3px rgba(42, 127, 255, 0.16);
@@ -249,15 +270,15 @@ form .ck-editor__editable,
   
 }
 
-.field-group-tabs-wrapper .button:hover,
-.field-group-tabs-wrapper button:hover,
-.field-group-tabs-wrapper input[type="submit"]:hover {
+form .button:hover,
+form button:hover,
+form input[type="submit"]:hover {
   box-shadow: var(--shadow-md);
 }
 
-.field-group-tabs-wrapper .button:active,
-.field-group-tabs-wrapper button:active,
-.field-group-tabs-wrapper input[type="submit"]:active {
+form .button:active,
+form button:active,
+form input[type="submit"]:active {
   transform: translateY(1px);
 }
 
@@ -280,6 +301,7 @@ form .ck-editor__editable,
 
 
 /* ========== Vertical tabs ========== */
+
 /* ----- Panes ----- */
 
 details.vertical-tabs__pane {
@@ -327,6 +349,8 @@ details.vertical-tabs__pane > summary {
 .field-group-tabs-wrapper .vertical-tabs__pane[open] > summary::before {
   transform: rotate(90deg);
 }
+
+
 
 /* ----- Menu ----- */
 
@@ -405,6 +429,7 @@ form  [id$="-format"] {
   text-align: right;
 }
 
+
 /* ----- Title input bigger ----- */
 
 form .field--name-field-title input,
@@ -482,6 +507,8 @@ fieldset#group-price-range .price-range-widget__row{
 .form-checkboxes .pretty-element label:hover {
   background: #f2f2f2;
 }
+
+
 
 /* =========== Geolocation ========== */
 
@@ -570,6 +597,7 @@ form .field-group-tabs-wrapper li.vertical-tabs__menu-item.optional-paragraph {
 
 
 /* ========== Inline widgtes ========== */
+
 /* ------- 3 columns ------- */
 
 /* 3 equal columns for the 3 field widgets inside your wrapper */
@@ -612,6 +640,8 @@ div.inline-widgets.col3 {
   box-sizing: border-box;
 }
 
+
+
 /* ------- 4 columns ------- */
 
 /* 4 equal columns for the 4 field widgets inside your wrapper */
@@ -641,12 +671,11 @@ div.inline-widgets.col3 {
   box-sizing: border-box;
 }
 
+
+
 /* ======== Relevance Slider ======== */
 
-.relevance-ui {
-  background: transparent !important;
-  border: 0 !important;
-}
+
 
 .relevance-ui .field--name-field-relevance2 legend {
   display: none;
@@ -696,4 +725,106 @@ div.inline-widgets.col3 {
 }
 .fieldset-hosting-capacity .field--type-integer input {
   width: 100px;
+}
+
+/* ========== Maxlength Counter ========== */
+
+.form-type-textarea,
+.form-type-textfield {
+  position: relative;
+}
+.counter {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: 1px solid #666;
+  border-radius: 5px;
+  padding: 3px 10px;
+  background:#0570A1;
+  color:#fff;
+  font-size: 9pt;
+}
+.form-type-textfield:hover .counter,
+.form-type-textarea:hover .counter {
+  display: inline-block;
+}
+
+/* ========== listing - texts ========== */
+
+form.node-listing-text-form {
+  max-width: 1200px;
+  margin: auto;
+  padding: 20px;
+  background: #eee;
+  border-radius: 12px;
+}
+form.node-listing-text-form .field-multiple-table thead,
+form.node-listing-text-form td.field-multiple-drag,
+form.node-listing-text-form .paragraphs-add-wrapper,
+form.node-listing-text-form .paragraphs-actions,
+form.node-listing-text-form .tabledrag-toggle-weight-wrapper {
+  display: none;
+}
+form.node-listing-text-form .paragraph-top {
+  grid-template-columns: 300px auto 1fr auto;
+}
+form.node-listing-text-form .paragraph-type-label {
+  font-size: 24pt;
+  font-weight: 600;
+}
+form.node-listing-text-form .paragraph-type-icon {
+  width: 100px;
+  height: auto;
+}
+form.node-listing-text-form label {
+  font-size: 13pt;
+  margin: 20px 10px 10px;
+}
+form.node-listing-text-form .field-subtitle-text {
+  font-size: 11pt;
+}
+form.node-listing-text-form .description {
+  font-size: 11pt;
+  padding: 8pt 20pt;
+  color: #666;
+}
+
+
+form.node-listing-images-form {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 16px;
+}
+form.node-listing-images-form  .field--name-field-images  {
+  grid-column: 2;
+}
+form.node-listing-images-form   .field--widget-paragraphs {
+  grid-column: 2;
+}
+form.node-listing-images-form  > .field--name-field-images  {
+  grid-column: 1;
+}
+form.node-listing-images-form .field-multiple-table thead,
+form.node-listing-images-form td.field-multiple-drag,
+form.node-listing-images-form .paragraphs-add-wrapper,
+form.node-listing-images-form legend,
+form.node-listing-images-form .paragraphs-actions,
+form.node-listing-images-form .tabledrag-toggle-weight-wrapper,
+form.node-listing-images-form .paragraphs-tabs .clearfix {
+  display: none !important;
+}
+form.node-listing-images-form .js-media-library-item {
+  width: 120px !important;
+  height: 120px !important;
+}
+form.node-listing-images-form fieldset.media-library-widget .nomads-media-selection-grid {
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+form.node-listing-images-form .paragraph-type-icon {
+
+}
+form.node-listing-images-form fieldset.media-library-widget .nomads-media-selection-grid__add input {
+  height: 120px !important;
 }

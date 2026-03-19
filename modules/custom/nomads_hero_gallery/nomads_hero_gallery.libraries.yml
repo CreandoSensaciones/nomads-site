@@ -2,3 +2,15 @@ hero_gallery:
   css:
     theme:
       css/hero-gallery.css: {}
+
+glightbox:
+  js:
+    /libraries/dom_purify/dist/purify.min.js: { minified: true }
+    /libraries/glightbox/dist/js/glightbox.min.js: { minified: true }
+    js/nomads-hero-gallery.glightbox.js: {}
+  css:
+    theme:
+      /libraries/glightbox/dist/css/glightbox.min.css: {}
+  dependencies:
+    - core/drupal
+    - core/once

@@ -7,6 +7,7 @@
 - Adds field formatter plugin `nomads_tiles_media` for media-image reference fields.
 - Adds Field Group formatter plugin `nomads_data_tile` for view-mode groups intended as data-tile sources.
 - Collects configured data-tile groups and renders their child fields into tile containers.
+- Auto-wraps consecutive rendered child fields that share the same `tile-row-*` marker class.
 - Builds image tiles from referenced media images (using image style `tile` if available).
 - Generates output sequence using configurable `D/I` patterns:
   - `pattern_1d`
@@ -33,8 +34,30 @@
 ## Runtime Behavior
 1. On entity view, module identifies `nomads_data_tile` field groups and marks their child fields for suppression.
 2. Formatter gathers data tiles from group children and image tiles from media references.
-3. Tile list is sequenced by configured `D/I` pattern and min/max tile limits.
-4. Render output is wrapped in `.nomads-tiles` and displayed as mixed data/image tiles.
+3. Consecutive rendered child fields that share the same `tile-row-*` marker class are wrapped together inside a generated container.
+4. Generated row wrappers receive the classes `tile_row`, `tile-row-[number-of-children]`, and the shared `tile-row-*` marker class.
+5. Tile list is sequenced by configured `D/I` pattern and min/max tile limits.
+6. Render output is wrapped in `.nomads-tiles` and displayed as mixed data/image tiles.
+
+## Row Wrappers
+Use row markers when several adjacent fields inside the same data tile should share one layout wrapper.
+
+- Add the same formatter class to adjacent fields in `Manage display`, for example `tile-row-meta`.
+- The site already includes `field_formatter_class`, and `nomads_tiles` reads the configured formatter class from the field display component.
+- Only consecutive sibling fields with the same `tile-row-*` marker are grouped.
+- The wrapper is rendered when at least one field in that marked run has output.
+- The generated wrapper gets:
+  - `tile_row`
+  - `tile-row-[number-of-children]`
+  - the shared marker class, for example `tile-row-meta`
+
+Example:
+- `field_year` class: `tile-row-meta`
+- `field_location` class: `tile-row-meta`
+- `field_status` class: `tile-row-meta`
+
+These fields render inside one wrapper with classes:
+- `tile_row tile-row-3 tile-row-meta`
 
 ## Concerns
 - Structural coupling: Behavior depends on Field Group internals and specific formatter IDs (`nomads_data_tile`); field-group config/model changes can break tile extraction.

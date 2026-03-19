@@ -220,12 +220,6 @@
 .nomads-easy-tagging__heading {
   width: 30%;
 }
-.node-listing-form .nomads-easy-tagging__heading {
-  display: inline-block;
-  width: 47%;
-  text-align: right;
-  margin-right: 5%;
-}
 .nomads-easy-tagging__card-explainer {
   font-size: 10pt;
 }

@@ -1,0 +1,29 @@
+{#
+/**
+ * @file
+ * Hosting period extra field output.
+ */
+#}
+<div class="nomads-hosting-period field--label-above">
+  {% if label %}
+    <div class="field__label">{{ label }}</div>
+  {% endif %}
+  {% if output_style == 'key' %}
+    <span class="nomads-hosting-period__text">
+      {{ 'Minimum hosting: @min. Typical hosting period: @typical'|t({ '@min': min_value, '@typical': typical_labels|join(', ') }) }}
+    </span>
+  {% else %}
+    <span class="nomads-hosting-period__text">
+      {{ 'Minimum'|t }}
+      <span class="nomads-pills" style="display: inline-block;">
+        <span class="nomads-pill">{{ '@min days'|t({ '@min': min_value }) }}</span>
+      </span>
+      {{ ', ' ~ 'typically'|t }}
+      <span class="nomads-pills" style="display: inline-block;">
+        {% for label in typical_labels %}
+          <span class="nomads-pill">{{ label }}</span>
+        {% endfor %}
+      </span>
+    </span>
+  {% endif %}
+</div>

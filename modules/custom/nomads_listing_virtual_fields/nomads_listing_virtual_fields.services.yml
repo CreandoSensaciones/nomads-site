@@ -1,0 +1,27 @@
+services:
+  nomads_listing_virtual_fields.hosting_period_builder:
+    class: Drupal\nomads_listing_virtual_fields\HostingPeriodExtraFieldBuilder
+    arguments:
+      - '@string_translation'
+
+  nomads_listing_virtual_fields.price_builder:
+    class: Drupal\nomads_listing_virtual_fields\PriceVirtualFieldBuilder
+    arguments:
+      - '@commerce_price.currency_formatter'
+      - '@string_translation'
+
+  nomads_listing_virtual_fields.location_builder:
+    class: Drupal\nomads_listing_virtual_fields\LocationExtraFieldBuilder
+    arguments:
+      - '@entity_type.manager'
+      - '@string_translation'
+
+  nomads_listing_virtual_fields.combined_map_builder:
+    class: Drupal\nomads_listing_virtual_fields\CombinedMapExtraFieldBuilder
+    arguments:
+      - '@string_translation'
+
+  nomads_listing_virtual_fields.date_location_block_builder:
+    class: Drupal\nomads_listing_virtual_fields\DateLocationBlockExtraFieldBuilder
+    arguments:
+      - '@string_translation'

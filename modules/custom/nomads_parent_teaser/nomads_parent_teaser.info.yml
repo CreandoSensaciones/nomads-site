@@ -1,0 +1,9 @@
+name: Nomads Parent Teaser
+type: module
+description: Provides a Views field that renders the parent node of a paragraph in a selected view mode.
+package: Custom
+core_version_requirement: ^11
+dependencies:
+  - drupal:node
+  - drupal:views
+  - drupal:paragraphs

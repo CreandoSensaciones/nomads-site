@@ -20,6 +20,12 @@
         var activeValue = "";
         var editValue = "";
         var currentPath = window.location.pathname.replace(/\/+$/, "") || "/";
+        var placeholderOption = document.createElement("option");
+
+        placeholderOption.value = "";
+        placeholderOption.textContent = Drupal.t("Actions");
+        placeholderOption.selected = true;
+        select.appendChild(placeholderOption);
 
         links.forEach(function (link) {
           var href = link.getAttribute("href");
@@ -33,13 +39,13 @@
             return;
           }
 
-          var option = document.createElement("option");
-          option.value = href;
-          option.textContent = label;
-
           if (label.toLowerCase() === "edit") {
             editValue = href;
           }
+
+          var option = document.createElement("option");
+          option.value = href;
+          option.textContent = label;
 
           var parentTask = link.closest(".is-active");
           var linkPath = "";
@@ -62,8 +68,8 @@
           return;
         }
 
-        if (!activeValue && editValue) {
-          select.value = editValue;
+        if (activeValue) {
+          select.value = activeValue;
         }
 
         select.addEventListener("change", function () {

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Nomads hosting period virtual field module.
+ * Compatibility wrapper for the consolidated listing virtual fields module.
  */
 
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
@@ -11,22 +11,35 @@ use Drupal\Core\Entity\EntityInterface;
 /**
  * Implements hook_entity_extra_field_info().
  */
-function nomads_hosting_period_virtual_field_entity_extra_field_info() {
-  $extra = [];
-  $extra['paragraph']['hosting']['display']['nomads_hosting_period_virtual_field'] = [
-    'label' => t('Nomads hosting period virtual field'),
-    'description' => t('Combined output of minimum hosting and typical hosting period.'),
-    'weight' => 0,
-    'visible' => TRUE,
-  ];
+function nomads_hosting_period_virtual_field_entity_extra_field_info(): array {
+  if (\Drupal::moduleHandler()->moduleExists('nomads_listing_virtual_fields')) {
+    return [];
+  }
 
-  return $extra;
+  return [
+    'paragraph' => [
+      'hosting' => [
+        'display' => [
+          'nomads_hosting_period_virtual_field' => [
+            'label' => t('Nomads hosting period virtual field'),
+            'description' => t('Combined output of minimum hosting and typical hosting period.'),
+            'weight' => 0,
+            'visible' => TRUE,
+          ],
+        ],
+      ],
+    ],
+  ];
 }
 
 /**
  * Implements hook_entity_view().
  */
-function nomads_hosting_period_virtual_field_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+function nomads_hosting_period_virtual_field_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, string $view_mode): void {
+  if (\Drupal::moduleHandler()->moduleExists('nomads_listing_virtual_fields')) {
+    return;
+  }
+
   if ($entity->getEntityTypeId() !== 'paragraph' || $entity->bundle() !== 'hosting') {
     return;
   }
@@ -52,7 +65,11 @@ function nomads_hosting_period_virtual_field_entity_view(array &$build, EntityIn
 /**
  * Implements hook_theme().
  */
-function nomads_hosting_period_virtual_field_theme() {
+function nomads_hosting_period_virtual_field_theme(): array {
+  if (\Drupal::moduleHandler()->moduleExists('nomads_listing_virtual_fields')) {
+    return [];
+  }
+
   return [
     'nomads_hosting_period_extra_field' => [
       'template' => 'nomads-hosting-period-extra-field',
@@ -66,7 +83,3 @@ function nomads_hosting_period_virtual_field_theme() {
     ],
   ];
 }
-
-/**
- * Implements hook_form_FORM_ID_alter().
- */

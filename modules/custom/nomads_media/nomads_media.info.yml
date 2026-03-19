@@ -1,0 +1,7 @@
+name: Nomads Media
+type: module
+description: 'Adds cross-widget drag and drop behavior for listing image media library widgets.'
+package: 'Nomads Features'
+core_version_requirement: '^11'
+dependencies:
+  - drupal:media_library

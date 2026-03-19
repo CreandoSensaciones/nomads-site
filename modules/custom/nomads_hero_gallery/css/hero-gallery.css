@@ -11,9 +11,10 @@
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 10px;
   align-items: stretch;
+  /* 
   height: clamp(280px, 38vw, 520px);
   max-width: 1550px;
-  max-height: 510px;
+  max-height: 510px; */
 }
 
 .nomads-hero-gallery--max-7 .nomads-hero-gallery__lead {
@@ -41,4 +42,11 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.nomads-hero-gallery__link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: zoom-in;
 }

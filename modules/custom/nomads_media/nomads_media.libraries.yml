@@ -1,0 +1,11 @@
+listing_images:
+  css:
+    theme:
+      css/nomads_media_listing_images.css: {}
+  js:
+    js/nomads_media_listing_images.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - core/sortable
+    - media_library/widget

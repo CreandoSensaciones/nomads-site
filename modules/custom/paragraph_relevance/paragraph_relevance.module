@@ -22,6 +22,7 @@ function paragraph_relevance_form_alter(array &$form, FormStateInterface $form_s
   paragraph_relevance_inject_group_attrs($form);
   paragraph_relevance_attach_relevance_ui_wrappers($form);
   paragraph_relevance_attach_sync_library($form, $form_state);
+  paragraph_relevance_apply_static_form_mode_visibility($form, $form_state, $form_id);
 
   if (paragraph_relevance_is_listing_form($form_state, $form_id)) {
     $form['#attached']['library'][] = 'paragraph_relevance/relevance';
@@ -927,6 +928,134 @@ function paragraph_relevance_is_listing_form(FormStateInterface $form_state, str
   }
 
   return in_array($form_id, $allowed_forms, TRUE);
+}
+
+/**
+ * Check if the form is a listing form-mode editor with static visibility.
+ */
+function paragraph_relevance_is_static_listing_form_mode(FormStateInterface $form_state, string $form_id): bool {
+  $allowed_forms = [
+    'node_listing_text_form',
+    'node_listing_images_form',
+  ];
+
+  if (!in_array($form_id, $allowed_forms, TRUE)) {
+    return FALSE;
+  }
+
+  $form_object = $form_state->getFormObject();
+  if (!$form_object || !method_exists($form_object, 'getEntity')) {
+    return FALSE;
+  }
+
+  $entity = $form_object->getEntity();
+  if (!$entity || !method_exists($entity, 'bundle')) {
+    return FALSE;
+  }
+
+  return $entity->getEntityTypeId() === 'node' && $entity->bundle() === 'listing';
+}
+
+/**
+ * Hide paragraph fields in form-mode editors based on the stored node only.
+ */
+function paragraph_relevance_apply_static_form_mode_visibility(array &$form, FormStateInterface $form_state, string $form_id): void {
+  if (!paragraph_relevance_is_static_listing_form_mode($form_state, $form_id)) {
+    return;
+  }
+
+  $form_object = $form_state->getFormObject();
+  $entity = $form_object && method_exists($form_object, 'getEntity')
+    ? $form_object->getEntity()
+    : NULL;
+  if (!$entity instanceof EntityInterface) {
+    return;
+  }
+
+  $source_field_names = paragraph_relevance_source_field_names($entity);
+  if (!$source_field_names) {
+    return;
+  }
+
+  $term_bundle_map = paragraph_relevance_collect_term_bundle_map($entity, [], $source_field_names);
+  if (!$term_bundle_map) {
+    return;
+  }
+
+  $selected_term_ids = paragraph_relevance_collect_selected_term_ids(NULL, $entity);
+  if (!$selected_term_ids) {
+    paragraph_relevance_hide_all_static_form_mode_paragraph_fields($form, $entity);
+    return;
+  }
+
+  $visible_bundles = [];
+  foreach ($selected_term_ids as $term_id) {
+    foreach (($term_bundle_map[(string) $term_id] ?? $term_bundle_map[$term_id] ?? []) as $bundle) {
+      $bundle = trim((string) $bundle);
+      if ($bundle === '') {
+        continue;
+      }
+      $visible_bundles[$bundle] = TRUE;
+      $visible_bundles[strtr($bundle, ['-' => '_'])] = TRUE;
+    }
+  }
+
+  paragraph_relevance_hide_static_form_mode_paragraph_fields($form, $entity, array_keys($visible_bundles));
+}
+
+/**
+ * Hide all paragraph fields that belong to listing paragraph bundles.
+ */
+function paragraph_relevance_hide_all_static_form_mode_paragraph_fields(array &$form, EntityInterface $entity): void {
+  $visible_bundles = [];
+  paragraph_relevance_hide_static_form_mode_paragraph_fields($form, $entity, $visible_bundles);
+}
+
+/**
+ * Hide paragraph fields whose bundle is not visible in static form modes.
+ */
+function paragraph_relevance_hide_static_form_mode_paragraph_fields(array &$form, EntityInterface $entity, array $visible_bundles): void {
+  $visible_lookup = [];
+  foreach ($visible_bundles as $bundle) {
+    $bundle = trim((string) $bundle);
+    if ($bundle === '') {
+      continue;
+    }
+    $visible_lookup[$bundle] = TRUE;
+    $visible_lookup[strtr($bundle, ['-' => '_'])] = TRUE;
+  }
+
+  foreach ($entity->getFieldDefinitions() as $field_name => $definition) {
+    if (!$definition instanceof FieldConfigInterface) {
+      continue;
+    }
+    if ($definition->getType() !== 'entity_reference_revisions') {
+      continue;
+    }
+    if ($definition->getSetting('target_type') !== 'paragraph') {
+      continue;
+    }
+    if (!isset($form[$field_name]) || !is_array($form[$field_name])) {
+      continue;
+    }
+
+    $target_bundles = $definition->getSetting('handler_settings')['target_bundles'] ?? [];
+    $target_bundles = array_values(array_filter(array_map('strval', $target_bundles)));
+    if (count($target_bundles) !== 1) {
+      continue;
+    }
+
+    $bundle = reset($target_bundles);
+    $relevance_field_name = 'field_' . strtr((string) $bundle, ['-' => '_']) . '_relevance';
+    if (!$entity->hasField($relevance_field_name)) {
+      continue;
+    }
+    if ($bundle === FALSE || isset($visible_lookup[$bundle]) || isset($visible_lookup[strtr($bundle, ['-' => '_'])])) {
+      continue;
+    }
+
+    $form[$field_name]['#access'] = FALSE;
+  }
 }
 
 /**

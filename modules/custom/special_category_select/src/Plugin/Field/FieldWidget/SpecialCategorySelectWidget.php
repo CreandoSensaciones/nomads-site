@@ -140,18 +140,34 @@ class SpecialCategorySelectWidget extends WidgetBase {
     $is_required = $this->fieldDefinition->isRequired();
     if ($is_required) {
       $element['#required'] = TRUE;
-      $element['#attributes']['class'][] = 'form-required';
     }
 
+    $input_id = Html::getUniqueId('edit-' . implode('-', array_merge($parents, ['0', '_cf_values'])));
+    $item_class_suffix = Html::getClass(implode('-', array_merge($parents, ['0', '_cf_values'])));
     $ui_title = $element['#title'] ?? $this->fieldDefinition->getLabel() ?? $this->t('Categories');
-    $element['ui_title'] = [
+    $element['ui_label'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => [
+          'js-form-item',
+          'form-item',
+          'js-form-type-textfield',
+          'form-type-textfield',
+          'js-form-item-' . $item_class_suffix,
+          'form-item-' . $item_class_suffix,
+        ],
+      ],
+    ];
+    $element['ui_label']['label'] = [
       '#type' => 'html_tag',
-      '#tag' => 'p',
+      '#tag' => 'label',
       '#value' => $ui_title,
-      '#attributes' => ['class' => ['special-category-select__title']],
+      '#attributes' => [
+        'for' => $input_id,
+      ],
     ];
     if ($is_required) {
-      $element['ui_title']['#attributes']['class'][] = 'form-required';
+      $element['ui_label']['label']['#attributes']['class'] = ['js-form-required', 'form-required'];
     }
 
     $element['ui'] = [
@@ -236,6 +252,7 @@ class SpecialCategorySelectWidget extends WidgetBase {
       '#type' => 'hidden',
       '#value' => implode("\n", $selected_ids),
       '#parents' => array_merge($parents, ['_cf_values']),
+      '#id' => $input_id,
       '#attributes' => [
         'data-cf-values' => '1',
       ],

@@ -1,0 +1,12 @@
+.geolocation-map-wrapper,
+.geolocation-map-container.leaflet-container {
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+/* Leaflet sometimes draws panes beyond the container, clip them too */
+.geolocation-map-container.leaflet-container .leaflet-pane,
+.geolocation-map-container.leaflet-container .leaflet-tile-pane,
+.geolocation-map-container.leaflet-container .leaflet-map-pane {
+  border-radius: 5px;
+}

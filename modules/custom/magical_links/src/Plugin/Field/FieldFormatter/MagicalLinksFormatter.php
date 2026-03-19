@@ -116,8 +116,6 @@ class MagicalLinksFormatter extends FormatterBase {
       ];
     }
 
-    $element['#type'] = 'container';
-    $element['#attributes']['class'][] = 'magical-links-formatter__groups';
     $element['#attached']['library'][] = 'magical_links/formatter';
 
     foreach ($group_definitions as $group_key => $group_definition) {

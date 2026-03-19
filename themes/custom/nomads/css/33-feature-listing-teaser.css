@@ -1,0 +1,285 @@
+.node--type-listing.node--view-mode-teaser {
+  padding: 7px;
+}
+.node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper .teaser-column-center {
+  text-align: center;
+}
+.node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper .teaser-column-center .paragraph-relevance-key-aspects {
+  width: 100%;
+}
+
+.node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper > .node__content .teaser-column {
+  height: 266px;
+}
+.node--type-listing.node--view-mode-teaser  .field--name-field-subtitle {
+  padding: 0 20px;
+}
+
+/* Make sure the 4 column wrappers behave as grid items */
+.node--type-listing.node--view-mode-teaser .teaser-column {
+  min-width: 0;           /* prevents overflow from long content */
+}
+
+/* Optional: if any column contains big images/sliders, keep them inside */
+.node--type-listing.node--view-mode-teaser img,
+.node--type-listing.node--view-mode-teaser .splide {
+  max-width: 100%;
+}
+
+
+
+.teaser-column.teaser-column-center {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+article.node--type-listing.node--view-mode-teaser {
+    position: relative;
+  }
+article.node--type-listing.node--view-mode-teaser .teaser-column {
+    text-align: center;
+}
+/* Teaser box shadow (soft, clean, clickable) */
+article.node--type-listing.node--view-mode-teaser {
+  background: #f8f8f8;
+  border-radius: 18px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.10);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  /* overflow: hidden; keeps rounded corners clean */
+  transition: box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease;
+}
+article.node--type-listing.node--view-mode-teaser .teaser-inner-wrapper {
+  border-radius: 12px;
+  background: #fafafa;
+}
+article.node--type-listing.node--view-mode-teaser:hover {
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14);
+  border-color: rgba(0, 0, 0, 0.10);
+}
+
+.teaser-action-calls .nomads-pill {
+  position: relative;
+  padding-right: 18px !important; /* space for arrow */
+}
+
+.teaser-action-calls .nomads-pill::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+.teaser-action-calls .nomads-pill.perk-teaser::after {
+  top: 5px;
+}
+
+article.node--type-listing.node--view-mode-teaser  div.teaser-action-calls .nomads-pill {
+  font-size: 9pt;
+}
+div.teaser-action-calls .perk-teaser.nomads-pill {
+  background: #fff;
+  color:#015180;
+  border: 2px solid #015180;
+  font-weight: 600;
+  padding: 2px 6px;
+}
+
+
+
+/* ----- Teaser Categories ----- */
+
+
+article.node--type-listing.node--view-mode-teaser .categories  {
+  text-align: center;
+} 
+article.node--type-listing.node--view-mode-teaser .categories .nomads-icon-formatter__item {
+  display: inline-block;
+}
+article.node--type-listing.node--view-mode-teaser .categories .nomads-pill {
+  background:#128bc3;
+}
+article.node--type-listing.node--view-mode-teaser .categories .nomads-pill:first-of-type {
+  background: #015180;
+}
+article.node--type-listing.node--view-mode-teaser .field--name-title h2 {
+  margin-bottom: 0;
+}
+article.node--type-listing.node--view-mode-teaser .field--name-field-subtitle {
+  margin-bottom: 5px;
+  font-size: 11pt;
+  max-height: 60px;
+  overflow: hidden;
+}
+article.node--type-listing.node--view-mode-teaser .nomads-taxonomy-breadcrumb,
+article.node--type-listing.node--view-mode-teaser .nomads-taxonomy-breadcrumb a
+ {
+  font-size: 10pt;
+  color: #999;
+  font-weight: 600;
+  text-transform: uppercase;
+  text-decoration: none;
+  margin-bottom: 3px;
+}
+article.node--type-listing.node--view-mode-teaser .nomads-taxonomy-breadcrumb .country a {
+  color: #555;
+}
+/* Multi-bundle layout: evenly spaced columns across full width */
+.location-date.location-date--multi-bundles > div {
+  display: flex;
+  justify-content: space-evenly; /* equal gaps, edges flush */
+  width: 100%;
+}
+
+/* Optional: if you want the same gap to also exist at left/right edges,
+   use space-evenly instead of space-between */
+.location-date.location-date--multi-bundles.location-date--space-evenly > div {
+  justify-content: space-evenly;
+}
+
+/* Bundle becomes a 2-line stack: location on top, date centered below */
+.location-date.location-date--multi-bundles .bundle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;   /* centers date and location text */
+  text-align: center;
+  line-height: 1;
+  white-space: nowrap;   /* keep "Apr - May" on one line */
+}
+
+/* Make the top line visually dominant */
+.location-date.location-date--multi-bundles .bundle .location {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+/* Slightly smaller date */
+.location-date.location-date--multi-bundles .bundle .date {
+  font-size: 0.7rem;
+  opacity: 0.75;
+}
+
+/* Prevent links from breaking the centering */
+.location-date.location-date--multi-bundles .bundle .location a {
+  display: inline-block;
+}
+
+/* If you want bundles to share width equally (nice symmetry), enable this */
+.location-date.location-date--multi-bundles.location-date--equal-columns > div {
+  justify-content: space-between;
+  gap: 0;                 /* keep math clean */
+}
+.location-date.location-date--multi-bundles.location-date--equal-columns .bundle {
+  flex: 1 1 0;
+}
+
+/* If you want a consistent inner padding (without affecting equal gaps),
+   add it to the wrapper (not to the inner flex container). */
+.location-date.location-date--multi-bundles {
+  padding-left: 12px;
+  padding-right: 12px;
+  box-sizing: border-box;
+}
+
+
+
+
+
+article.node--type-listing.node--view-mode-teaser h3 {
+  font-size: 8pt;
+  text-transform: uppercase;
+  margin: 3px auto 1px auto;
+}
+article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects > div {
+  display: inline-block;
+}
+article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects__items {
+  gap: 5px;
+}
+article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects .nomads-pill {
+  background: #01a6ab;
+}
+article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects__group--important_aspect .nomads-pill {
+  ackground: #1dc6cc;
+}
+article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects__group--minor_relevance .nomads-pill {
+  background: #3ed2d7;
+}
+
+
+
+.node--type-listing.node--view-mode-teaser .field--name-title h2 a {
+  text-decoration: none;
+  color: #000;
+}
+.node--type-listing.node--view-mode-teaser .field--name-field-subtitle {
+  text-align: center;
+}
+
+.splide__slide.slide--text {
+  display: flex;
+  align-items: center;
+}
+
+.splide-text-slide {
+  width: 100%;
+  padding: 16px;
+}
+
+
+
+/* ----- Teaser Tags ----- */
+
+.node--type-listing.node--view-mode-teaser .nomads-icon-formatter__icon img {
+  opacity: 0.6;
+}
+.node--type-listing.node--view-mode-teaser:hover .nomads-icon-formatter__icon img {
+  opacity: 1;
+}
+
+
+/* ========= Calendar teasers ========== */
+
+.cal-teaser-header {
+  width: 400px;
+  margin: 0 auto -40px;
+  padding-left: 80px;
+  position: relative;
+}
+.cal-teaser-header-inner {
+  position: relative;
+  z-index: 500;
+  width: 400px;
+  background:rgb(1, 166, 171);
+  border-radius: 999px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.10);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  text-align: center;
+  font-size: 16pt;
+  font-weight: 600;
+  color: #fff;
+  padding: 5px;
+}
+.cal-teaser-header-inner .date {
+  font-size: 12pt;
+  font-weight: 600;
+  color: #fff;
+}
+.cal-teaser-header-inner .geo {
+  font-size: 11pt;
+  font-weight: 600;
+  color: #fff;
+  opacity: 0.7;
+}
+.view-calendar.teaser-list .location-date {
+  opacity: 0;
+}
+.teaser-list .view-content .views-row:hover {
+  transform: translateY(-2px);
+}
+
+  

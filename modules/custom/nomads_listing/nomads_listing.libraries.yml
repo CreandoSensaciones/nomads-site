@@ -1,11 +1,3 @@
-base:
-  css:
-    theme:
-      css/temporary.css: {}
-listing_base_layout:
-  css:
-    theme:
-      css/listing-base-layout.css: {}
 nomads_leaflet_fix:
   header: true
   js:

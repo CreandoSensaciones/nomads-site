@@ -15,8 +15,8 @@
         }
     ],
     "require": {
-        "cweagans/composer-patches": "^1.7",
         "composer/installers": "^2.3",
+        "cweagans/composer-patches": "^1.7",
         "drupal/address": "^2.0",
         "drupal/autocomplete_deluxe": "^2.1",
         "drupal/commerce": "^3.2",
@@ -41,6 +41,7 @@
         "drupal/field_formatter_class": "^1.8",
         "drupal/geofield": "^1.66",
         "drupal/geolocation": "^3.14",
+        "drupal/glightbox": "^1.0",
         "drupal/inline_entity_form": "^3.0@rc",
         "drupal/jquery_ui_slider": "^2.1",
         "drupal/layout_paragraphs": "^2.1",
@@ -59,9 +60,11 @@
         "drupal/smart_date": "*",
         "drupal/splide": "*",
         "drupal/svg_image": "^3.2",
+        "drupal/swiper_formatter": "^2.1",
         "drupal/taxonomy_manager": "*",
         "drupal/views_bulk_edit": "^3.0",
         "drupal/views_bulk_operations": "^4.4",
+        "drupal/viewsreference": "^2.0@beta",
         "drush/drush": "^13.7"
     },
     "conflict": {

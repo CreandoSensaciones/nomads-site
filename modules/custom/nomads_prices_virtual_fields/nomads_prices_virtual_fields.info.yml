@@ -1,8 +1,9 @@
 name: 'Nomads Prices Virtual Fields'
 type: module
-description: 'Provides display-only virtual price-range field output for hosting paragraphs by combining Commerce min/max day, week, and month price fields.'
+description: 'Compatibility wrapper. Price range virtual field provisioning moved to Nomads listing virtual fields.'
 package: 'Nomads Display'
 core_version_requirement: ^11
 
 dependencies:
+  - nomads_listing_virtual_fields:nomads_listing_virtual_fields
   - commerce_price:commerce_price

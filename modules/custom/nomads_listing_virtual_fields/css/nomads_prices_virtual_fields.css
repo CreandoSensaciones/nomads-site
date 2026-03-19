@@ -1,0 +1,13 @@
+.nomads-price-range__body {
+  display: block;
+  text-align: inherit;
+}
+
+.nomads-price-range__line {
+  display: inline-block;
+  margin: 0 1.5rem 0.35rem 0;
+}
+
+.npvf-price {
+  font-weight: 700;
+}

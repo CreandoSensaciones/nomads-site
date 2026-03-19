@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Location virtual field module.
+ * Compatibility wrapper for the consolidated listing virtual fields module.
  */
 
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
@@ -13,6 +13,10 @@ use Drupal\Core\Form\FormStateInterface;
  * Implements hook_entity_extra_field_info().
  */
 function location_virtual_field_entity_extra_field_info(): array {
+  if (\Drupal::moduleHandler()->moduleExists('nomads_listing_virtual_fields')) {
+    return [];
+  }
+
   return [
     'node' => [
       'listing' => [
@@ -33,6 +37,10 @@ function location_virtual_field_entity_extra_field_info(): array {
  * Implements hook_entity_view().
  */
 function location_virtual_field_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, string $view_mode): void {
+  if (\Drupal::moduleHandler()->moduleExists('nomads_listing_virtual_fields')) {
+    return;
+  }
+
   if ($entity->getEntityTypeId() !== 'node' || !method_exists($entity, 'bundle') || $entity->bundle() !== 'listing') {
     return;
   }
@@ -59,6 +67,10 @@ function location_virtual_field_entity_view(array &$build, EntityInterface $enti
  * Implements hook_theme().
  */
 function location_virtual_field_theme(): array {
+  if (\Drupal::moduleHandler()->moduleExists('nomads_listing_virtual_fields')) {
+    return [];
+  }
+
   return [
     'location_virtual_field' => [
       'template' => 'location-virtual-field',
@@ -76,9 +88,14 @@ function location_virtual_field_theme(): array {
  * Implements hook_form_alter().
  */
 function location_virtual_field_form_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
+  if (\Drupal::moduleHandler()->moduleExists('nomads_listing_virtual_fields')) {
+    return;
+  }
+
   if (!in_array($form_id, ['entity_view_display_edit_form', 'entity_view_display_form'], TRUE)) {
     return;
   }
+
   location_virtual_field_add_display_settings($form, $form_state);
 }
 
@@ -86,6 +103,10 @@ function location_virtual_field_form_alter(array &$form, FormStateInterface $for
  * Implements hook_form_FORM_ID_alter() for entity_view_display_edit_form.
  */
 function location_virtual_field_form_entity_view_display_edit_form_alter(array &$form, FormStateInterface $form_state): void {
+  if (\Drupal::moduleHandler()->moduleExists('nomads_listing_virtual_fields')) {
+    return;
+  }
+
   location_virtual_field_add_display_settings($form, $form_state);
 }
 
@@ -93,6 +114,10 @@ function location_virtual_field_form_entity_view_display_edit_form_alter(array &
  * Implements hook_form_BASE_FORM_ID_alter() for entity_view_display_form.
  */
 function location_virtual_field_form_entity_view_display_form_alter(array &$form, FormStateInterface $form_state): void {
+  if (\Drupal::moduleHandler()->moduleExists('nomads_listing_virtual_fields')) {
+    return;
+  }
+
   location_virtual_field_add_display_settings($form, $form_state);
 }
 
@@ -110,7 +135,7 @@ function location_virtual_field_add_display_settings(array &$form, FormStateInte
     return;
   }
 
-  if ($display->getTargetEntityTypeId() !== 'node') {
+  if ($display->getTargetEntityTypeId() !== 'node' || $display->getTargetBundle() !== 'listing') {
     return;
   }
 
@@ -119,10 +144,7 @@ function location_virtual_field_add_display_settings(array &$form, FormStateInte
   }
 
   $default_link_terms = (bool) $display->getThirdPartySetting('location_virtual_field', 'link_terms', TRUE);
-  $default_max_bundles = (int) $display->getThirdPartySetting('location_virtual_field', 'max_bundles', 6);
-  if ($default_max_bundles < 1) {
-    $default_max_bundles = 1;
-  }
+  $default_max_bundles = max(1, (int) $display->getThirdPartySetting('location_virtual_field', 'max_bundles', 6));
 
   $form['location_virtual_field_settings'] = [
     '#type' => 'details',
@@ -175,10 +197,7 @@ function location_virtual_field_entity_view_display_edit_form_submit(array &$for
 
   $settings = (array) $form_state->getValue('location_virtual_field_settings', []);
   $link_terms = !empty($settings['link_terms']);
-  $max_bundles = isset($settings['max_bundles']) ? (int) $settings['max_bundles'] : 6;
-  if ($max_bundles < 1) {
-    $max_bundles = 1;
-  }
+  $max_bundles = max(1, (int) ($settings['max_bundles'] ?? 6));
 
   $display->setThirdPartySetting('location_virtual_field', 'link_terms', $link_terms);
   $display->setThirdPartySetting('location_virtual_field', 'max_bundles', $max_bundles);

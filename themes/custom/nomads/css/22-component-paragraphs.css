@@ -1,0 +1,40 @@
+/* ========== Paragraphs general ========== */
+
+
+
+
+/* ------- Paragraph Header ------ */
+/* Defaults */
+.nomads-paragraph-header {
+  width: 100%;
+}
+.nomads-paragraph-icon {
+  width: 100px;
+  height: auto;
+}
+.nomads-paragraph-icon img {
+  width: 100px;
+  height: auto;
+  display: block;
+}
+.nomads-paragraph-label {
+  font-family: Candara, "Segoe UI", Arial, sans-serif;
+  font-weight: 700;
+  font-size: 18pt;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #0dafc5, #0575b1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  line-height: 1;
+  white-space: nowrap;
+}
+.nomads-paragraph-title {
+  margin: 0;
+}
+.nomads-paragraph-title h2,
+.nomads-paragraph-title h3 {
+  margin: 0;
+  text-align: center;
+}

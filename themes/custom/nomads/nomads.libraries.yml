@@ -5,10 +5,19 @@ global:
       css/00-base.css: {}
       css/10-layout.css: {}
       css/20-components.css: {}
-      css/21-component-navbar.css: {}
-      css/22-component-tax-icons.css: {}
+      css/22-component-paragraphs.css: {}
+      css/24-component-tax-icons.css: {}
+      css/25-component-tiles.css: {}
+      css/26-component-modals.css: {}
       css/30-features.css: {}
+      css/31-feature-navbar.css: {}
+      css/33-feature-listing-teaser.css: {}
+      css/35-feature-relevance-paragraphs.css: {}
+      css/38-feature-maps.css: {}
       css/40-forms.css: {}
+      css/42-forms-listing.css: {}
+      css/43-forms-relevance-paragraphs.css: {}
+      css/48-forms-wizard.css: {}
       css/50-style.css: {}
       css/60-img-handling.css: {}
   js:

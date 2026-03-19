@@ -5,12 +5,6 @@
   align-items: start;
 }
 
-.special-category-select__title {
-  font-weight: 600;
-  margin: 0 0 10px 0;
-  font-size: 15px;
-}
-
 .special-category-select__tree,
 .special-category-select__selected {
   border: 1px solid #d8dbe0;
@@ -113,39 +107,6 @@
 .special-category-select__selected-parent {
   font-size: 12px;
   color: #6f7782;
-}
-
-.special-category-select__tree [data-tooltip] {
-  position: relative;
-}
-
-.special-category-select__tree [data-tooltip]:hover::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  left: 14px;
-  top: 100%;
-  margin-top: 6px;
-  background: #000;
-  color: #fff;
-  padding: 6px 8px;
-  border-radius: 4px;
-  font-size: 13px;
-  line-height: 1.3;
-  max-width: none;
-  white-space: nowrap;
-  z-index: 1000;
-}
-
-.special-category-select__tree [data-tooltip]:hover::before {
-  content: '';
-  position: absolute;
-  left: 10px;
-  top: 100%;
-  margin-top: 2px;
-  border-width: 4px;
-  border-style: solid;
-  border-color: transparent transparent #000 transparent;
-  z-index: 1001;
 }
 
 .special-category-select .term-reference-tree-level {

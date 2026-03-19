@@ -1,4 +1,17 @@
 tiles:
+  version: VERSION
+  dependencies:
+    - core/drupal
+
+glightbox:
+  version: VERSION
   css:
     theme:
-      css/nomads_tiles.css: {}
+      /libraries/glightbox/dist/css/glightbox.min.css: {}
+  js:
+    /libraries/dom_purify/dist/purify.min.js: { minified: true }
+    /libraries/glightbox/dist/js/glightbox.min.js: { minified: true }
+    js/nomads-tiles.glightbox.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

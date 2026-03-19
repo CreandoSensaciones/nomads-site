@@ -1,0 +1,33 @@
+{#
+/**
+ * @file
+ * Price range virtual field output.
+ */
+#}
+<div class="nomads-price-range field--label-above">
+  {% set has_content = groups is not empty %}
+  {% if label and has_content %}
+    <div class="nomads-price-range__label field__label">{{ label }}</div>
+  {% endif %}
+  {% if has_content %}
+    <div class="nomads-price-range__body">
+    {% for group in groups %}
+    {% if group.mode == 'range' %}
+      <div class="nomads-price-range__line">
+        {{ group.prefix }}:
+        <span class="price-range-wrapper">
+          <span class="npvf-price npvf-price--min" title="{{ 'minimal price available'|t }}">{{ group.min }}</span>
+          -
+          <span class="npvf-price npvf-price--max" title="{{ 'maximum price offered'|t }}">{{ group.max }}</span>
+        </span>
+      </div>
+    {% elseif group.mode == 'single' %}
+      <div class="nomads-price-range__line">
+        {{ group.prefix }}:
+        <span class="npvf-price npvf-price--min" title="{{ 'price available'|t }}">{{ group.value }}</span>
+      </div>
+    {% endif %}
+    {% endfor %}
+    </div>
+  {% endif %}
+</div>

@@ -20,6 +20,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\TranslatableInterface as TranslatableDataInterface;
+use Drupal\image\ImageStyleInterface;
 use Drupal\media\MediaInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -194,10 +195,12 @@ class NomadsTilesMediaFormatter extends FormatterBase implements ContainerFactor
           'nomads-tiles',
           'nomads-tiles--field-' . Html::getClass($field_name),
         ],
+        'data-gallery-id' => $this->buildGalleryId($entity, $field_name),
       ],
       '#attached' => [
         'library' => [
           'nomads_tiles/tiles',
+          'nomads_tiles/glightbox',
         ],
       ],
     ];
@@ -205,6 +208,7 @@ class NomadsTilesMediaFormatter extends FormatterBase implements ContainerFactor
     foreach ($output_tiles as $delta => $tile_build) {
       $wrapper['tile_' . $delta] = $tile_build;
     }
+    $wrapper['gallery_items'] = $this->buildHiddenGalleryLinks($items, $output_tiles, $cacheability);
 
     $cacheability->applyTo($wrapper);
 
@@ -379,6 +383,7 @@ class NomadsTilesMediaFormatter extends FormatterBase implements ContainerFactor
       }
 
       $has_content = FALSE;
+      $rendered_children = [];
 
       $child_weight = 0;
       foreach ($children as $child) {
@@ -426,13 +431,20 @@ class NomadsTilesMediaFormatter extends FormatterBase implements ContainerFactor
         if (!empty($field_build)) {
           $has_content = TRUE;
           $field_build['#weight'] = $child_weight;
-          $tile_build['tile_items'][$child] = $field_build;
+          $rendered_children[] = [
+            'key' => $child,
+            'build' => $field_build,
+            'row_marker' => $this->extractTileRowMarker($component, $field_build),
+          ];
         }
 
         $child_weight++;
       }
 
       if ($has_content) {
+        foreach ($this->groupTileRowChildren($rendered_children) as $item) {
+          $tile_build['tile_items'][$item['key']] = $item['build'];
+        }
         $data_tiles[] = $tile_build;
       }
     }
@@ -452,14 +464,19 @@ class NomadsTilesMediaFormatter extends FormatterBase implements ContainerFactor
   protected function buildImageTiles(FieldItemListInterface $items, CacheableMetadata $cacheability): array {
     $image_tiles = [];
     $media_entities = $items->referencedEntities();
+    $gallery_id = $this->buildGalleryId($items->getEntity(), $this->fieldDefinition->getName());
+    $tile_style = $this->entityTypeManager->getStorage('image_style')->load('tile');
+    $lightbox_style = $this->entityTypeManager->getStorage('image_style')->load('lightbox');
 
     if (empty($media_entities)) {
       return $image_tiles;
     }
 
-    $style = $this->entityTypeManager->getStorage('image_style')->load('tile');
-    if ($style) {
-      $cacheability->addCacheableDependency($style);
+    if ($tile_style) {
+      $cacheability->addCacheableDependency($tile_style);
+    }
+    if ($lightbox_style) {
+      $cacheability->addCacheableDependency($lightbox_style);
     }
 
     foreach ($media_entities as $delta => $media) {
@@ -467,30 +484,78 @@ class NomadsTilesMediaFormatter extends FormatterBase implements ContainerFactor
         continue;
       }
 
-      $image_url = $this->getMediaImageUrl($media, $style);
-      if (!$image_url) {
+      $image_data = $this->getMediaImageData($media, $tile_style, $lightbox_style);
+      if (!$image_data) {
         continue;
       }
 
       $tile = [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
+        '#type' => 'link',
+        '#title' => '',
+        '#url' => \Drupal\Core\Url::fromUri($image_data['full_url']),
         '#attributes' => [
           'class' => [
             'tile',
             'image-tile',
+            'nomads-tiles-glightbox',
           ],
-          'style' => "background-image:url('{$image_url}')",
+          'style' => "background-image:url('{$image_data['tile_url']}')",
           'data-delta' => (string) $delta,
           'data-media-id' => (string) $media->id(),
+          'data-gallery' => $gallery_id,
+          'aria-label' => $this->t('Open image @number', ['@number' => $delta + 1]),
         ],
       ];
 
       $cacheability->addCacheableDependency($media);
+      $cacheability->addCacheableDependency($image_data['file']);
       $image_tiles[] = $tile;
     }
 
     return $image_tiles;
+  }
+
+  /**
+   * Builds hidden gallery links for images omitted from the tile layout.
+   */
+  protected function buildHiddenGalleryLinks(FieldItemListInterface $items, array $output_tiles, CacheableMetadata $cacheability): array {
+    $gallery_markup = '';
+    $visible_media_ids = [];
+    $gallery_id = $this->buildGalleryId($items->getEntity(), $this->fieldDefinition->getName());
+    $lightbox_style = $this->entityTypeManager->getStorage('image_style')->load('lightbox');
+
+    if ($lightbox_style) {
+      $cacheability->addCacheableDependency($lightbox_style);
+    }
+
+    foreach ($output_tiles as $tile) {
+      $media_id = $tile['#attributes']['data-media-id'] ?? NULL;
+      if ($media_id !== NULL) {
+        $visible_media_ids[(string) $media_id] = TRUE;
+      }
+    }
+
+    foreach ($items->referencedEntities() as $media) {
+      if (!$media instanceof MediaInterface) {
+        continue;
+      }
+      if (isset($visible_media_ids[(string) $media->id()])) {
+        continue;
+      }
+
+      $image_data = $this->getMediaImageData($media, NULL, $lightbox_style);
+      if (!$image_data) {
+        continue;
+      }
+
+      $cacheability->addCacheableDependency($media);
+      $cacheability->addCacheableDependency($image_data['file']);
+      $gallery_markup .= '<a href="' . Html::escape($image_data['full_url']) . '" class="nomads-tiles-glightbox visually-hidden" data-gallery="' . Html::escape($gallery_id) . '" aria-hidden="true" tabindex="-1"></a>';
+    }
+
+    return [
+      '#markup' => $gallery_markup,
+    ];
   }
 
   /**
@@ -620,7 +685,7 @@ class NomadsTilesMediaFormatter extends FormatterBase implements ContainerFactor
   /**
    * Resolve media image URL.
    */
-  protected function getMediaImageUrl(MediaInterface $media, $style): ?string {
+  protected function getMediaImageData(MediaInterface $media, ?ImageStyleInterface $tile_style, ?ImageStyleInterface $lightbox_style = NULL): ?array {
     $source = $media->getSource();
     if (!$source) {
       return NULL;
@@ -646,14 +711,27 @@ class NomadsTilesMediaFormatter extends FormatterBase implements ContainerFactor
       return NULL;
     }
 
+    /** @var \Drupal\file\FileInterface $file */
     $file = $image_item->entity;
     $uri = $file->getFileUri();
+    $tile_url = $tile_style ? $tile_style->buildUrl($uri) : $this->fileUrlGenerator->generateAbsoluteString($uri);
+    $full_url = $lightbox_style ? $lightbox_style->buildUrl($uri) : $this->fileUrlGenerator->generateAbsoluteString($uri);
 
-    if ($style) {
-      return $style->buildUrl($uri);
-    }
+    return [
+      'file' => $file,
+      'full_url' => $full_url,
+      'tile_url' => $tile_url,
+    ];
+  }
 
-    return $this->fileUrlGenerator->generateAbsoluteString($uri);
+  /**
+   * Build a stable gallery id per entity field instance.
+   */
+  protected function buildGalleryId(FieldableEntityInterface $entity, string $field_name): string {
+    $entity_type = $entity->getEntityTypeId();
+    $entity_id = $entity->id() ?? 'new';
+
+    return Html::getId(sprintf('nomads-tiles-%s-%s-%s', $entity_type, $entity_id, $field_name));
   }
 
   /**
@@ -675,6 +753,110 @@ class NomadsTilesMediaFormatter extends FormatterBase implements ContainerFactor
 
     $parts = preg_split('/\s+/', trim($raw_classes)) ?: [];
     return array_values(array_filter($parts, static fn(string $class): bool => $class !== ''));
+  }
+
+  /**
+   * Group consecutive rendered children that share a tile-row marker class.
+   */
+  protected function groupTileRowChildren(array $children): array {
+    $grouped = [];
+    $count = count($children);
+    $index = 0;
+
+    while ($index < $count) {
+      $current = $children[$index];
+      $marker = $current['row_marker'] ?? NULL;
+
+      if ($marker === NULL) {
+        $grouped[] = [
+          'key' => $current['key'],
+          'build' => $current['build'],
+        ];
+        $index++;
+        continue;
+      }
+
+      $row_children = [$current];
+      $index++;
+
+      while ($index < $count && (($children[$index]['row_marker'] ?? NULL) === $marker)) {
+        $row_children[] = $children[$index];
+        $index++;
+      }
+
+      $wrapper_key = Html::getId('tile-row-' . implode('-', array_map(static fn(array $child): string => $child['key'], $row_children)));
+      $wrapper = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => [
+            'tile_row',
+            'tile-row-' . count($row_children),
+            $marker,
+          ],
+        ],
+      ];
+
+      foreach ($row_children as $position => $row_child) {
+        $row_child['build']['#weight'] = $position;
+        $wrapper[$row_child['key']] = $row_child['build'];
+      }
+
+      $grouped[] = [
+        'key' => $wrapper_key,
+        'build' => $wrapper,
+      ];
+    }
+
+    return $grouped;
+  }
+
+  /**
+   * Extract the first tile-row marker from a component or rendered field.
+   */
+  protected function extractTileRowMarker(array $component, array $field_build): ?string {
+    foreach ($this->extractComponentClasses($component, $field_build) as $class) {
+      if (str_starts_with($class, 'tile-row-')) {
+        return $class;
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * Extract configured class names for a field display component.
+   */
+  protected function extractComponentClasses(array $component, array $field_build = []): array {
+    $raw_classes = [];
+    $third_party_settings = $component['third_party_settings'] ?? [];
+
+    if (!empty($third_party_settings['field_formatter_class']['class']) && is_string($third_party_settings['field_formatter_class']['class'])) {
+      $raw_classes[] = $third_party_settings['field_formatter_class']['class'];
+    }
+
+    if (!empty($third_party_settings['field_group']['classes']) && is_string($third_party_settings['field_group']['classes'])) {
+      $raw_classes[] = $third_party_settings['field_group']['classes'];
+    }
+
+    if (!empty($third_party_settings['field_group']['format_settings']['classes']) && is_string($third_party_settings['field_group']['format_settings']['classes'])) {
+      $raw_classes[] = $third_party_settings['field_group']['format_settings']['classes'];
+    }
+
+    if (!empty($field_build['#attributes']['class']) && is_array($field_build['#attributes']['class'])) {
+      $raw_classes[] = implode(' ', $field_build['#attributes']['class']);
+    }
+
+    $classes = [];
+    foreach ($raw_classes as $raw_class_string) {
+      $parts = preg_split('/\s+/', trim($raw_class_string)) ?: [];
+      foreach ($parts as $class) {
+        if ($class !== '') {
+          $classes[$class] = $class;
+        }
+      }
+    }
+
+    return array_values($classes);
   }
 
   /**

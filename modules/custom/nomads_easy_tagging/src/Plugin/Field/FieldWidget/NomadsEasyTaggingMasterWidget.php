@@ -114,6 +114,38 @@ class NomadsEasyTaggingMasterWidget extends WidgetBase implements ContainerFacto
     $children_url = $this->buildChildrenUrl();
 
     $type_field_info = $this->getTypeFieldInfo($items);
+    $is_required = $this->fieldDefinition->isRequired();
+    if ($is_required) {
+      $element['#required'] = TRUE;
+    }
+
+    $input_id = Html::getUniqueId('edit-' . implode('-', array_merge($parents, ['0', '_net_values'])));
+    $item_class_suffix = Html::getClass(implode('-', array_merge($parents, ['0', '_net_values'])));
+    $ui_title = $element['#title'] ?? $this->fieldDefinition->getLabel() ?? $this->t('Categories');
+    $element['ui_label'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => [
+          'js-form-item',
+          'form-item',
+          'js-form-type-textfield',
+          'form-type-textfield',
+          'js-form-item-' . $item_class_suffix,
+          'form-item-' . $item_class_suffix,
+        ],
+      ],
+    ];
+    $element['ui_label']['label'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'label',
+      '#value' => $ui_title,
+      '#attributes' => [
+        'for' => $input_id,
+      ],
+    ];
+    if ($is_required) {
+      $element['ui_label']['label']['#attributes']['class'] = ['js-form-required', 'form-required'];
+    }
 
     $element['ui'] = [
       '#type' => 'container',
@@ -145,6 +177,7 @@ class NomadsEasyTaggingMasterWidget extends WidgetBase implements ContainerFacto
       '#type' => 'hidden',
       '#value' => implode("\n", $selected_ids),
       '#parents' => array_merge($parents, ['_net_values']),
+      '#id' => $input_id,
       '#attributes' => [
         'data-selected-values' => '1',
       ],

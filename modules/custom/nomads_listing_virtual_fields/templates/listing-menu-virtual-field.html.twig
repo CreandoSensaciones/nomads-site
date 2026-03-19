@@ -1,0 +1,19 @@
+{#
+/**
+ * @file
+ * Listing menu virtual field output.
+ */
+#}
+{% set classes = wrapper_classes|default([]) %}
+<div class="{{ classes|join(' ') }}">
+  {% if label and label_display != 'hidden' %}
+    <div class="field__label">{{ label }}</div>
+  {% endif %}
+  {% if items %}
+    <div class="listing-menu-virtual-field__items">
+      {% for item in items %}
+        <a class="listing-menu-virtual-field__link" href="{{ item.href }}">{{ item.title }}</a>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>

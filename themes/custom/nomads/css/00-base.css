@@ -45,3 +45,6 @@ h3 {
 .center {
   text-align: center;
 }
+.small {
+  font-size: 0.8em;
+}

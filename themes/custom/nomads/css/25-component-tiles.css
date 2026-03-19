@@ -1,0 +1,240 @@
+
+.nomads-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.nomads-tiles .tile {
+  position: relative;
+  width: 250px;
+  height: 250px;
+  margin: 0;
+  border: 1px solid #999;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.nomads-tiles .image-tile {
+  display: block;
+  background-size: cover;
+  background-position: center;
+  cursor: zoom-in;
+}
+
+
+
+/* --------- Tiles layout -------- */
+
+/* Tile Label on top, rest shares space evenly */
+.nomads-tiles .data-tile {
+  display: flex;
+  flex-direction: column;
+  height: 250px;
+}
+.nomads-tiles .data-tile > h3 {
+  margin: 0;
+  flex: 0 0 auto;
+}
+.nomads-tiles .data-tile .tile-items {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  align-content: space-evenly;
+  height: 235px;
+}
+.nomads-tiles .data-tile .tile-items > div {
+  grid-column: 1/-1;
+  width: 240px;
+  text-align: center;
+}
+.nomads-tiles .data-tile .tile-items > div.span2 {
+  grid-column: span 2;
+}
+.nomads-tiles .data-tile .tile-items > div.span3 {
+  grid-column: span 3;
+  text-align: center;
+}
+.nomads-tiles .data-tile .tile-items > div.span4 {
+  grid-column: span 4;
+}
+.nomads-tiles .data-tile .tile-items > div.span5 {
+  grid-column: span 5;
+}
+.nomads-tiles .data-tile .tile-items > div.span6 {
+  grid-column: span 6;
+}
+.nomads-tiles .data-tile .tile-items > div.span7 {
+  grid-column: span 7;
+}
+.nomads-tiles .data-tile .tile-items > div.span8 {
+  grid-column: span 8;
+}
+
+
+
+
+/* Title spans full width */
+.data-tile > h3 {
+  grid-column: 1 / -1;
+}
+
+.data-tile .inline-field {
+  display: inline-flex;
+}
+
+
+
+/* --------- Tiles Style --------- */
+
+.nomads-tiles .tile {
+  border-radius: 5px;
+  border: none;
+}
+/* Data tile background */
+.nomads-tiles .data-tile {
+  padding: 8px 2px;
+  text-align: center;
+  background: linear-gradient(125deg, #cff6f0, #94d9fe);
+}
+.nomads-tiles .tile h3 {
+  font-size: 12pt;
+  font-family: inter;
+  font-weight: 700;
+  color: #0575b1;
+}
+
+
+
+/* ---------- Label above ---------- */
+
+.nomads-tiles .tile .field--label-above .field__label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+  color: #0570A1;
+  font-size: 10pt;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-bottom: 3px;
+}
+.nomads-tiles .tile .field--label-above .field__label::before,
+.nomads-tiles .tile .field--label-above .field__label::after {
+  content: "";
+  flex: 1 1 auto;
+  min-width: 20px;
+  height: 1px;
+  background: #0DAFC5;
+}
+
+
+
+/* ---------- Prefix / Suffix ---------- */
+
+.nomads-tiles .tile  .prefix,
+.nomads-tiles .tile  .suffix {
+  display: inline-block;
+  font-size: 8pt;
+  font-weight: 400;
+  opacity: 0.8;
+  max-width: 30px;
+  white-space: wrap;
+}
+.nomads-tiles .tile  .prefix {
+  margin-right: 3px;
+}
+.nomads-tiles .tile  .suffix {
+  margin-left: 3px;
+  text-align: left;
+  vertical-align: top;
+}
+
+
+
+/* ---------- Big text ---------- */
+
+.nomads-tiles .big-text.field {
+    font-size: 15pt;
+    font-weight: 700;
+    line-height: 1;
+}
+
+
+
+/* --------- Tiles - Pills ---------- */
+
+.nomads-tiles .data-tile .nomads-pill {
+  font-size: 12pt;
+  font-weight: 500;
+}
+.nomads-tiles .data-tile .items-3  .nomads-pill { font-size: 10pt; }
+.nomads-tiles .data-tile .items-6  .nomads-pill { font-size: 8pt; }
+.nomads-tiles .data-tile .items-9  .nomads-pill { font-size: 8pt; }
+.nomads-tiles .data-tile .items-12 .nomads-pill { font-size: 8pt; }
+
+
+.nomads-tiles .field--name-field-amenities.items-6 .nomads-pill {
+  font-size: 10pt;
+}
+.nomads-hosting-period__text > span:nth-of-type(2) .nomads-pill {
+  font-size: 8pt;
+}
+
+
+
+/* ------- Tiles - Icon Label Formatter ----- */
+
+.data-tile .nomads-icon-field-label__icon,
+.data-tile .nomads-icon-field-label__icon svg {
+    max-width: 24px;
+    height: 24px;
+}
+.data-tile .nomads-icon-field-label__wrapper {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;  
+  gap: 3px;             
+  padding: 0 ; 
+  height: 24px;
+  vertical-align: middle;
+  font-size: 15pt;
+  font-weight: 700;
+  line-height: 1;
+}
+
+
+
+/* ========== Fields ========== */
+
+/* ---------- Internet Speed ---------- */
+
+.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-first::before,
+.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-second::before {
+  width: 27px;
+  height: 27px;
+  flex: 0 0 20px;
+  margin: auto 1px auto 5px;
+}
+.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-first,
+.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-second {
+  font-size: 15pt;
+}
+.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-first::after,
+.nomads-icon-paragraph .data-tile .field--name-field-internet-speed .double-field-second::after {
+  font-size: 9pt;
+  font-weight: 400;
+  margin: auto 10px auto 5px;
+}
+
+/* ---------- Others ---------- */
+
+.nomads-tiles .field--name-field-audience-age-range {
+  white-space: nowrap;
+}
+.nomads-tiles .field--name-field-common-meals .suffix {
+  max-width: 80px;
+  margin-left: 7px;
+}
+

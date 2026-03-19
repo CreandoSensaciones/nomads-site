@@ -1,0 +1,47 @@
+<?php
+
+declare(strict_types=1);
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the listing images form mode.
+ */
+function nomads_media_form_node_listing_images_form_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
+  nomads_media_attach_listing_images_library($form, $form_state, $form_id);
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function nomads_media_form_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
+  nomads_media_attach_listing_images_library($form, $form_state, $form_id);
+}
+
+/**
+ * Attaches the listing images library on the dedicated listing image editor.
+ */
+function nomads_media_attach_listing_images_library(array &$form, FormStateInterface $form_state, string $form_id): void {
+  if ($form_id === 'node_listing_images_form') {
+    $form['#attributes']['data-nomads-media-listing-images'] = '1';
+    $form['#attached']['library'][] = 'nomads_media/listing_images';
+    return;
+  }
+
+  $form_object = $form_state->getFormObject();
+  if (!method_exists($form_object, 'getEntity') || !method_exists($form_object, 'getOperation')) {
+    return;
+  }
+
+  $entity = $form_object->getEntity();
+  if (!$entity || $entity->getEntityTypeId() !== 'node' || $entity->bundle() !== 'listing') {
+    return;
+  }
+
+  if ($form_object->getOperation() !== 'images') {
+    return;
+  }
+
+  $form['#attributes']['data-nomads-media-listing-images'] = '1';
+  $form['#attached']['library'][] = 'nomads_media/listing_images';
+}

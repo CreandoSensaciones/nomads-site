@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Drupal\nomads_hero_gallery\Plugin\Field\FieldFormatter;
 
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceFormatterBase;
+use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Url;
 use Drupal\image\ImageStyleStorageInterface;
 use Drupal\media\MediaInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -37,6 +41,11 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
   protected RendererInterface $renderer;
 
   /**
+   * The file URL generator.
+   */
+  protected FileUrlGeneratorInterface $fileUrlGenerator;
+
+  /**
    * Constructs a HeroGalleryMediaFormatter instance.
    */
   public function __construct(
@@ -49,10 +58,12 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
     array $third_party_settings,
     ImageStyleStorageInterface $image_style_storage,
     RendererInterface $renderer,
+    FileUrlGeneratorInterface $file_url_generator,
   ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
     $this->imageStyleStorage = $image_style_storage;
     $this->renderer = $renderer;
+    $this->fileUrlGenerator = $file_url_generator;
   }
 
   /**
@@ -69,6 +80,7 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
       $configuration['third_party_settings'],
       $container->get('entity_type.manager')->getStorage('image_style'),
       $container->get('renderer'),
+      $container->get('file_url_generator'),
     );
   }
 
@@ -156,6 +168,9 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
   public function viewElements(FieldItemListInterface $items, $langcode): array {
     $elements = [];
     $media_items = $this->getEntitiesToView($items, $langcode);
+    $gallery_media_items = $this->getGalleryMediaItems($items, $langcode);
+    $gallery_items = $this->buildGalleryItems($gallery_media_items);
+    $gallery_id = $this->buildGalleryId($items);
 
     if (empty($media_items)) {
       return $elements;
@@ -210,6 +225,8 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
         '#image_style' => $image_style,
       ];
 
+      $elements[$delta] = $this->wrapImageWithGalleryLink($elements[$delta], $media, $gallery_id);
+
       $this->renderer->addCacheableDependency($elements[$delta], $media);
       $rendered_images[] = $elements[$delta];
       $count++;
@@ -219,6 +236,9 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
       if ($image_style = $this->imageStyleStorage->load($style_name)) {
         $this->renderer->addCacheableDependency($elements, $image_style);
       }
+    }
+    if ($lightbox_style = $this->imageStyleStorage->load('lightbox')) {
+      $this->renderer->addCacheableDependency($elements, $lightbox_style);
     }
 
     if ($max_images === 7 && count($rendered_images) > 0) {
@@ -244,6 +264,7 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
           '#type' => 'container',
           '#attributes' => [
             'class' => ['nomads-hero-gallery', 'nomads-hero-gallery--max-7'],
+            'data-gallery-id' => $gallery_id,
           ],
           'lead' => [
             '#type' => 'container',
@@ -253,15 +274,23 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
             'image' => $lead_image,
           ],
           'grid' => $grid,
+          'gallery_items' => $this->buildHiddenGalleryLinks($gallery_items, $gallery_id, $count),
         ],
         '#attached' => [
-          'library' => ['nomads_hero_gallery/hero_gallery'],
+          'library' => [
+            'nomads_hero_gallery/hero_gallery',
+            'nomads_hero_gallery/glightbox',
+          ],
         ],
       ];
       return $elements;
     }
 
     $elements['#attached']['library'][] = 'nomads_hero_gallery/hero_gallery';
+    $elements['#attached']['library'][] = 'nomads_hero_gallery/glightbox';
+    $elements['#prefix'] = '<div class="nomads-hero-gallery" data-gallery-id="' . $gallery_id . '">';
+    $elements['gallery_items'] = $this->buildHiddenGalleryLinks($gallery_items, $gallery_id, $count);
+    $elements['#suffix'] = '</div>';
 
     return $elements;
   }
@@ -271,6 +300,119 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
    */
   public static function isApplicable(FieldDefinitionInterface $field_definition): bool {
     return $field_definition->getFieldStorageDefinition()->getSetting('target_type') === 'media';
+  }
+
+  /**
+   * Gets gallery media items from node field_images, capped at 24.
+   */
+  protected function getGalleryMediaItems(FieldItemListInterface $items, string $langcode): array {
+    $entity = $items->getEntity();
+    $gallery_field = 'field_images';
+
+    if ($entity instanceof FieldableEntityInterface && $entity->hasField($gallery_field)) {
+      $gallery_items = $entity->get($gallery_field)->referencedEntities();
+    }
+    else {
+      $gallery_items = $this->getEntitiesToView($items, $langcode);
+    }
+
+    $gallery_items = array_values(array_filter($gallery_items, static fn ($item): bool => $item instanceof MediaInterface));
+    return array_slice($gallery_items, 0, 24);
+  }
+
+  /**
+   * Builds gallery metadata for all available media items.
+   */
+  protected function buildGalleryItems(array $media_items): array {
+    $gallery_items = [];
+
+    foreach ($media_items as $media) {
+      $image_data = $this->getMediaImageData($media);
+      if ($image_data) {
+        $gallery_items[] = $image_data;
+      }
+    }
+
+    return $gallery_items;
+  }
+
+  /**
+   * Wraps one rendered image in a GLightbox trigger link.
+   */
+  protected function wrapImageWithGalleryLink(array $image_render, MediaInterface $media, string $gallery_id): array {
+    $current_image = $this->getMediaImageData($media);
+    if (!$current_image) {
+      return $image_render;
+    }
+
+    return [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['nomads-hero-gallery__trigger'],
+      ],
+      'image' => [
+        '#type' => 'link',
+        '#title' => $image_render,
+        '#url' => Url::fromUri($current_image['full_url']),
+        '#attributes' => [
+          'class' => ['nomads-hero-gallery-glightbox', 'nomads-hero-gallery__link'],
+          'data-gallery' => $gallery_id,
+          'aria-label' => $this->t('Open gallery image'),
+        ],
+      ],
+    ];
+  }
+
+  /**
+   * Builds hidden gallery links for non-rendered images.
+   */
+  protected function buildHiddenGalleryLinks(array $gallery_items, string $gallery_id, int $visible_count): array {
+    $gallery_markup = '';
+
+    foreach (array_slice($gallery_items, $visible_count) as $gallery_item) {
+      $gallery_markup .= '<a href="' . Html::escape($gallery_item['full_url']) . '" class="nomads-hero-gallery-glightbox visually-hidden" data-gallery="' . Html::escape($gallery_id) . '" aria-hidden="true" tabindex="-1"></a>';
+    }
+
+    return [
+      '#markup' => $gallery_markup,
+    ];
+  }
+
+  /**
+   * Resolves full image metadata for a media item.
+   */
+  protected function getMediaImageData(MediaInterface $media): ?array {
+    $media_type = $media->bundle->entity;
+    $source_field_definition = $media_type?->getSource()->getSourceFieldDefinition($media_type);
+    $source_field_name = $source_field_definition?->getName();
+    if (!$source_field_name || $source_field_definition?->getType() !== 'image') {
+      return NULL;
+    }
+
+    $image_item = $media->get($source_field_name)->first();
+    if (!$image_item || empty($image_item->entity)) {
+      return NULL;
+    }
+
+    $file = $image_item->entity;
+    $uri = $file->getFileUri();
+    $lightbox_style = $this->imageStyleStorage->load('lightbox');
+
+    return [
+      'full_url' => $lightbox_style ? $lightbox_style->buildUrl($uri) : $this->fileUrlGenerator->generateAbsoluteString($uri),
+    ];
+  }
+
+  /**
+   * Builds a stable gallery id for the rendered field.
+   */
+  protected function buildGalleryId(FieldItemListInterface $items): string {
+    $entity = $items->getEntity();
+    $entity_type = $entity->getEntityTypeId();
+    $entity_id = $entity->id() ?? 'new';
+    $field_name = $this->fieldDefinition->getName();
+
+    return Html::getId(sprintf('nomads-hero-gallery-%s-%s-%s', $entity_type, $entity_id, $field_name));
   }
 
 }

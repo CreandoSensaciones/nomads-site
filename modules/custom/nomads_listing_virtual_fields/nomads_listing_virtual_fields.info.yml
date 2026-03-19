@@ -1,0 +1,11 @@
+name: 'Nomads listing virtual fields'
+type: module
+description: 'Provides listing-related virtual display fields for hosting price, hosting period, and listing location output while preserving existing display config keys.'
+package: 'Nomads Display'
+core_version_requirement: ^11
+
+dependencies:
+  - paragraphs:paragraphs
+  - commerce_price:commerce_price
+  - nomads_taxonomy_breadcrumb:nomads_taxonomy_breadcrumb
+  - drupal:views

@@ -1,8 +1,9 @@
 name: 'Nomads hosting period virtual field'
 type: module
-description: 'Adds a paragraph extra display field that combines minimum hosting and typical hosting period values for the hosting paragraph bundle.'
+description: 'Compatibility wrapper. Hosting period virtual field provisioning moved to Nomads listing virtual fields.'
 package: 'Nomads Display'
 core_version_requirement: ^11
 
 dependencies:
+  - nomads_listing_virtual_fields:nomads_listing_virtual_fields
   - paragraphs:paragraphs
