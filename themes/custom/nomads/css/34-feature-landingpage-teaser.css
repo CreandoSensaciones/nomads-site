@@ -1,0 +1,226 @@
+.node--type-landing-page.node--view-mode-teaser {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+  height: 100%;
+}
+
+.node--type-landing-page.node--view-mode-teaser .node__content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+
+
+
+/* ===================================
+  Land page teasers - Subdomain cards
+======================================= */
+
+/* ======= Subdomain Heaser ======= */
+
+.node--type-landing-page.node--view-mode-teaser {
+  max-width: 520px;
+}
+
+.node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain {
+  order: 1;
+  background: #fff;
+  padding: 16px 20px 14px;
+  text-align: center;
+  line-height: 1;
+}
+.node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain span {
+  padding: 0 5px;
+}
+.node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain .prefix,
+.node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain .suffix {
+  display: contents;
+}
+.node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain h3 {
+  margin: 0;
+  font-size: clamp(1.2rem, 1.8vw, 2.4rem);
+  font-weight: 400;
+  line-height: 1;
+}
+.node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain a {
+  display: inline-block;
+  text-decoration: none;
+  color: #222;
+}
+/* gradient first word simulation via first-word wrap if you later add spans */
+.node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain a {
+  text-transform: lowercase;
+  color: #b0b0b0;
+  font-weight: 400;
+}
+/* current fallback, style the first word stronger if whole title stays one link */
+.node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain a::first-line {
+  color: inherit;
+}
+.node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain a:focus-visible {
+  outline: 2px solid #0575b1;
+  outline-offset: 2px;
+  background: rgba(5, 117, 177, 0.12);
+  border-radius: 6px;
+}
+
+/* If you later split subdomain into spans like:
+   <span class="domain-first">COLIVING</span><span class="domain-dot"> • </span><span class="domain-rest">nomads.site</span>
+   then these will apply immediately
+*/
+.node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain .domain-first {
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #0575b1;
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain .domain-first {
+    background-image: linear-gradient(90deg, #0dafc5, #0575b1);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+.node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain .domain-rest {
+  text-transform: lowercase;
+  color: #b0b0b0;
+  font-weight: 400;
+}
+
+.node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain .domain-dot {
+  color: #c0c0c0;
+  font-weight: 400;
+  padding: 0 0.3em;
+}
+
+
+
+/* ============ Image area ================= */
+
+.node--type-landing-page.node--view-mode-teaser .field--name-field-hero {
+  order: 2;
+  position: relative;
+  margin: 0;
+  flex: 1 1 auto;
+}
+
+.node--type-landing-page.node--view-mode-teaser  .field--name-field-stock-image > .field__item {
+  display: block;
+  position: relative;
+  aspect-ratio: 4 / 3;
+}
+
+.node--type-landing-page.node--view-mode-teaser  .field--name-field-stock-image a {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.node--type-landing-page.node--view-mode-teaser .field--name-field-stock-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+
+/* ==============  Teaser line overlay =================== */
+
+.node--type-landing-page.node--view-mode-teaser .field--name-field-teaser-line {
+  order: 3;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  margin: 0;
+  background: rgba(0, 0, 0, 0.48);
+  padding: 16px 20px 18px;
+  text-align: center;
+}
+
+.node--type-landing-page.node--view-mode-teaser .field--name-field-teaser-line .prefix,
+.node--type-landing-page.node--view-mode-teaser .field--name-field-teaser-line .suffix {
+  display: contents;
+}
+
+.node--type-landing-page.node--view-mode-teaser .field--name-field-teaser-line h4 {
+  margin: 0;
+  font-size: clamp(1.15rem, 1.2vw, 1.7rem);
+  line-height: 1.2;
+  font-weight: 400;
+}
+
+.node--type-landing-page.node--view-mode-teaser .field--name-field-teaser-line a {
+  color: #fff;
+  text-decoration: none;
+  text-wrap: balance;
+}
+
+.node--type-landing-page.node--view-mode-teaser .field--name-field-teaser-line a:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+
+
+
+/* =============== Hover ========================= */
+
+.node--type-landing-page.node--view-mode-teaser {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.node--type-landing-page.node--view-mode-teaser:hover,
+.node--type-landing-page.node--view-mode-teaser:focus-within {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
+}
+
+
+
+
+/* =========================
+   Responsive
+   ========================= */
+
+@media (max-width: 1100px) {
+  .field--name-field-reference.grid-3.field__items {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .field--name-field-reference.grid-3.field__items {
+    grid-template-columns: 1fr;
+  }
+
+  .node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain {
+    padding: 14px 16px 12px;
+  }
+
+  .node--type-landing-page.node--view-mode-teaser .field--name-field-teaser-line {
+    padding: 14px 16px 16px;
+  }
+}
+
+
+/* =========================
+   Hide contextual overflow issues
+   ========================= */
+
+.node--type-landing-page.node--view-mode-teaser .contextual {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 20;
+}

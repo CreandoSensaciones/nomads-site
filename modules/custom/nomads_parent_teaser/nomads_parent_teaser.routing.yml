@@ -1,0 +1,10 @@
+nomads_parent_teaser.teaser:
+  path: '/nomads-parent-teaser/{node}'
+  defaults:
+    _controller: '\Drupal\nomads_parent_teaser\Controller\NomadsParentTeaserController::teaser'
+  requirements:
+    _entity_access: 'node.view'
+  options:
+    parameters:
+      node:
+        type: entity:node

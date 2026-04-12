@@ -1,0 +1,19 @@
+
+.node--type-landing-page.node--view-mode-full .viewsreference--view-title {
+    font-size: 14pt;
+    color: #666;
+    margin: -40px 0 0 400px;
+}
+.node--type-landing-page.node--view-mode-full  .paragraph--bundle-view h2 {
+    font-size: 16pt;
+    text-align: left;
+    color: #015180;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.node--type-landing-page .paragraph--bundle-text {
+    max-width: 960px;
+    margin: 30px auto;
+    font-size: 1.2em;
+}

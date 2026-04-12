@@ -1,0 +1,27 @@
+
+
+/* ========== Presentation ========== */
+
+.feature-card .field--type-entity-reference {
+  margin: 30px auto;
+}
+.presentation .blue-cards-container {
+  max-width: 1400px;
+  margin-right: auto;
+  margin-left: auto;
+}
+.presentation .blue-cards-container p {
+  padding: 0 10px;
+}
+.presentation p {
+  text-align: center;
+}
+.presentation .feature-card.key-aspect-cards img {
+  width: auto;
+  height: 100px;
+}
+.presentation .feature-card .field--name-field-reference {
+  max-width: 1400px;
+  margin-right: auto;
+  margin-left: auto;
+}

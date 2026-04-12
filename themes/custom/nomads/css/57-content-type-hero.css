@@ -1,0 +1,165 @@
+
+.page-node-type-hero #toolbar-administration {
+    display: none;
+}
+
+/* RESET ANY BREAKOUT DAMAGE */
+.hero-ui {
+  position: relative;
+  width: 100%;
+  margin: 0;
+}
+
+/* FULLSCREEN FIXED BACKGROUND */
+.hero-ui__bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+}
+
+/* IMAGE */
+.hero-ui__bg-image,
+.hero-ui__bg-image img {
+  width: 100%;
+  height: 100vh;
+  display: block;
+}
+
+.hero-ui__bg-image img {
+  object-fit: cover;
+  object-position: center;
+  border-radius: 0 !important;
+}
+
+/* DARK OVERLAY */
+/* .hero-ui__bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+} */
+
+/* CONTENT CENTERED IN VIEWPORT */
+.hero-ui__overlay {
+  /* min-height: 100vh; */
+  min-height: calc(100vh - 100px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* REMOVE ANY WIDTH BREAKOUT THAT CAUSED SCROLLBAR */
+/* .nomads-breakout,
+.nomads-content .hero-ui {
+  width: auto !important;
+  margin: 0 !important;
+} */
+
+.hero-ui__overlay h1.hero-ui__title {
+font-size: 48px;
+color: #fff;
+text-shadow: 
+  0 2px 8px rgba(0,0,0,0.9),
+  0 6px 20px rgba(0,0,0,0.4);
+}
+
+.hero-ui__overlay .field--name-field-subtitle h2 {
+font-size: 36px;
+margin-bottom: 30px;
+color: #fff;
+text-shadow: 
+  0 2px 8px rgba(0,0,0,0.9),
+  0 6px 20px rgba(0,0,0,0.4);
+}
+.hero-ui__overlay  .teaser-line {
+font-size: 20px;
+}
+
+/* ========= Node 99 - Login ======== */
+
+.hero-ui__overlay form.user-login-form,
+.hero-ui__overlay form.user-register-form,
+.hero-ui__overlay form.user-pass,
+.hero-ui__overlay .field--name-body {
+  background: rgba(255,255,255,0.75);
+  border: 1px solid #fff;
+  border-radius: 12px;
+  padding: 12px 34px;
+  box-sizing: border-box;
+  width: 300px;
+  margin: 0 auto;
+}
+form.user-register-form,
+form.user-pass {
+    width: 400px;
+}
+form.user-register-form div.description {
+  font-size: 10pt;
+  color: #000;
+}
+
+
+form.user-login-form input,
+form.user-register-form input {
+  padding: 7px 14px !important;
+  border-radius: 8px !important;
+
+}
+.hero-ui__inner {
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  padding: 20px;
+  width: 450px;
+  text-align: center;
+}
+.hero-ui__body,
+.hero-ui__body > div {
+    
+  text-align: center;
+}
+.hero-ui__body:has(form) > div {
+  display: flex;
+  flex-direction: column;
+  gap: 30px; /* Abstand zwischen den beiden divs */
+}
+
+.hero-ui__inner input {
+  border-radius: 12px;
+  border: none;
+  padding: 14px;
+}
+
+a.button {
+    background: #0b6fa4;
+    border-radius: 8px;
+    border-color: #0b6fa4;
+    color: #fff;
+    transform: translateY(-1px);
+    text-decoration: none;
+    margin: 20px;
+    margin-top: 50px !important;
+    padding: 5px 12px;
+}
+a.button-primery {
+    font-size: 22pt;
+    padding: 12px 50px;
+  
+    border-radius: 16px;
+}
+
+.hero-ui__overlay .field--name-body {
+  width: 550px;
+}
+.create-listing .hero-ui__overlay .field--name-body {
+  width: 500px;
+}
+
+
+.hero-ui__overlay:has(.field--name-body) .hero-ui__inner {
+  width: 600px;
+}
+article.create-listing .hero-ui__inner {
+  width: 550px !important;
+}

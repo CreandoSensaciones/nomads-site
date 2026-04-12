@@ -1,0 +1,126 @@
+<?php
+
+declare(strict_types=1);
+
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Url;
+use Drupal\node\NodeInterface;
+
+/**
+ * @file
+ * Nomads Navigation module hooks.
+ */
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function nomads_navigation_views_data_alter(array &$data): void {
+  $data['node_field_data']['nomads_navigation_has_domain_term'] = [
+    'title' => t('Has domain term'),
+    'help' => t('Filters content to nodes that reference the current domain navigation filter term directly or through any owned paragraph.'),
+    'filter' => [
+      'id' => 'nomads_navigation_has_domain_term',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_entity_view_alter().
+ */
+function nomads_navigation_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display): void {
+  if (
+    !$entity instanceof NodeInterface ||
+    $entity->bundle() !== 'landing_page' ||
+    ($build['#view_mode'] ?? NULL) !== 'teaser'
+  ) {
+    return;
+  }
+
+  /** @var \Drupal\nomads_navigation\FrontpageDomainResolver $resolver */
+  $resolver = \Drupal::service('nomads_navigation.frontpage_domain_resolver');
+  $root_url = $resolver->resolveRootUrl($entity);
+
+  (new CacheableMetadata())
+    ->setCacheTags($resolver->getCacheTags())
+    ->applyTo($build);
+
+  if ($root_url === NULL) {
+    return;
+  }
+
+  nomads_navigation_rewrite_teaser_links($build, (string) $entity->id(), $root_url);
+}
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function nomads_navigation_preprocess_node(array &$variables): void {
+  $node = $variables['node'] ?? NULL;
+  $view_mode = $variables['view_mode'] ?? NULL;
+  if (
+    !$node instanceof NodeInterface ||
+    $node->bundle() !== 'landing_page' ||
+    $view_mode !== 'teaser'
+  ) {
+    return;
+  }
+
+  /** @var \Drupal\nomads_navigation\FrontpageDomainResolver $resolver */
+  $resolver = \Drupal::service('nomads_navigation.frontpage_domain_resolver');
+  $root_url = $resolver->resolveRootUrl($node);
+
+  $cacheability = (new CacheableMetadata())->setCacheTags($resolver->getCacheTags());
+  if (isset($variables['elements']) && is_array($variables['elements'])) {
+    $cacheability->applyTo($variables['elements']);
+  }
+
+  if ($root_url === NULL) {
+    return;
+  }
+
+  $variables['url'] = $root_url;
+  $variables['teaser_url'] = $root_url;
+}
+
+/**
+ * Rewrites canonical node link render elements inside a teaser build.
+ */
+function nomads_navigation_rewrite_teaser_links(array &$element, string $node_id, string $root_url): void {
+  if (isset($element['#url']) && nomads_navigation_url_targets_node($element['#url'], $node_id)) {
+    $element['#url'] = Url::fromUri($root_url);
+  }
+
+  foreach ($element as $key => &$child) {
+    if ((is_string($key) && str_starts_with($key, '#')) || !is_array($child)) {
+      continue;
+    }
+    nomads_navigation_rewrite_teaser_links($child, $node_id, $root_url);
+  }
+}
+
+/**
+ * Determines whether a render URL points at the node canonical route/path.
+ */
+function nomads_navigation_url_targets_node(mixed $url, string $node_id): bool {
+  if ($url instanceof Url) {
+    if ($url->isRouted() && $url->getRouteName() === 'entity.node.canonical') {
+      return (string) ($url->getRouteParameters()['node'] ?? '') === $node_id;
+    }
+
+    return nomads_navigation_path_targets_node($url->toString(), $node_id);
+  }
+
+  return is_string($url) && nomads_navigation_path_targets_node($url, $node_id);
+}
+
+/**
+ * Determines whether a rendered URL string points at the node path.
+ */
+function nomads_navigation_path_targets_node(string $path, string $node_id): bool {
+  $path = strtok($path, '?#') ?: $path;
+  $path = '/' . ltrim($path, '/');
+
+  return rtrim($path, '/') === '/node/' . $node_id;
+}

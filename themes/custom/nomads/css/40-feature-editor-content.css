@@ -1,0 +1,891 @@
+.float-right {
+  float: right;
+}
+
+
+/* =========================================================
+   STORY PARAGRAPHS TIMELINE
+========================================================= */
+
+.timeline {
+  max-width: 960px;
+  margin: 0 auto;
+}
+.timeline .paragraph--type--story {
+  position: relative;
+}
+.timeline .paragraph--type--story h1,
+.timeline .paragraph--type--story h2,
+.timeline .paragraph--type--story h3 {
+  margin: 0;
+  padding: 0;
+}
+
+.timeline .paragraph--type--story {
+  display: grid;
+  grid-template-columns:  360px minmax(0, 1fr);
+  grid-template-areas:
+    "image title"
+    "image date"
+    "image body";
+  column-gap: 48px;
+  row-gap: 0;
+  align-items: start;
+  padding: 0 0 22px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  grid-template-rows: auto auto 1fr;
+}
+
+/* text areas */
+.timeline .paragraph--type--story .field--name-field-title {
+  grid-area: title;
+  margin: 0;
+}
+
+.timeline .paragraph--type--story .field--name-field-background-title {
+  grid-area: date;
+  margin-top: -27px;
+  padding: 0;
+  font-size: 30pt;
+  line-height: 1.25;
+  font-weight: 1000;
+  opacity: 0.10;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  color: #0575b1;
+}
+
+.timeline .paragraph--type--story .field--name-field-body {
+  grid-area: body;
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.68;
+  max-width: 48rem;
+  opacity: 0.94;
+}
+
+.timeline .paragraph--type--story .field--name-field-body p {
+  margin: 0 0 1em;
+}
+
+.timeline .paragraph--type--story .field--name-field-body p:last-child {
+  margin-bottom: 0;
+}
+
+/* image / slider area */
+.timeline .paragraph--type--story > .swiper-container,
+.timeline .paragraph--type--story [id^="paragraph-story-"][id$="-field-images"] {
+  grid-area: image;
+  width: 100%;
+  max-width: 360px;
+  justify-self: end;
+  align-self: start;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.10);
+}
+
+/* slides */
+.timeline .paragraph--type--story .swiper-slide {
+  overflow: hidden;
+}
+
+.timeline .paragraph--type--story .swiper-slide picture,
+.timeline .paragraph--type--story .swiper-slide a,
+.timeline .paragraph--type--story .swiper-slide img {
+  display: block;
+  width: 100%;
+}
+
+.timeline .paragraph--type--story .swiper-slide img {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+/* swiper controls, calmer */
+.timeline .paragraph--type--story .swiper-pagination {
+  bottom: 10px !important;
+}
+
+.timeline .paragraph--type--story .swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+}
+
+.timeline .paragraph--type--story .swiper-button-prev,
+.timeline .paragraph--type--story .swiper-button-next {
+  width: 40px;
+  height: 40px;
+  margin-top: -20px;
+}
+
+.timeline .paragraph--type--story .swiper-button-prev::after,
+.timeline .paragraph--type--story .swiper-button-next::after {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* story without images should collapse to text only */
+.timeline .paragraph--type--story:not(:has(.swiper-container)) {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "title"
+    "date"
+    "body";
+}
+
+/* optional, if there is title + image but no body */
+.timeline .paragraph--type--story .field--name-field-body:empty,
+.timeline .paragraph--type--story .field--name-field-background-title:empty {
+  display: none;
+}
+
+/* last story no divider */
+.timeline .field--name-field-paragraphs > .field__item:last-child .paragraph--type--story {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1200px) {
+  .timeline .paragraph--type--story {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    column-gap: 36px;
+  }
+
+  .timeline .paragraph--type--story > .swiper-container,
+  .timeline .paragraph--type--story [id^="paragraph-story-"][id$="-field-images"] {
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 900px) {
+  .timeline > .node__content {
+    gap: 28px;
+  }
+
+  .timeline .field--name-field-paragraphs {
+    gap: 44px;
+  }
+
+  .timeline .field--name-title h1,
+  .timeline .field--name-title h2 {
+    font-size: 2.3rem;
+  }
+
+  .timeline .paragraph--type--story,
+  .timeline .paragraph--type--story:not(:has(.swiper-container)) {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "title"
+      "date"
+      "image"
+      "body";
+    row-gap: 14px;
+  }
+
+  .timeline .paragraph--type--story > .swiper-container,
+  .timeline .paragraph--type--story [id^="paragraph-story-"][id$="-field-images"] {
+    max-width: 100%;
+    justify-self: stretch;
+  }
+
+  .timeline .paragraph--type--story .field--name-field-body {
+    max-width: none;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* ==============================
+   Early Access - Announcement
+   ============================== */
+
+#block-nomads-earlyaccessannouncement ,
+#block-nomads-earlyaccessannouncement-2 {
+  max-width: 860px;
+  margin: 24px auto;
+  overflow: hidden;
+  background: #f4f9fc;
+  border: 1px solid rgba(22, 158, 196, 0.22);
+  border-left: 6px solid #169ec4;
+  border-radius: 22px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+  padding: 15px;
+  text-align: center;
+}
+
+#block-nomads-earlyaccessannouncement h2,
+#block-nomads-earlyaccessannouncement-2 h2 {
+  margin: 0;
+  padding: 6px;
+  color: #169ec4;
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+
+#block-nomads-earlyaccessannouncement p,
+#block-nomads-earlyaccessannouncement-2 p {
+  margin: 0;
+  color: #31424c;
+}
+
+/* first line */
+#block-nomads-earlyaccessannouncement p:nth-of-type(1),
+#block-nomads-earlyaccessannouncement-2  p:nth-of-type(1) {
+  font-size: 28px;
+  line-height: 1.18;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #1f2d35;
+}
+
+/* second line */
+#block-nomads-earlyaccessannouncement p:nth-of-type(2),
+#block-nomads-earlyaccessannouncement-2 p:nth-of-type(2)  {
+  margin-top: 12px;
+  font-size: 19px;
+  line-height: 1.35;
+  font-weight: 400;
+  color: #4e5f69;
+}
+
+#block-nomads-earlyaccessannouncement p:nth-of-type(2) strong,
+#block-nomads-earlyaccessannouncement-2 p:nth-of-type(2) strong {
+  color: #169ec4;
+  font-weight: 700;
+}
+
+/* hide the standalone arrow paragraph */
+#block-nomads-earlyaccessannouncement p:nth-of-type(3),
+#block-nomads-earlyaccessannouncement-2 p:nth-of-type(3) {
+  display: none;
+}
+
+/* CTA paragraph */
+#block-nomads-earlyaccessannouncement p:last-child,
+#block-nomads-earlyaccessannouncement-2 p:last-child {
+  margin-top: 22px;
+}
+
+/* CTA paragraph */
+#block-nomads-earlyaccessannouncement p:last-child,
+#block-nomads-earlyaccessannouncement-2 p:last-child {
+  margin-top: 24px;
+  text-align: center;
+}
+
+/* CTA link as real pill button */
+#block-nomads-earlyaccessannouncement a.create-listing,
+#block-nomads-earlyaccessannouncement-2 a.create-listing {
+  display: inline-block;
+  width: auto;
+  max-width: 100%;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: #169ec4;
+  color: #fff;
+  font-size: 17px;
+  line-height: 1.2;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(22, 158, 196, 0.22);
+  transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+#block-nomads-earlyaccessannouncement a.create-listing:hover,
+#block-nomads-earlyaccessannouncement a.create-listing:focus,
+#block-nomads-earlyaccessannouncement-2 a.create-listing:hover,
+#block-nomads-earlyaccessannouncement-2 a.create-listing:focus {
+  background: #118bb0;
+  color: #fff;
+  text-decoration: none;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(22, 158, 196, 0.28);
+}
+
+#block-nomads-earlyaccessannouncement a.create-listing:active,
+#block-nomads-earlyaccessannouncement-2 a.create-listing:active {
+  transform: translateY(0);
+}
+
+
+
+/* mobile */
+@media (max-width: 767px) {
+  #block-nomads-earlyaccessannouncement,
+  #block-nomads-earlyaccessannouncement-2 {
+    margin: 24px 16px;
+  }
+
+  #block-nomads-earlyaccessannouncement h2,
+  #block-nomads-earlyaccessannouncement-2 h2 {
+    padding: 18px 18px 4px;
+  }
+
+  #block-nomads-earlyaccessannouncement p:nth-of-type(1),
+  #block-nomads-earlyaccessannouncement-2 p:nth-of-type(1) {
+    font-size: 22px;
+  }
+
+  #block-nomads-earlyaccessannouncement p:nth-of-type(2),
+  #block-nomads-earlyaccessannouncement-2 p:nth-of-type(2) {
+    font-size: 17px;
+  }
+
+  #block-nomads-earlyaccessannouncement a.create-listing,
+  #block-nomads-earlyaccessannouncement-2 a.create-listing {
+    width: 100%;
+    padding: 14px 18px;
+  }
+}
+
+
+
+
+
+/* =================
+  Feature cards
+==================== */
+
+.feature-card .node--type-feature.node--view-mode-teaser {
+  position: relative;
+}
+.feature-card .feature-teaser-modal-link {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+/* inner card content */
+.feature-card .feature-teaser-modal-link .node__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* contextual buttons */
+.feature-card .contextual {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 5;
+}
+
+/* icon */
+.feature-card .field--name-field-icon {
+  margin-bottom: 4px;
+}
+
+.feature-card .field--name-field-icon img {
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto;
+}
+
+/* title */
+.feature-card .field--name-title {
+  width: 100%;
+}
+
+.feature-card .field--name-title h3 {
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
+/* subtitle */
+.feature-card .field--name-field-subtitle {
+  width: 100%;
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+.feature-cards .field--name-field-subtitle .field__item {
+  max-width: 28ch;
+  margin: 0 auto;
+}
+
+/* cta */
+.feature-card .field--name-field-teaser-line {
+  width: 100%;
+  margin-top: auto;
+  padding-top: 8px;
+  font-weight: 600;
+}
+
+.feature-card .field--name-field-teaser-line .field__item {
+  margin: 0 auto;
+}
+
+.feature-card .ajax-progress,
+.feature-card .ajax-progress-throbber {
+  display: none !important;
+}
+
+/* remove inline wrapper weirdness if present */
+.feature-card .field--name-title .prefix,
+.feature-card .field--name-title .suffix {
+  display: contents;
+}
+
+/* optional hover */
+.feature-card .node--type-feature.node--view-mode-teaser:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+
+/* card link must stay visually identical in all states */
+.feature-card .feature-teaser-modal-link,
+.feature-card .feature-teaser-modal-link:hover,
+.feature-card .feature-teaser-modal-link:focus,
+.feature-card .feature-teaser-modal-link:active,
+.feature-card .feature-teaser-modal-link:visited {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+  border: 0;
+  box-shadow: none;
+  transform: none;
+}
+
+/* prevent click-state movement inside card */
+.feature-card .feature-teaser-modal-link .node__content,
+.feature-card .feature-teaser-modal-link:active .node__content,
+.feature-card .feature-teaser-modal-link:focus .node__content {
+  transform: none;
+}
+
+/* ajax throbber should not take space inside the card */
+.feature-card .feature-teaser-modal-link {
+  position: relative;
+}
+
+.feature-card .feature-teaser-modal-link .ajax-progress,
+.feature-card .feature-teaser-modal-link .ajax-progress-throbber {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  margin: 0;
+  width: auto;
+  height: auto;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* if theme adds pseudo-elements on click/focus, neutralize them */
+.feature-card .feature-teaser-modal-link::before,
+.feature-card .feature-teaser-modal-link::after,
+.feature-card .feature-teaser-modal-link:focus::before,
+.feature-card .feature-teaser-modal-link:focus::after,
+.feature-card .feature-teaser-modal-link:active::before,
+.feature-card .feature-teaser-modal-link:active::after {
+  box-sizing: border-box;
+}
+
+
+
+/* =================
+  Blue cards
+==================== */
+
+.blue-cards-container > .field--name-field-paragraphs {
+  gap: 32px;
+}
+
+/* each card */
+.blue-cards-container > .field--name-field-paragraphs > .field__item
+ {
+  position: relative;
+  overflow: hidden;
+  padding: 30px 30px 34px;
+  background:
+    radial-gradient(circle at top right, rgba(255,255,255,0.14), transparent 34%),
+    radial-gradient(circle at bottom left, rgba(255,255,255,0.08), transparent 30%),
+    linear-gradient(180deg, #2f6ac5 0%, #1e4d99 58%, #183b79 100%);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+/* keep content above overlays */
+.blue-cards-container .paragraph--type--story > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* card title */
+.blue-cards-container .column-text h2 {
+  margin: 0 0 20px;
+  color: #fff;
+  font-size: clamp(1.7rem, 2vw, 2.2rem);
+  line-height: 1.08;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* body text area */
+.blue-cards-container .field--name-field-body {
+  margin-top: 22px;
+}
+
+.blue-cards-container .field__item .field--name-field-body,
+.blue-cards-container .field__item .field--name-field-body p {
+  color: rgba(255,255,255,0.94);
+}
+
+.blue-cards-container .field--name-field-body p:last-child {
+  margin-bottom: 0;
+}
+
+/* image sizing */
+.blue-cards-container picture,
+.blue-cards-container img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* remove visual noise from swiper controls if desired */
+.blue-cards-container .swiper-button-prev,
+.blue-cards-container .swiper-button-next,
+.blue-cards-container .swiper-pagination {
+  opacity: 0.85;
+}
+
+/* whole section title */
+.blue-cards-container > .field--name-field-title h2 {
+  margin: 0 0 28px;
+}
+
+/* better card alignment */
+.blue-cards-container .paragraph--type--story {
+  justify-content: flex-start;
+}
+
+/* let the text sit lower when a card has no body yet */
+.blue-cards-container .paragraph--type--story .field--name-field-body {
+  margin-top: auto;
+}
+
+/* admin contextual overlap */
+.blue-cards-container .contextual {
+  z-index: 5;
+}
+
+/* tablet */
+@media (max-width: 980px) {
+  .blue-cards-container > .field--name-field-paragraphs {
+    grid-template-columns: 1fr;
+  }
+
+  .blue-cards-container > .field--name-field-paragraphs > .field__item > .paragraph {
+    padding: 10px;
+  }
+
+  .blue-cards-container .column-text h2 {
+    margin-bottom: 16px;
+  }
+
+  .blue-cards-container .field--name-field-body {
+    max-width: none;
+  }
+}
+
+
+/* ==================
+  Presentation
+===================== */
+
+.presentation p {
+  max-width: 960px;
+  margin-right: auto !important;
+  margin-left: auto !important;
+}
+
+.presentation {
+  margin-bottom: 50px !important;
+}
+.presentation p {
+  font-size: 1.2em;
+}
+.presentation .paragraph .paragraph p {
+  font-size: 1em;
+}
+
+.presentation .blue-cards-container p {
+  font-size: 1.1em;
+  text-align: justify;
+}
+.presentation h2 {
+  font-size: 30pt;
+}
+.presentation .field--name-field-body {
+  margin-bottom: 50px;
+} 
+.presentation .field__item .field__item .field--name-field-body {
+  margin-bottom: 0;
+}
+
+
+
+
+/* =========================
+   Membership section
+   Uses existing DOM only
+   ========================= */
+
+.membership-section {
+  padding: 24px 24px 60px;
+}
+
+.membership-section .page-title {
+  text-align: center;
+  margin: 0 0 36px;
+  font-size: clamp(2.4rem, 4.5vw, 4rem);
+  line-height: 1.05;
+  font-weight: 700;
+  color: #222;
+}
+
+/* grid wrapper */
+.membership-section #paragraph_grid.paragraph-grid-3 > .field--name-field-paragraphs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  align-items: stretch;
+}
+
+/* each card column */
+.membership-section #paragraph_grid.paragraph-grid-3 > .field--name-field-paragraphs > .field__item {
+  min-width: 0;
+  display: flex;
+}
+
+/* actual card */
+.membership-section #paragraph_grid .paragraph--type--text {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 560px;
+  padding: 28px 26px 24px;
+  border-radius: 28px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #3f79d6 0%, #2559ad 58%, #1b468d 100%);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.12);
+}
+
+/* soft light overlay */
+.membership-section #paragraph_grid .paragraph--type--text::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at top right, rgba(255,255,255,0.16), transparent 34%),
+    radial-gradient(circle at bottom left, rgba(255,255,255,0.08), transparent 26%);
+}
+
+/* keep content above overlay */
+.membership-section #paragraph_grid .paragraph--type--text > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* card title */
+.membership-section #paragraph_grid .field--name-field-title {
+  margin-bottom: 18px;
+}
+
+.membership-section #paragraph_grid .field--name-field-title h2 {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(2rem, 2.2vw, 3rem);
+  line-height: 1.1;
+  font-weight: 500;
+  color: #fff;
+}
+
+/* body */
+.membership-section #paragraph_grid .field--name-field-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  color: #fff;
+}
+
+/* first paragraph, subtitle */
+.membership-section #paragraph_grid .field--name-field-body > p:first-child {
+  margin: 0 0 20px;
+  font-size: 1.05rem;
+  line-height: 1.45;
+  font-weight: 500;
+  color: rgba(255,255,255,0.98);
+}
+
+/* normal paragraphs */
+.membership-section #paragraph_grid .field--name-field-body > p {
+  margin: 0 0 16px;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.92);
+}
+
+/* bullet list */
+.membership-section #paragraph_grid .field--name-field-body ul {
+  margin: 0 0 22px;
+  padding-left: 1.35em;
+}
+
+.membership-section #paragraph_grid .field--name-field-body li {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: rgba(255,255,255,0.98);
+}
+
+.membership-section #paragraph_grid .field--name-field-body strong {
+  color: #fff;
+  font-weight: 800;
+}
+
+/* price heading inside body */
+.membership-section #paragraph_grid .field--name-field-body h2 {
+  margin: auto 0 0;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255,255,255,0.18);
+  text-align: center;
+  font-size: clamp(2.1rem, 3vw, 3.2rem);
+  line-height: 1;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.03em;
+}
+
+/* "per month" line under price */
+.membership-section #paragraph_grid .field--name-field-body h2 + p {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 1rem;
+  line-height: 1.35;
+  color: rgba(255,255,255,0.88);
+}
+
+/* free card price style */
+.membership-section #paragraph_grid .field__item:first-child .field--name-field-body h2 {
+  text-transform: lowercase;
+}
+
+/* middle card highlighted */
+/* .membership-section #paragraph_grid > .field--name-field-paragraphs > .field__item:nth-child(2) .paragraph--type--text {
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.16);
+}
+
+.membership-section #paragraph_grid > .field--name-field-paragraphs > .field__item:nth-child(2) .paragraph--type--text::after {
+  content: "Recommended";
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #fff;
+  color: #1f4f9d;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  z-index: 2;
+}
+*/
+/* hover */
+.membership-section #paragraph_grid .paragraph--type--text {
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.membership-section #paragraph_grid .paragraph--type--text:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.16);
+}
+/*
+.membership-section #paragraph_grid > .field--name-field-paragraphs > .field__item:nth-child(2) .paragraph--type--text:hover {
+  transform: translateY(-12px) scale(1.02);
+} */
+
+/* responsive */
+@media (max-width: 1100px) {
+  .membership-section #paragraph_grid.paragraph-grid-3 > .field--name-field-paragraphs {
+    grid-template-columns: 1fr;
+  }
+
+  .membership-section #paragraph_grid > .field--name-field-paragraphs > .field__item:nth-child(2) .paragraph--type--text {
+    transform: none;
+  }
+
+  .membership-section #paragraph_grid > .field--name-field-paragraphs > .field__item:nth-child(2) .paragraph--type--text:hover {
+    transform: translateY(-4px);
+  }
+}
+
+@media (max-width: 700px) {
+  .membership-section {
+    padding: 18px 14px 40px;
+  }
+
+  .membership-section #paragraph_grid .paragraph--type--text {
+    min-height: 0;
+    padding: 22px 18px 20px;
+    border-radius: 22px;
+  }
+
+  .membership-section #paragraph_grid .field--name-field-title h2 {
+    font-size: 2rem;
+  }
+
+  .membership-section #paragraph_grid .field--name-field-body > p:first-child,
+  .membership-section #paragraph_grid .field--name-field-body > p,
+  .membership-section #paragraph_grid .field--name-field-body li {
+    font-size: 0.96rem;
+  }
+}
+
+
+
+
+

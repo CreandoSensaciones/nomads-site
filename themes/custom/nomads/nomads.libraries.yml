@@ -4,22 +4,44 @@ global:
     theme:
       css/00-base.css: {}
       css/10-layout.css: {}
+      css/11-layout-listing.css: {}
+      css/12-layout-paragraphs.css: {}
+      css/13-layout-teaser.css: {}
+      css/15-layout-grids.css: {}
       css/20-components.css: {}
       css/22-component-paragraphs.css: {}
       css/24-component-tax-icons.css: {}
       css/25-component-tiles.css: {}
       css/26-component-modals.css: {}
+      css/27-component-fields.css: {}
       css/30-features.css: {}
       css/31-feature-navbar.css: {}
+      css/32-feature-hero.css: {}
       css/33-feature-listing-teaser.css: {}
+      css/34-feature-herocard-teaser.css: {}
+      css/34-feature-landingpage-teaser.css: {}
       css/35-feature-relevance-paragraphs.css: {}
+      css/36-feature-main-navigation.css: {}
       css/38-feature-maps.css: {}
-      css/40-forms.css: {}
-      css/42-forms-listing.css: {}
-      css/43-forms-relevance-paragraphs.css: {}
-      css/48-forms-wizard.css: {}
-      css/50-style.css: {}
-      css/60-img-handling.css: {}
+      css/39-feature-maps.css: {}
+      css/40-feature-editor-content.css: {}
+      css/50-content.css: {}
+      css/51-region-button.css: {}
+      css/52-region-footer.css: {}
+      css/54-content-type-page.css: {}
+      css/55-content-type-tutorial.css: {}
+      css/56-content-type-landingpage.css: {}
+      css/57-content-type-hero.css: {}
+      css/60-forms.css: {}
+      css/62-forms-listing.css: {}
+      css/63-forms-relevance-paragraphs.css: {}
+      css/68-forms-wizard.css: {}
+      css/70-user.css: {}
+      css/75-team.css: {}
+      css/80-style.css: {}
+      css/81-style-shaddow-boxes.css: {}
+      css/82-style-cards.css: {}
+      css/90-img-handling.css: {}
   js:
     js/nomads.js: {}
     js/nomads-navbar.js: {}
@@ -33,3 +55,12 @@ tooltips:
   dependencies:
     - core/drupal
     - core/once
+
+
+feature-teaser-modal:
+  css:
+    theme:
+      css/34-feature-teaser-modal.css: {}
+  dependencies:
+    - core/drupal.ajax
+    - core/drupal.dialog.ajax

@@ -1,0 +1,457 @@
+.ui-dialog.ui-widget {
+  background: linear-gradient(135deg, #0a8bd6, #035c8f);
+  color: #fff !important;
+  border-radius: 12px;
+  height: 400px;
+  border: 0;
+  padding: 20px;
+}
+.ui-widget-content,
+.ui-widget-content form {
+   /* color: #fff !important; */
+}
+.ui-dialog .ui-dialog-titlebar,
+.ui-dialog .ui-dialog-buttonpane {
+  background: transparent;
+  border: 0;
+}
+.ui-dialog h1 {
+  font-size: 20pt;
+  color: #fff;
+}
+.ui-dialog h2 {
+  font-size: 16pt;
+  color: #fff;
+}
+.ui-widget-overlay {
+  z-index: 1000 !important;
+}
+
+
+
+
+/* ------------------------------------------------
+   2) Clip only inner modal content
+   ------------------------------------------------ */
+.ui-dialog.ui-dialog-buttons > #drupal-modal.ui-dialog-content {
+  flex: 1 1 auto;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  border-radius: 16px !important;
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========= Chatsgtp media library style proposal ========= */
+
+/* =========================
+   MEDIA LIBRARY MODAL
+   ========================= */
+
+.ui-dialog.media-library-widget-modal {
+  width: min(1400px, 92vw) !important;
+  max-width: 92vw;
+  top: 4vh !important;
+  left: 4vw !important;
+}
+
+.ui-dialog.media-library-widget-modal .ui-dialog-content {
+  height: 78vh !important;
+  overflow: auto;
+  padding: 24px;
+  box-sizing: border-box;
+  /* background: #f5f7fa; */
+  color: #1a1a1a;
+}
+
+#media-library-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* =========================
+   TOP UPLOAD AREA
+   ========================= */
+
+#media-library-add-form-wrapper {
+  padding: 16px 20px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+#media-library-add-form-wrapper .form-item-upload {
+  margin: 0;
+}
+
+#media-library-add-form-wrapper label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+#media-library-add-form-wrapper .description {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  opacity: 0.9;
+}
+
+/* =========================
+   GRID / TABLE SWITCH
+   ========================= */
+
+#media-library-view .view-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+#media-library-view .view-header a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  text-decoration: none;
+  background: #e9eef3;
+  color: #1a1a1a;
+}
+
+#media-library-view .view-header a.is-active {
+  background: #ffffff;
+  color: #111111;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================
+   EXPOSED FILTERS INLINE
+   ========================= */
+
+#media-library-view .view-filters {
+  margin-bottom: 18px;
+}
+
+#views-exposed-form-media-library-widget .form--inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 14px;
+}
+
+#views-exposed-form-media-library-widget .form-item {
+  float: none;
+  margin: 0;
+}
+
+#views-exposed-form-media-library-widget .form-item-name {
+  flex: 1 1 340px;
+  min-width: 260px;
+}
+
+#views-exposed-form-media-library-widget .form-item-sort-by {
+  flex: 0 0 220px;
+}
+
+#views-exposed-form-media-library-widget .form-actions {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+#views-exposed-form-media-library-widget label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+#views-exposed-form-media-library-widget .form-text,
+#views-exposed-form-media-library-widget .form-select {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 14px;
+  border: 1px solid #cfd7df;
+  border-radius: 12px;
+  box-sizing: border-box;
+  background: #ffffff;
+}
+
+#views-exposed-form-media-library-widget .form-submit {
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 12px;
+}
+
+/* =========================
+   MEDIA GRID
+   ========================= */
+
+#media-library-view .view-content .views-form {
+  width: 100%;
+}
+
+/* stable selector, no generated id */
+#media-library-view .view-content .views-form form.js-media-library-views-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+/* keep non-item elements full width */
+#media-library-view .view-content .views-form form.js-media-library-views-form > #media-library-messages,
+#media-library-view .view-content .views-form form.js-media-library-views-form > input[type="hidden"],
+#media-library-view .view-content .views-form form.js-media-library-views-form > .form-actions {
+  grid-column: 1 / -1;
+}
+
+/* reset default Views row behavior */
+#media-library-view .view-content .views-row {
+  width: auto !important;
+  float: none !important;
+  clear: none !important;
+  margin: 0 !important;
+}
+
+/* media tile */
+#media-library-view .view-content .js-media-library-item {
+  position: relative;
+  display: block !important;
+  width: 100%;
+  margin: 0 !important;
+  padding: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  background: #ffffff;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#media-library-view .view-content .js-media-library-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* remove stacked spacing from Views fields */
+#media-library-view .view-content .js-media-library-item .views-field {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+/* preview fills tile */
+#media-library-view .view-content .js-media-library-item .views-field-rendered-entity,
+#media-library-view .view-content .js-media-library-item .field-content,
+#media-library-view .view-content .js-media-library-item article,
+#media-library-view .view-content .js-media-library-item .js-media-library-item-preview,
+#media-library-view .view-content .js-media-library-item .field--name-thumbnail,
+#media-library-view .view-content .js-media-library-item .field--name-thumbnail .field__item {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* image fills card */
+#media-library-view .view-content .js-media-library-item img.image-style-media-library {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+/* =========================
+   CHECKBOX OVER IMAGE
+   ========================= */
+
+#media-library-view .view-content .js-media-library-item .views-field-media-library-select-form {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 21;
+  width: auto;
+  margin: 0;
+  padding: 0;
+}
+
+#media-library-view .view-content .js-media-library-item .views-field-media-library-select-form .form-item {
+  margin: 0;
+  padding: 0;
+}
+
+#media-library-view .view-content .js-media-library-item .views-field-media-library-select-form input.form-checkbox {
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  display: block;
+  cursor: pointer;
+  accent-color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+  border-radius: 4px;
+  background: #ffffff;
+}
+
+/* dark backing behind checkbox for readability */
+#media-library-view .view-content .js-media-library-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 54px;
+  height: 54px;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0));
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* selected state */
+#media-library-view .view-content .js-media-library-item:has(input.form-checkbox:checked) {
+  border-color: #2a7db8;
+  box-shadow: 0 0 0 3px rgba(42, 125, 184, 0.18);
+}
+
+/* clickable preview */
+#media-library-view .view-content .js-media-library-item .js-click-to-select-trigger {
+  cursor: pointer;
+}
+
+/* =========================
+   PAGER
+   ========================= */
+
+#media-library-view .pager {
+  margin-top: 22px;
+}
+
+#media-library-view .pager__items {
+  display: flex;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+/* =========================
+   BOTTOM BUTTON BAR
+   ========================= */
+
+.ui-dialog.media-library-widget-modal .ui-dialog-buttonpane {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 20px;
+}
+
+.ui-dialog.media-library-widget-modal .ui-dialog-buttonpane .ui-dialog-buttonset {
+  order: 2;
+}
+
+.ui-dialog.media-library-widget-modal .media-library-selected-count {
+  order: 1;
+  margin: 0;
+  font-weight: 600;
+}
+
+/* =========================
+   SMALLER SCREENS
+   ========================= */
+
+@media (max-width: 900px) {
+  .ui-dialog.media-library-widget-modal {
+    width: 96vw !important;
+    max-width: 96vw;
+    left: 2vw !important;
+    top: 2vh !important;
+  }
+
+  .ui-dialog.media-library-widget-modal .ui-dialog-content {
+    height: 84vh !important;
+    padding: 16px;
+  }
+
+  #media-library-view .view-content .views-form form.js-media-library-views-form {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 14px;
+  }
+
+  #views-exposed-form-media-library-widget .form-item-name,
+  #views-exposed-form-media-library-widget .form-item-sort-by,
+  #views-exposed-form-media-library-widget .form-actions {
+    flex: 1 1 100%;
+  }
+}
+
+.ui-dialog.media-library-widget-modal {
+  height: 90vh !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.ui-dialog.media-library-widget-modal .ui-dialog-titlebar,
+.ui-dialog.media-library-widget-modal .ui-dialog-buttonpane {
+  flex: 0 0 auto;
+}
+
+.ui-dialog.media-library-widget-modal .ui-dialog-content {
+  flex: 1 1 auto;
+  min-height: 0 !important;
+  height: auto !important;
+  overflow: hidden !important;
+  padding: 24px;
+}
+
+#drupal-modal,
+#media-library-wrapper,
+#media-library-content {
+  height: 100%;
+  min-height: 0;
+  padding: 0 5px;
+}
+
+#media-library-content {
+  overflow: auto;
+}
+
+
+/* ========== Feedback ========== */
+
+.website-feedback-dialog {
+  right: auto !important;
+  left: 30px !important;
+  top: 50px !important;
+}
+.website-feedback-dialog input {
+  padding: 4px 8px !important;
+  border: 1px;
+  margin: 0 10px;
+}
+.website-feedback-dialog .field--name-summary input {
+  padding: 8px !important;
+  margin: 0;
+}
+.website-feedback-dialog .field--name-uid,
+.website-feedback-dialog .field--name-created,
+.website-feedback-dialog .field--type-image .description {
+  display: none;
+}
+.website-feedback-dialog .field--name-screenshot,
+.website-feedback-dialog .field--name-image {
+  display: inline-block;
+  width: auto;
+  max-width: 50%;
+  margin-right: 10px;
+  padding: 8px;
+}
+
+
+

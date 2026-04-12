@@ -1,0 +1,10 @@
+map_teaser:
+  version: 1.x
+  css:
+    theme:
+      css/nomads_parent_teaser.map_teaser.css: {}
+  js:
+    js/nomads_parent_teaser.map_teaser.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

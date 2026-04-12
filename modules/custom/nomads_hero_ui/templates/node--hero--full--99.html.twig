@@ -1,0 +1,68 @@
+{#
+/**
+ * @file
+ * Dedicated full node template for hero node 99.
+ */
+#}
+{%
+  set classes = [
+    'node',
+    'node--type-' ~ node.bundle|clean_class,
+    'node--view-mode-' ~ view_mode|clean_class,
+    'hero-ui',
+    'contextual-region',
+    node.isPromoted() ? 'node--promoted',
+    node.isSticky() ? 'node--sticky',
+    not node.isPublished() ? 'node--unpublished',
+  ]
+%}
+<article{{ attributes.addClass(classes) }}>
+  {% if title_prefix or title_suffix %}
+    <div class="hero-ui__admin">
+      {{ title_prefix }}
+      {{ title_suffix }}
+    </div>
+  {% endif %}
+
+  {% if hero_ui_has_background %}
+    <div class="hero-ui__bg" aria-hidden="true">
+      <div class="hero-ui__bg-media">
+        {{ hero_ui_background_render }}
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="hero-ui__overlay">
+    <div{{ content_attributes.addClass('node__content', 'hero-ui__inner') }}>
+      {% if hero_ui_has_title or hero_ui_has_subtitle or hero_ui_has_teaser %}
+        <header class="hero-ui__header">
+          {% if hero_ui_has_title %}
+            <h1{{ title_attributes.addClass('hero-ui__title') }}>{{ hero_ui_title }}</h1>
+          {% endif %}
+
+          {% if hero_ui_has_subtitle %}
+            {{ hero_ui_subtitle }}
+          {% endif %}
+
+          {% if hero_ui_has_teaser %}
+            {{ hero_ui_teaser }}
+          {% endif %}
+        </header>
+      {% endif %}
+
+      {% if hero_ui_show_auth_gate %}
+        {{ hero_ui_auth_panel }}
+      {% elseif hero_ui_has_body %}
+        <div id="{{ hero_ui_content_wrapper_id }}" class="hero-ui__body">
+          {{ hero_ui_body }}
+        </div>
+      {% endif %}
+
+      {% if hero_ui_has_actions %}
+        <div class="hero-ui__actions">
+          {{ hero_ui_actions }}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</article>

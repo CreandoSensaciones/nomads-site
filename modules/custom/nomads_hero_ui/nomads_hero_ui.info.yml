@@ -1,0 +1,5 @@
+name: 'Nomads Hero UI'
+type: module
+description: 'Provides the Nomads Hero UI feature module.'
+package: 'Nomads Features'
+core_version_requirement: '^11'

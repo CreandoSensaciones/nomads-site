@@ -1,0 +1,7 @@
+name: Nomads Block Visibility
+type: module
+description: 'Adds Nomads-specific block visibility controls.'
+package: 'Nomads Site General'
+core_version_requirement: ^10 || ^11
+dependencies:
+  - drupal:block

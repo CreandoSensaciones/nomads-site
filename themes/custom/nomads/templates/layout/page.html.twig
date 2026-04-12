@@ -3,12 +3,24 @@
 {% set list_active = current_path == '/list' or current_path starts with '/list/' %}
 {% set map_active = current_path == '/map' or current_path starts with '/map/' %}
 {% set cal_active = current_path == '/cal' or current_path starts with '/cal/' %}
+{% set domain_prefix = nomads_domain_prefix|default('coliving') %}
+{% set navbar_logo = '/' ~ directory ~ '/assets/navbar/logo-' ~ domain_prefix ~ '.svg' %}
 
+<div class="mobile-announcement-overlay">
+  <div class="mobile-announcement-overlay__inner">
+    <img src="{{ navbar_logo }}" alt="Logo" class="mobile-announcement-overlay__logo">
+    <div class="mobile-announcement-overlay__text">
+      <p>Nomads.site is currently under construction.</p>
+      <p>Launching at Bansko Nomad Fest in June</p>
+      <p>early access is offered only on desktop devices<br>with a screen width above 1200px.</p>
+    </div>
+  </div>
+</div>
 <header class="nomads-navbar nomads-breakout" role="banner">
   <div class="nomads-navbar__inner nomads-inner nomads-inner--constrained">
     <div class="nomads-navbar__brand-wrap nomads-navbar__dropdownwrap nomads-navbar__dropdownwrap--domains">
-      <a class="nomads-navbar__brand nomads-navbar__domains" href="/" aria-label="Domains" aria-expanded="false" aria-controls="nomads-domainsmenu" data-once="nomads-navbar-domains">
-        <img class="nomads-navbar__brand-logo" src="{{ '/' ~ directory ~ '/assets/navbar/logo-coliving.svg' }}" alt="nomads.site" />
+      <a class="nomads-navbar__brand nomads-navbar__domains" href="http://nomads.site:8080" aria-label="Domains" aria-expanded="false" aria-controls="nomads-domainsmenu" data-once="nomads-navbar-domains">
+        <img class="nomads-navbar__brand-logo" src="{{ navbar_logo }}" alt="nomads.site" />
       </a>
       <div id="nomads-domainsmenu" class="nomads-navbar__dropdown nomads-navbar__dropdown--domains" hidden>
         <ul class="nomads-navbar__dropdown-list">
@@ -30,15 +42,12 @@
     </div>
 
     <form class="nomads-navbar__search" action="/search" method="get" role="search">
-      <input class="nomads-navbar__search-input" type="search" name="q" placeholder="Where do I go?" aria-label="Where do I go?" />
+      <input class="nomads-navbar__search-input" type="search" name="q" placeholder="Where do I go? - No function still" aria-label="Where do I go? - No function still" />
     </form>
 
     <nav class="nomads-navbar__actions" aria-label="Primary actions">
       <div class="nomads-navbar__group nomads-navbar__group--views">
-        <a class="nomads-navbar__icon create-listing use-ajax" title="test" href="/listing/wizard" data-dialog-type="modal" data-dialog-options="{&quot;width&quot;:1100}">
-          <img src="{{ '/' ~ directory ~ '/assets/navbar/icon-create.svg' }}" alt="" />
-        </a>
-        <a class="nomads-navbar__icon search-icon{{ front_active ? ' active' : '' }}" href="/front" aria-label="Front">
+        <a class="nomads-navbar__icon search-icon{{ front_active ? ' active' : '' }}" href="/" aria-label="Front">
           <img src="{{ '/' ~ directory ~ '/assets/navbar/icon-front.svg' }}" alt="" />
         </a>
         <a class="nomads-navbar__icon search-icon{{ list_active ? ' active' : '' }}" href="/list" aria-label="List">

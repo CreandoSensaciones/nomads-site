@@ -1,0 +1,20 @@
+/* ========== Profile ========== */
+ .path-user h1 {
+  margin: 0 200px;
+ }
+
+.path-user .region-content {
+  max-width: 960px;
+  margin: 0 auto;
+ }
+
+
+article.profile .field--name-user-picture {
+  float: left;
+  margin-right: 50px;
+}
+article.profile .field--name-user-picture img {
+  border-radius: 999px;
+  margin-top: -80px;
+}
+

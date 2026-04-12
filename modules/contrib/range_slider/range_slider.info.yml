@@ -1,9 +1,0 @@
-name: Range Slider
-type: module
-description: Integration with https://rangeslider.js.org
-core_version_requirement: '>=9.2'
-
-# Information added by Drupal.org packaging script on 2025-09-21
-version: '2.1.1'
-project: 'range_slider'
-datestamp: 1758483118

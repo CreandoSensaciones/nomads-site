@@ -1,0 +1,16 @@
+views.filter.nomads_navigation_has_domain_term:
+  type: views_filter
+  label: 'Has domain term'
+  mapping:
+    selected_paragraph_bundles:
+      type: sequence
+      label: 'Selected paragraph bundles'
+      sequence:
+        type: string
+        label: 'Paragraph bundle'
+    paragraph_bundle_selection_initialized:
+      type: boolean
+      label: 'Paragraph bundle selection initialized'
+    bypass_domain_assigned:
+      type: boolean
+      label: 'Bypass listings assigned to the active domain'

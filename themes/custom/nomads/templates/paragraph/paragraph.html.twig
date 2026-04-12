@@ -22,6 +22,6 @@
     not paragraph.isPublished() ? 'paragraph--unpublished'
   ]
 %}
-<div{{ attributes.addClass(classes) }}>
+<div{{ attributes.addClass(classes, nomads_extra_classes|default([])) }}>
   {{ content }}
 </div>

@@ -1,0 +1,87 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @file
+ * Theme hooks and render helpers for the Nomads Parent Teaser module.
+ */
+
+use Drupal\Core\Template\Attribute;
+use Drupal\views\ViewExecutable;
+
+/**
+ * Implements hook_theme().
+ */
+function nomads_parent_teaser_theme(): array {
+  return [
+    'nomads_parent_teaser_map_panel' => [
+      'variables' => [
+        'attributes' => [],
+        'panel_title' => NULL,
+        'panel_classes' => [],
+        'content' => [],
+        'empty_message' => NULL,
+      ],
+    ],
+  ];
+}
+
+/**
+ * Build the themed map detail panel wrapper.
+ */
+function nomads_parent_teaser_build_map_panel(array $options = []): array {
+  $attributes = $options['attributes'] ?? [];
+  if (!$attributes instanceof Attribute) {
+    $attributes = new Attribute((array) $attributes);
+  }
+
+  $content = $options['content'] ?? [];
+  if (!is_array($content)) {
+    $content = [
+      '#markup' => (string) $content,
+    ];
+  }
+
+  $panel_classes = array_values(array_filter([
+    'map-detail-panel',
+    ...((array) ($options['panel_classes'] ?? [])),
+  ]));
+
+  return [
+    '#theme' => 'nomads_parent_teaser_map_panel',
+    '#attributes' => $attributes,
+    '#panel_title' => $options['panel_title'] ?? '',
+    '#panel_classes' => $panel_classes,
+    '#content' => $content,
+    '#empty_message' => $options['empty_message'] ?? '',
+  ];
+}
+
+/**
+ * Implements hook_views_pre_render().
+ */
+function nomads_parent_teaser_views_pre_render(ViewExecutable $view): void {
+  if (!in_array($view->id(), ['ma', 'map'], TRUE) || $view->current_display !== 'page_1') {
+    return;
+  }
+
+  if (!in_array(\Drupal::routeMatch()->getRouteName(), ['view.ma.page_1', 'view.map.page_1'], TRUE)) {
+    return;
+  }
+
+  if ($view->display_handler?->getPluginId() !== 'page') {
+    return;
+  }
+
+  if ($view->display_handler->getOption('path') !== 'map') {
+    return;
+  }
+
+  $panel = nomads_parent_teaser_build_map_panel();
+  $panel['#attached']['library'][] = 'nomads_parent_teaser/map_teaser';
+  $panel['#attached']['library'][] = 'swiper_formatter/remote';
+  $panel['#attached']['library'][] = 'swiper_formatter/swiper_formatter';
+
+  $view->attachment_after['nomads_parent_teaser_map_panel'] = $panel;
+}

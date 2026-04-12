@@ -1,11 +1,11 @@
-/* ========== Compentent Navbar ========== */
+/* Nomads: basic vertical spacing */
 
 .nomads-navbar {
   background: #fff;
   border-bottom: 1px solid #eee;
   position: sticky;
   top: 0;
-  z-index: 900;
+  z-index: 500;
 }
 
 .nomads-navbar__inner {
@@ -51,7 +51,6 @@
   color: #333;
   outline: none;
 }
-
 .nomads-navbar__search-input::placeholder {
   color: #888;
 }
@@ -61,6 +60,27 @@
   display: inline-flex;
   align-items: center;
   gap: 18px;
+}
+.nomads-navbar__group--views {
+    position: relative;
+}
+  
+@media (max-width: 980px) {
+  .nomads-navbar__group--views {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background:#fff;
+  z-index: 9999;
+  display: inline-flex;
+  justify-content: space-evenly;
+  height: 70px;
+  }
+  div .nomads-navbar__group--views img {
+  height: 50px;
+  width: 50px;
+  }
 }
 
 .nomads-navbar__icon {

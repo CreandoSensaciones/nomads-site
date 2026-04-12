@@ -1,0 +1,526 @@
+.ui-dialog-buttonpane .js-form-submit.is-disabled {
+  display: none;
+}
+
+
+#nomads-listing-wizard-wrapper .form-type-vertical-tabs {
+  display: none;
+}
+
+#nomads-listing-wizard-wrapper input {
+  font-size: 16pt;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+/* ================================
+   Listing Wizard Modal (Nomads)
+   Single source of truth
+   ================================ */
+
+
+
+#nomads-listing-wizard-wrapper .field--name-field-type .form-type-textfield,
+#nomads-listing-wizard-wrapper .field--name-field-date legend,
+#nomads-listing-wizard-wrapper .field--name-field-defaults-tags .form-type-textfield,
+#nomads-listing-wizard-wrapper .field--name-field-defaults-tags legend {
+  display: none;
+}
+#nomads-listing-wizard-wrapper .field--name-field-country .button {
+  display: none;
+}
+#nomads-listing-wizard-wrapper details label {
+  margin: 0 !important;
+  font-size: 16px !important;
+  font-weight: 600;
+  text-align: left;
+  color: #095b80 !important;
+}
+#nomads-listing-wizard-wrapper details {
+  margin: 20px auto;
+}
+/* repair for autocomplte options being behind table extention */
+#nomads-listing-wizard-wrapper .field--name-field-country table,
+#nomads-listing-wizard-wrapper .field--name-field-country td {
+  margin: 0;
+  padding: 0;
+}
+#nomads-listing-wizard-wrapper .field-group-toggle summary {
+  text-align: left;
+}
+#nomads-listing-wizard-wrapper .field--name-field-date {
+  color: #333;
+}
+
+
+
+
+
+/* ------------------------------------------------
+   4) Wizard wrapper: padding and reserved bottom room
+   ------------------------------------------------ */
+#drupal-modal #nomads-listing-wizard-wrapper {
+  position: relative !important;
+  box-sizing: border-box;
+  padding: 0 30px 20px 30px !important;
+  height: 100%;
+  min-height: 0;
+  text-align: center;
+}
+
+
+/* ------------------------------------------------
+   5) Text colors: wizard white, inputs dark text
+   ------------------------------------------------ */
+#drupal-modal #nomads-listing-wizard-wrapper {
+  color: #fff;
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper input,
+#drupal-modal #nomads-listing-wizard-wrapper textarea,
+#drupal-modal #nomads-listing-wizard-wrapper select {
+  color: #111;
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper label,
+#drupal-modal #nomads-listing-wizard-wrapper .fieldset-legend,
+#drupal-modal #nomads-listing-wizard-wrapper .description {
+  color: #fff;
+}
+
+
+
+
+
+#drupal-modal #nomads-listing-wizard-wrapper label,
+#drupal-modal #nomads-listing-wizard-wrapper  .fieldset-legend {
+  font-size: 16pt;
+  margin: 10px;
+  display: block;
+}
+#drupal-modal #nomads-listing-wizard-wrapper .description {
+  margin: 10pt;
+  opacity: 0.55;
+}
+#drupal-modal #nomads-listing-wizard-wrapper .field-subtitle-enabled .field-prefix {
+  display: block;
+  margin: 10px;
+}
+#drupal-modal #nomads-listing-wizard-wrapper .field-subtitle-enabled .field-subtitle-text {
+  font-size: 13pt;
+  max-width: 800px;
+}
+
+
+
+/* ------------------------------------------------
+   6) Easy Tagging cards: grid layout (3x2 / 2x3)
+   ------------------------------------------------ */
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__cards {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 22px !important;
+
+  /* fill available height and keep equal rows */
+  height: 100%;
+  min-height: 0;
+  grid-auto-rows: 1fr;
+
+  /* do NOT center the whole grid vertically (prevents odd gaps) */
+  align-content: stretch;
+  align-items: stretch;
+
+  /* kill any inherited pill layouts */
+  flex-wrap: unset !important;
+}
+
+@media (max-width: 900px) {
+  #drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+
+/* ------------------------------------------------
+   7) Cards: equal height, internal structure stable
+   ------------------------------------------------ */
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card {
+  height: 225px;
+  min-height: 0 !important;
+  overflow: hidden;
+
+  display: flex !important;
+  flex-direction: column;
+  justify-content: flex-start;
+
+  padding: 18px 18px 16px;
+  box-sizing: border-box;
+
+  width: auto !important;
+  max-width: none !important;
+}
+
+/* Card text color:
+   - default: black text
+   - selected: white text */
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card,
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card * {
+  color: #111 !important;
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card.is-selected,
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card.is-selected *,
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card[aria-pressed="true"],
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card[aria-pressed="true"] * {
+  color: #fff !important;
+}
+
+
+/* ------------------------------------------------
+   8) Card header: icon 80x80 + label aligned
+   ------------------------------------------------ */
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 0 0 auto;
+  margin-bottom: 10px;
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card-icon,
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card-icon-wrapper {
+  width: 80px !important;
+  height: 80px !important;
+  flex: 0 0 80px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card-icon img,
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card-icon svg {
+  width: 80px !important;
+  height: 80px !important;
+  max-width: 80px !important;
+  max-height: 80px !important;
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card-label {
+  flex: 1 1 auto;
+  margin: 0;
+  line-height: 1.15;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* ------------------------------------------------
+   9) Card body: explainer centered in remaining space
+   ------------------------------------------------ */
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card-explainer {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 8px;
+  line-height: 1.35;
+  overflow: hidden;
+}
+
+#drupal-modal #nomads-listing-wizard-wrapper .nomads-easy-tagging__card-explainer p {
+  margin: 0;
+}
+
+/* ------------------------------------------------
+   1) Dialog shell and stacking context
+   ------------------------------------------------ */
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard) {
+  height: 600px !important;
+  display: flex;
+  flex-direction: column;
+  position: relative !important;
+  overflow: visible !important;
+  border-radius: 16px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35) !important;
+  z-index: 1001 !important;
+}
+
+/* ==========================================
+   Real wizard button: floating Next / Save
+   ========================================== */
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard) > .ui-dialog-buttonpane {
+  position: absolute !important;
+  inset: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  pointer-events: none !important;
+  overflow: visible !important;
+}
+
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset {
+  position: absolute !important;
+  top: 50% !important;
+  right: -28px !important;
+  transform: translateY(-50%) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  float: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  pointer-events: auto !important;
+  z-index: 1002 !important;
+}
+
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset .ui-button,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset button,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset input[type="submit"] {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35) !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  text-shadow: none !important;
+  white-space: nowrap !important;
+  opacity: 1 !important;
+  transition: transform 160ms ease, box-shadow 160ms ease !important;
+  pointer-events: auto !important;
+}
+
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset .ui-button .ui-button-text,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset .ui-button-text {
+  display: none !important;
+}
+
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset .ui-button::before,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset button::before,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset input[type="submit"]::before {
+  content: "";
+  width: 28px;
+  height: 28px;
+  display: block;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 28px 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M9 6l6 6-6 6' stroke='%23095B80' stroke-width='3.25' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset .ui-button:hover,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset button:hover,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset input[type="submit"]:hover,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset .ui-button:focus,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset button:focus,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset input[type="submit"]:focus,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset .ui-button:focus-visible,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset button:focus-visible,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset input[type="submit"]:focus-visible {
+  opacity: 1 !important;
+  background: #fff !important;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45) !important;
+  transform: scale(1.03) !important;
+  outline: none !important;
+}
+
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset .ui-button.ui-state-disabled,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset .ui-state-disabled,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset .ui-button:disabled,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset button:disabled,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset input[type="submit"]:disabled,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset[aria-disabled="true"],
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard) .ui-dialog-buttonset .ui-state-disabled {
+  display: none !important;
+}
+
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset #edit-submit,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset button#edit-submit,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonsetinput#edit-submit,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset input[value="Save"],
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset button[value="Save"] {
+  width: auto !important;
+  min-width: 120px !important;
+  padding: 0 22px !important;
+  color: #095b80 !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+}
+
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset #edit-submit::before,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset button#edit-submit::before,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset input#edit-submit::before,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset input[value="Save"]::before,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset button[value="Save"]::before {
+  content: none !important;
+}
+
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset #edit-submit .ui-button-text,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset button#edit-submit .ui-button-text,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset button[value="Save"] .ui-button-text {
+  display: inline-block !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+}
+
+/* ------------------------------------------------
+   10) NOTE: Vertical centering for single-field steps
+   Removed here intentionally because the current rule
+   used :has(), and the "safe CSS only" approach was
+   breaking other wizard step types (pills overview).
+   ------------------------------------------------ */
+
+
+
+/* ==========================================================
+   Wizard: stop clipping the floating chevron button
+   Keep rounding and clipping ONLY on inner blue content
+   ========================================================== */
+
+/* 1) The dialog shell must NEVER clip, it hosts the floating button */
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard),
+.ui-dialog.ui-dialog-buttons.ui-widget:has(.listing-wizard) {
+  position: relative !important;
+  overflow: visible !important;
+  clip-path: none !important;
+}
+
+/* 2) Make sure the content is below the button pane in stacking */
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard) > #drupal-modal.ui-dialog-content {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* 3) Button pane is the floating layer, must not be clipped and must sit above content */
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard) > .ui-dialog-buttonpane {
+  position: absolute !important;
+  inset: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+
+  overflow: visible !important;
+  z-index: 10 !important;      
+  pointer-events: none !important;
+}
+
+/* Buttons stay clickable */
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard) > .ui-dialog-buttonpane .ui-dialog-buttonset {
+  pointer-events: auto !important;
+}
+
+/* 4) If ANY upstream rule still clips the dialog, force visible on common ancestors.
+   This is safe because it is scoped to dialogs only. */
+.ui-dialog:has(.listing-wizard),
+.ui-dialog.ui-widget:has(.listing-wizard),
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard) .ui-dialog-buttonpane,
+.ui-dialog.ui-dialog-buttons:has(.listing-wizard)  .ui-dialog-buttonset{
+  overflow: visible !important;
+}
+
+
+/* ========= Wizard Card Location ========== */
+
+
+/* Hide everything inside the paragraph row by default
+.node-listing-onboarding-form .field--name-field-location-date .field-multiple-table,
+.node-listing-onboarding-form .field--name-field-location-date .tabledrag-toggle-weight-wrapper,
+.node-listing-onboarding-form .field--name-field-location-date .tableresponsive-toggle-columns,
+.node-listing-onboarding-form .field--name-field-location-date .paragraph-top,
+.node-listing-onboarding-form .field--name-field-location-date .paragraphs-actions,
+.node-listing-onboarding-form .field--name-field-location-date .field-multiple-drag,
+.node-listing-onboarding-form .field--name-field-location-date .paragraphs-add-wrapper,
+.node-listing-onboarding-form .field--name-field-location-date .delta-order {
+  display: none !important;
+} */
+
+.node-listing-onboarding-form .field--name-field-location-date .tabledrag-toggle-weight-wrapper,
+.node-listing-onboarding-form .field--name-field-location-date .tableresponsive-toggle-columns,
+.node-listing-onboarding-form .field--name-field-location-date thead,
+.node-listing-onboarding-form .field--name-field-location-date .field-multiple-drag,
+.node-listing-onboarding-form .field--name-field-location-date .paragraph-top.add-above-on,
+.node-listing-onboarding-form .field--name-field-location-date .paragraphs-add-wrapper  {
+  display: none !important;
+}
+
+/* Re-show the two target field wrappers */
+.node-listing-onboarding-form .field--name-field-location-date
+ .field--name-field-country.field--widget-entity-reference-autocomplete,
+.node-listing-onboarding-form .field--name-field-location-date 
+  .field--name-field-date.field--widget-smartdate-only {
+  display: block !important;
+}
+
+/* Optional: remove extra chrome if table still affects layout */
+.node-listing-onboarding-form .field--name-field-location-date  table,
+.node-listing-onboarding-form .field--name-field-location-date  thead,
+.node-listing-onboarding-form .field--name-field-location-date  tbody,
+.node-listing-onboarding-form .field--name-field-location-date  tr,
+.node-listing-onboarding-form .field--name-field-location-date  td {
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.node-listing-onboarding-form .field--name-field-location-date  table {
+  width: 100%;
+}
+
+
+.node-listing-onboarding-form .field--name-field-location-date .smartdate--widget .fieldset-wrapper {
+  border: 0;
+  text-align: center;
+}
+.node-listing-onboarding-form .field--name-field-location-date .smartdate--widget .fieldset-wrapper .form-wrapper {
+  justify-content: center;
+}
+
+
+.node-listing-onboarding-form  .field--name-field-location-date input {
+  font-size: 20px;
+  padding: 15px;
+}
+.node-listing-onboarding-form  .field--name-field-location-date .paragraphs-subform > .form-wrapper {
+  margin: 50px 0;
+}
+
+/* ========== Title ========== */
+
+.node-listing-onboarding-form  .field--name-title,
+.node-listing-onboarding-form  .field--name-field-subtitle
+ {
+  margin: 50px 0;
+}
+.node-listing-onboarding-form  .field--name-title label {
+  display: block;
+}
+
+
+
+.node-listing-onboarding-form  .field--name-field-description label,
+.node-listing-onboarding-form  .field--name-field-description .ck-label {
+  display: none !important;
+}
+.node-listing-onboarding-form  .field--name-field-description .ck-editor__main {
+  height: 500px;
+}
+.node-listing-onboarding-form  .field--name-field-description .ck-editor__top,
+.node-listing-onboarding-form  .field--name-field-description .ck-toolbar__items button,
+.node-listing-onboarding-form  .field--name-field-description .ck-toolbar__items svg {
+  color: #000 !important;
+}
+
+

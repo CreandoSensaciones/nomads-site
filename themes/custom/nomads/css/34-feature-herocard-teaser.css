@@ -1,0 +1,119 @@
+.hero-card-container .field--name-field-paragraphs {
+  max-width: 1400px;
+  margin: 30px auto;
+  gap: 44px;
+}
+
+.hero-card-container .field--name-field-paragraphs > .field__item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+  height: 100%;
+}
+
+.hero-card-container .field--name-field-paragraphs > .field-item > .paragraph {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.hero-card-container .field--name-field-paragraphs .field--name-field-title {
+  order: 1;
+  background: #fff;
+  padding: 16px 0 14px;
+  text-align: center;
+  line-height: 1;
+}
+/* .hero-card-container .field--name-field-paragraphs .field--name-field-subdomain .prefix,
+.hero-card-container .field--name-field-paragraphs .field--name-field-subdomain .suffix {
+  display: contents;
+} */
+.hero-card-container .field--name-field-paragraphs h3 {
+  font-size: 22pt;
+  margin: 0;
+}
+
+.hero-card-container .field--name-field-paragraphs .field--name-field-image {
+  order: 2;
+  position: relative;
+  margin: 0;
+  flex: 1 1 auto;
+}
+
+.hero-card-container .field--name-field-paragraphs  .field--type-image > .field__item {
+  display: block;
+  position: relative;
+  aspect-ratio: 4 / 3;
+}
+
+.hero-card-container .field--name-field-paragraphs .field--type-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+}
+
+.hero-card-container .field--name-field-paragraphs .field--name-field-body {
+  order: 3;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  margin: 0;
+  background: rgba(0, 0, 0, 0.48);
+  padding: 5px;
+  text-align: center;
+  font-size: clamp(1.15rem, 1.2vw, 1.7rem);
+  line-height: 1.2;
+  font-weight: 400;
+}
+
+.hero-card-container .field--name-field-paragraphs .field--name-field-body .prefix,
+.hero-card-container .field--name-field-paragraphs .field--name-field-body .suffix {
+  display: contents;
+}
+
+.hero-card-container .field--name-field-paragraphs .field--name-field-body p {
+  color: #fff;
+}
+
+
+/* =========================
+   Responsive
+   ========================= */
+
+@media (max-width: 1100px) {
+  .field--name-field-reference.grid-3.field__items {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .field--name-field-reference.grid-3.field__items {
+    grid-template-columns: 1fr;
+  }
+
+  .node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain {
+    padding: 14px 16px 12px;
+  }
+
+  .node--type-landing-page.node--view-mode-teaser .field--name-field-teaser-line {
+    padding: 14px 16px 16px;
+  }
+}
+
+
+/* =========================
+   Hide contextual overflow issues
+   ========================= */
+
+.hero-card-container .field--name-field-paragraphs .contextual {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 20;
+}

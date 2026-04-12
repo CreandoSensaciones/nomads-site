@@ -1,32 +1,21 @@
-/* Features layer for page- or feature-specific styling.
-   Allowed: feature flags, experiment styles, debug-only (commented) blocks.
-   Not allowed: base vars, layout helpers, components, forms.
-   Override policy: may override earlier layers; should be scoped and minimal.
-   Notes for Codex: Edit only this file when changing feature-specific styling.
-   Last updated: 2026-02-04 */
-/*
-Debug region outlines (disabled in production)
 
-.region-navbar { outline: 3px solid red; }
-.region-hero { outline: 3px solid orange; }
-.region-title { outline: 3px solid yellow; }
-.region-content { outline: 3px solid green; }
-.region-bottom { outline: 3px solid cyan; }
-.region-footer { outline: 3px solid blue; }
+/* 
+* Local Task Pill
+* Drupal message
 */
 
 
-/* ========== Hero Gallery ========== */
-
-#hero-gallery img { 
-  border-radius: 8px;
-}
-.nomads-hero-gallery--max-7 {
-  width: 1550px;
-  height: 510px;
+.node--type-feature.node--view-mode-teaser .contextual {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  z-index: 5;
 }
 
-/* ========== Local tasks Pill ========== */
+/* ===================
+  Local tasks Pill
+====================== */
+
 /* Big pill select */
 .nomads-title-local-tasks__select{
   -webkit-appearance: none;
@@ -41,7 +30,8 @@ Debug region outlines (disabled in production)
 
   border-radius: 9999px;
   border: 1px solid rgba(0,0,0,.18);
-  background: #fff;
+  background:#015180;
+  color: #fff;
 
   font-size: 16px;
   font-weight: 600;
@@ -82,8 +72,8 @@ Debug region outlines (disabled in production)
   top: 35%;
   width: 12px;
   height: 12px;
-  border-right: 2px solid rgba(0,0,0,.55);
-  border-bottom: 2px solid rgba(0,0,0,.55);
+  border-right: 2px solid rgba(255,255,255,.85);
+  border-bottom: 2px solid rgba(255,255,255,.85);
   transform: translateY(-50%) rotate(45deg);
   pointer-events: none;
 }
@@ -103,201 +93,107 @@ html:not(.nomads-ready) .nomads-title-local-tasks__select-wrap{
   width: 100%;          /* or your fixed width */
 }
 
-.teaser-list .view-header h1 {
-  margin: 20px auto 40px;
-  font-size: 20pt;
-  color: #777;
-}
-.view-calendar.teaser-list .view-content > h3 {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-
-  margin: 10px 0;
-  font-size: 28pt;
-  color: #999;
-  text-align: center;
-}
-
-.view-calendar.teaser-list .view-content > h3::before,
-.view-calendar.teaser-list .view-content > h3::after {
-  content: "";
-  flex: 1;
-  border-top: 1px solid #ccc;
-  margin: 0 20px;
-}
-
-.teaser-list {
-  margin-bottom: 50px;
-}
-
-/* ========== Region Bottom ========== */
-
-section.region-bottom {
-  background-color:#0570A1;
-  color: #fff;
-}
-.region-bottom a {
-  text-decoration: none;
-  color: #fff;
-}
-
-/* ========== Footer ========== */
-
-.region-footer {
-  background-color: #015180;;
-  color: #fff;
-}
-.region-footer a {
-  text-decoration: none;
-  color: #fff;
-}
-
-section.region-footer .region.region-footer {
-  display: flex;
-  justify-content: space-evenly;
-  align-items: flex-start;
-  width: 100%;
-}
-
-#block-nomads-useraccountmenu > .menu {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-#block-nomads-footer {
-  flex: 1;
-}
-
-#block-nomads-footer > .menu {
-  display: flex;
-  justify-content: space-evenly;
-  align-items: flex-start;
-  width: 100%;
-}
-
-#block-nomads-footer > .menu > .menu-item {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
 
 
-/* ========== Map ========== */
 
-/* MAP PAGE, full viewport map, no page scroll, navbar floating above map */
-body.path-map {
-  margin: 0;
-  overflow: hidden;
-}
 
-/* Remove Drupal toolbar offset on map page */
-body.path-map,
-body.path-map.toolbar-horizontal,
-body.path-map.toolbar-fixed,
-body.path-map.toolbar-tray-open {
-  padding-top: 0 !important;
-}
 
-/* Full viewport page shell */
-body.path-map,
-body.path-map .dialog-off-canvas-main-canvas,
-body.path-map .region-content,
-body.path-map .nomads-content,
-body.path-map #block-nomads-content,
-body.path-map .view-map,
-body.path-map .view-map .view-content,
-body.path-map .geolocation-map-wrapper {
-  height: 100vh;
-  min-height: 100vh;
-}
 
-/* Remove width constraints and spacing */
-body.path-map .nomads-inner,
-body.path-map .nomads-inner--constrained,
-body.path-map .nomads-content,
-body.path-map .region-content,
-body.path-map .view-map,
-body.path-map .view-map .view-content,
-body.path-map #block-nomads-content {
-  max-width: none !important;
-  width: 100vw;
-  margin: 0 !important;
-  padding: 0 !important;
-}
 
-/* Hide normal page content below the map */
-body.path-map footer,
-body.path-map .region-footer,
-body.path-map .geolocation-location,
-body.path-map .location-content {
-  display: none !important;
-}
 
-/* Make the map fill the whole viewport */
-body.path-map .geolocation-map-wrapper,
-body.path-map .geolocation-map-container,
-body.path-map .leaflet-container {
-  width: 100vw !important;
-  height: 100vh !important;
-  min-height: 100vh !important;
-}
 
-/* Floating navbar over the map */
-body.path-map .nomads-navbar {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================
+   Drupal Messages
+   ========================= */
+
+[data-drupal-messages] {
   position: fixed;
-  top: 0;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999;
+  width: min(680px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+[data-drupal-messages] .messages {
+  pointer-events: auto;
+  margin: 0 0 12px;
+  padding: 16px 20px;
+  border-radius: 18px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.18);
+  background: #fff;
+  color: #222;
+  border-left: 6px solid #1e88e5;
+  animation: nomadsMessageFadeout 10s ease forwards;
+}
+
+[data-drupal-messages] .messages--status {
+  border-left-color: #1e88e5;
+}
+
+[data-drupal-messages] .messages--warning {
+  border-left-color: #f5a623;
+}
+
+[data-drupal-messages] .messages--error {
+  border-left-color: #d93025;
+}
+
+@keyframes nomadsMessageFadeout {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  6% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  88% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+    visibility: hidden;
+  }
+}
+
+
+/* ========== Feedback ========== */
+
+.website-feedback-toggle-wrapper {
+  position: fixed;
+  right: auto;
+  bottom: auto;
   left: 0;
-  right: 0;
-  z-index: 1000;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  padding: 0 50px;
+  top: 50%;
+  transform: translateY(-50%) rotate(-90deg);
+  transform-origin: left top;
 }
-
-/* Keep navbar inner full width too */
-body.path-map .nomads-navbar__inner {
-  max-width: none !important;
-  width: 100%;
-}
-
-/* Push map controls below floating navbar */
-body.path-map .leaflet-top {
-  top: 90px;
-}
-
-/* Optional, hide Drupal admin toolbar completely on map page */
-body.path-map #toolbar-administration {
-  display: none !important;
-}
-
-
-#map.combined-map-virtual-field {
-  height: clamp(320px, 70vh, 1100px);
-}
-
-#map .views-element-container,
-#map .view,
-#map .view-content,
-#map .geolocation-map-wrapper,
-#map .geolocation-map-container {
-  height: 100%;
-}
-#map.combined-map-virtual-field {
-  height: 695px;
-}
-
-
-.date-location-table table {
-  table-layout: fixed;
-  font-size: 14pt;
-  font-weight: 600;
-  color:#0570A1;
-  margin: 0 auto 15px;
-}
-.date-location-table td {
-  padding: 0 30px;
+div.website-feedback-toggle-wrapper a {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  font-size: 1em !important;
 }

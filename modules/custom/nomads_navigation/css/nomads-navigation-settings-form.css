@@ -1,0 +1,8 @@
+.nomads-navigation-settings-form .form-type--entity-autocomplete,
+.nomads-navigation-settings-form .form-type--entity-autocomplete .form-item__description,
+.nomads-navigation-settings-form .form-type--entity-autocomplete .claro-autocomplete,
+.nomads-navigation-settings-form .form-type--entity-autocomplete input.form-autocomplete,
+.nomads-navigation-settings-form .form-type--entity-autocomplete input.form-element {
+  max-width: none;
+  width: 100%;
+}

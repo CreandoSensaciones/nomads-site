@@ -209,6 +209,13 @@
     });
   }
 
+  function hasVisibleEasyTaggingWidget(form) {
+    return Array.prototype.some.call(
+      form.querySelectorAll('.nomads-easy-tagging[data-nomads-term-target]'),
+      isVisible
+    );
+  }
+
   function getCategoryStepWidgets(form) {
     return Array.prototype.slice.call(
       form.querySelectorAll('.nomads-easy-tagging.nomads-easy-tagging--category-steps')
@@ -279,6 +286,103 @@
     return candidates.length ? candidates[0] : null;
   }
 
+  function normalizeStepId(stepId) {
+    return String(stepId || '')
+      .replace(/^#/, '')
+      .replace(/^edit-/, '')
+      .replace(/_/g, '-');
+  }
+
+  function getVisibleFieldsStepId(visibleFields) {
+    var firstField = Array.prototype.find.call(visibleFields || [], function (field) {
+      return !!field;
+    });
+    if (!firstField) {
+      return '';
+    }
+
+    var pane = firstField.closest('.vertical-tabs__pane, [data-drupal-selector^="edit-group-"], [id^="edit-group-"]');
+    if (!pane) {
+      return '';
+    }
+
+    return normalizeStepId(pane.id || pane.getAttribute('data-drupal-selector'));
+  }
+
+  function fieldMatchesName(field, matcher) {
+    var name = String(field && field.name || '');
+    var selector = String(field && field.getAttribute('data-drupal-selector') || '');
+    return matcher(name, selector);
+  }
+
+  function getRequiredFieldsForStep(stepId, visibleFields) {
+    if (stepId === 'group-title') {
+      return visibleFields.filter(function (field) {
+        return fieldMatchesName(field, function (name, selector) {
+          return (
+            name.indexOf('title[') === 0 ||
+            name.indexOf('field_subtitle[') === 0 ||
+            selector.indexOf('title-') !== -1 ||
+            selector.indexOf('field-subtitle-') !== -1
+          );
+        });
+      });
+    }
+
+    if (stepId === 'group-category') {
+      return visibleFields.filter(function (field) {
+        return fieldMatchesName(field, function (name, selector) {
+          return name.indexOf('field_type[') === 0 || selector.indexOf('field-type-') !== -1;
+        });
+      });
+    }
+
+    if (stepId === 'group-location-date') {
+      return visibleFields.filter(function (field) {
+        return fieldMatchesName(field, function (name, selector) {
+          return (
+            name === 'field_location_date[country]' ||
+            name.indexOf('field_location_date[') === 0 && name.indexOf('[country]') !== -1 ||
+            name.indexOf('[field_country]') !== -1 && name.indexOf('[country]') !== -1 ||
+            name.indexOf('[field_country]') !== -1 && name.indexOf('[target_id]') !== -1 ||
+            name.indexOf('field_country[') === 0 && name.indexOf('[target_id]') !== -1 ||
+            selector.indexOf('field-location-date-country') !== -1 ||
+            selector.indexOf('field-country-country') !== -1 ||
+            selector.indexOf('field-country') !== -1 && selector.indexOf('target-id') !== -1
+          );
+        });
+      });
+    }
+
+    return null;
+  }
+
+  function inferRequiredStepIdFromFields(form, visibleFields) {
+    if (getRequiredFieldsForStep('group-title', visibleFields).length) {
+      return 'group-title';
+    }
+    if (getRequiredFieldsForStep('group-location-date', visibleFields).length) {
+      return 'group-location-date';
+    }
+    if (hasVisibleEasyTaggingWidget(form)) {
+      return 'group-category';
+    }
+    if (getRequiredFieldsForStep('group-category', visibleFields).length) {
+      return 'group-category';
+    }
+    return '';
+  }
+
+  function getRequiredFieldMinimum(stepId) {
+    if (stepId === 'group-title') {
+      return 2;
+    }
+    if (stepId === 'group-location-date') {
+      return 1;
+    }
+    return 0;
+  }
+
   function setDialogButtonState(button, enabled) {
     if (!button) {
       return;
@@ -323,24 +427,51 @@
     var nextButton = getNextButton(form);
     var dialogNextButton = getDialogNextButton(form);
     var hasDialogButton = !!dialogNextButton;
+    var isFinalStep = form.getAttribute('data-nomads-wizard-final-step') === '1';
+    var requiresInput = form.getAttribute('data-nomads-wizard-requires-input') === '1';
     var categoryStepState = areCategoryStepWidgetsAtLastSet(form);
+    var visibleFields = collectVisibleFields(form);
+    var stepId = getVisibleFieldsStepId(visibleFields);
+    var inferredStepId = inferRequiredStepIdFromFields(form, visibleFields);
+    if (inferredStepId === 'group-location-date') {
+      stepId = inferredStepId;
+    }
+    else if (stepId === '') {
+      stepId = inferredStepId;
+    }
+    var requiredStepFields = getRequiredFieldsForStep(stepId, visibleFields);
 
-    if (categoryStepState === false) {
+    if (!isFinalStep && categoryStepState === false) {
       setInlineSubmitState(nextButton, false, hasDialogButton);
       setDialogButtonState(dialogNextButton, false);
       return;
     }
 
-    if (categoryStepState === true) {
+    if (categoryStepState === true && !requiresInput && requiredStepFields === null) {
       setInlineSubmitState(nextButton, true, hasDialogButton);
       setDialogButtonState(dialogNextButton, true);
       return;
     }
 
-    var visibleFields = collectVisibleFields(form);
-    var fieldsToValidate = visibleFields.filter(shouldValidateField);
-    var allFilled = fieldsToValidate.every(fieldHasValue);
-    if (categoryStepState === null) {
+    if (isFinalStep || (!requiresInput && requiredStepFields === null)) {
+      setInlineSubmitState(nextButton, true, hasDialogButton);
+      setDialogButtonState(dialogNextButton, true);
+      return;
+    }
+
+    if (stepId === 'group-official') {
+      setInlineSubmitState(nextButton, true, hasDialogButton);
+      setDialogButtonState(dialogNextButton, true);
+      return;
+    }
+
+    var fieldsToValidate = requiredStepFields || visibleFields.filter(shouldValidateField);
+    var requiredMinimum = requiredStepFields === null ? 0 : getRequiredFieldMinimum(stepId);
+    var allFilled = fieldsToValidate.length >= requiredMinimum && fieldsToValidate.every(fieldHasValue);
+    if (stepId === 'group-category') {
+      allFilled = (fieldsToValidate.length === 0 || fieldsToValidate.every(fieldHasValue)) && easyTaggingIsComplete(form);
+    }
+    else if (categoryStepState === null && requiredStepFields === null) {
       allFilled = allFilled && easyTaggingIsComplete(form);
     }
     setInlineSubmitState(nextButton, allFilled, hasDialogButton);

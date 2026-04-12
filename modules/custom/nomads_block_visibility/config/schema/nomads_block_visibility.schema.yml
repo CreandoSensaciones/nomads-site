@@ -1,0 +1,9 @@
+condition.plugin.nomads_tweaks:
+  type: condition.plugin
+  label: 'Nomads tweaks condition'
+  mapping:
+    enabled_rules:
+      type: sequence
+      label: 'Selected Nomads tweaks'
+      sequence:
+        type: string

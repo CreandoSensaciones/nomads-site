@@ -208,7 +208,7 @@
 
 .magical-links-widget__fields .tabledrag-handle,
 .magical-links-widget__fields .field-multiple-drag {
-  display: none !important;
+  /* display: none !important; */
 }
 
 .magical-links-widget__fields .form-item {

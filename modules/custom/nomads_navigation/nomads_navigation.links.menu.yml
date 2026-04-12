@@ -1,0 +1,6 @@
+nomads_navigation.settings:
+  title: 'Nomads navigation'
+  description: 'Configure domain-specific navigation settings.'
+  route_name: nomads_navigation.settings
+  parent: system.admin_config_search
+  weight: 20

@@ -1,187 +1,34 @@
-/* Layout layer for structural containers and spacing rules.
-   Allowed: layout helpers, containers, region spacing, breakout rules.
-   Not allowed: component styling, feature-specific, forms, base vars.
-   Override policy: may override 00-base.css; may be overridden by later layers.
-   Notes for Codex: Edit only this file when changing layout helpers or region spacing.
-   Last updated: 2026-02-04 */
-
-/*
- * Listing base layout (theme-agnostic, structural only).
- * Assumes these IDs render as siblings inside
- * .node__content.
- * IDs: #hero-gallery, #title-container, #left-sidebar, #right-sidebar,
- * #content-container, #connectbar, #paragraphs-container.
- */
-
- body {
+body {
   margin: 0;
+  position: relative;
  }
 
- /* =========== Listing base layout ========== */
+  #hero-wrapper,
+  .nomads-content .nomads-breakout {
+    max-width: 99.5vw;
+  } 
 
-.node--type-listing.node--view-mode-full > .node__content {
-  --nomads-listing-gap: 16px;
-  --nomads-left-width: 22%;
-  --nomads-right-width: 28%;
-  --nomads-breakpoint: 900px;
+/* ========= region title ========= */
+
+section.region-title {
+  padding: 12px 0 12px;
+}
+section.region-title #block-nomads-primary-local-tasks {
+ text-align: right;
+ height: 50px;
 }
 
-.node--type-listing.node--view-mode-full > .node__content {
-  display: grid;
-  gap: var(--nomads-listing-gap);
-  grid-template-columns:
-    minmax(0, var(--nomads-left-width))
-    minmax(0, 1fr)
-    minmax(0, var(--nomads-right-width));
-  grid-template-areas:
-    "hero hero hero"
-    "title title title"
-    "left content right"
-    "connect connect connect"
-    "paragraphs paragraphs paragraphs";
-  align-items: stretch;
+/* ========= Admin tweak ========= */
+.toolbar-horizontal .region-title #block-nomads-primary-local-tasks {
+  margin-right: 50px;
 }
 
-.node--type-listing.node--view-mode-full > .node__content > #hero-gallery {
-  grid-area: hero;
+/* ========= region content ========= */
+
+.region-content {
+  min-height: 500px;
+  padding: 0;
 }
-
-.node--type-listing.node--view-mode-full > .node__content > #title-container {
-  grid-area: title;
-}
-
-.node--type-listing.node--view-mode-full > .node__content > #left-sidebar {
-  grid-area: left;
-}
-
-.node--type-listing.node--view-mode-full > .node__content > #content-container {
-  grid-area: content;
-}
-
-.node--type-listing.node--view-mode-full > .node__content > #right-sidebar {
-  grid-area: right;
-}
-
-.node--type-listing.node--view-mode-full > .node__content > #connectbar {
-  grid-area: connect;
-}
-
-.node--type-listing.node--view-mode-full > .node__content > #paragraphs-container {
-  grid-area: paragraphs;
-}
-
-@media (max-width: 900px) {
-.node--type-listing.node--view-mode-full > .node__content {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "hero"
-      "title"
-      "content"
-      "left"
-      "right"
-      "connect"
-      "paragraphs";
-  }
-}
-
-
-
-/* ========== Paragraphs ========== */
-
-div #paragraphs-container {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  column-gap: 40px;
-  row-gap: 60px;  
-  margin-bottom: 50px;
-  grid-auto-flow: dense;
-}
-.paragraph-relevance-vfield {
-  display: contents;
-}
-#paragraphs-container .paragraph-relevance-vfield--core .paragraph-relevance-vfield__section,
-#paragraphs-container  .field--name-field-location-date {
-  grid-column: 1 / -1;
-}
-#paragraphs-container .paragraph-relevance-vfield--relevant .paragraph-relevance-vfield__section {
-  grid-column: span 1;
-  grid-row: span 3;
-}
-
-
-.paragraph-left-column,
-.paragraph-center-column,
-.paragraph-right-column {
-  height: 510px;
-  overflow: hidden;
-}
-.paragraph--viewmode-vm-3 {
-  display: grid;
-  gap: 10px;
-  row-gap: 0;
-}
-.paragraph--viewmode-vm-3.col2 {
-  grid-template-columns: minmax(0, 1fr) 770px;
-  grid-template-areas:
-    "title title"
-    "left right";
-}
-.paragraph--viewmode-vm-3.col3 {
-    grid-template-columns: minmax(0, 1fr) 510px 510px;
-    grid-template-areas:
-        "title title title"
-        "left center right";
-}
-.paragraph--viewmode-vm-3 .nomads-paragraph-header {
-  grid-area: title;
-  height: 0;
-  position: relative;
-}
-.paragraph--viewmode-vm-3 > .paragraph-right-column {
-  grid-area: right;
-}
-.paragraph--viewmode-vm-3 > .paragraph-left-column {
-  grid-area: left;
-}
-.paragraph--viewmode-vm-3 > .paragraph-center-column {
-  grid-area: center;
-}
-
-
-
-/* ========== Teaser ========== */
-
-.node--type-listing.node--view-mode-teaser {
-  width: 1200px;
-  margin: 0 auto;
-}
-.node--type-listing.node--view-mode-teaser .teaser-inner-wrapper {
-  height: 266px;
-  overflow: hidden;
-}
-.node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper > .node__content {
-  display: grid;
-  grid-template-columns: 400px 500px 290px;
-  gap: 5px;              /* adjust */
-  align-items: start;     /* top align */
-  overflow: hidden;
-}
-
-.teaser-list .view-content {
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
-}
-
-
-
-
-
-
-
-
-
-
 .nomads-inner {
   width: 100%;
 }
@@ -190,6 +37,7 @@ div #paragraphs-container {
   margin: 0 auto;
   padding-left: 16px;
   padding-right: 16px;
+  box-sizing: border-box;
 }
 .nomads-content .nomads-breakout {
   width: 100vw;
@@ -201,194 +49,69 @@ div #paragraphs-container {
   position: relative;
 }
 
+.node--view-mode-full > .node__content {
+  display: grid;
+  row-gap: 50px;
+  grid-template-columns: 1fr;
+  margin-bottom: 50px;
+}
 
-/* Nomads: basic vertical spacing */
-.region-navbar {
-  padding: 12px 0;
-}
-section.region-title {
-  padding: 12px 0 12px;
-}
-.region-content {
-  padding: 0;
-}
+/* ========= region button ========= */
+
 section.region-bottom {
   padding: 32px 0;
 }
+
+
+/* ========= region footer ========= */
+
 section.region-footer {
   padding: 32px 0;
 }
-.path-map section.region-bottom {
+
+
+
+
+
+
+
+/* ======================================
+  Mobile device announcement - temporary
+========================================= */
+
+.mobile-announcement-overlay {
   display: none;
 }
-.path-map section.region-footer {
-  display: none;
+/*
+@media (max-width: 1199px) {
+  .mobile-announcement-overlay {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: #fff;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+  }
+
+  .mobile-announcement-overlay__inner {
+    max-width: 700px;
+    width: 100%;
+  }
+
+  .mobile-announcement-overlay__logo {
+    max-width: 60vw;
+    height: auto;
+    display: block;
+    margin: 0 auto 24px;
+  }
+
+  .mobile-announcement-overlay__text {
+    font-size: clamp(18px, 2.4vw, 30px);
+    line-height: 1.4;
+    color: #000;
+  }
 }
-
-
-/* Sidebar alignment */
-#left-sidebar,
-#right-sidebar {
-  text-align: center;
-}
-
-/* Listing title region minimum height */
-#title-container {
-  min-height: 150px;
-}
-
-
-
-
-
-
-
-
-#title-container .field--name-field-organization-ref {
-  width: 20%;
-  min-width: 200px;
-  display: inline-block;
-  vertical-align: top;
-}
-
-/* Description field padding */
-article .field--name-field-description {
-  padding-left: 1vw;
-  padding-right: 1vw;
-}
-.paragraph-relevance-virtual-field-2 .paragraph-relevance-virtual-field-items {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 40px;
-}
-
-
-
-/* ========== Listing - Title Container ========== */
-
-.node--type-listing.node--view-mode-full > .node__content > #title-container{
-  display: grid;
-  grid-template-columns: 200px minmax(0, 1fr) 200px;
-  grid-template-rows: auto auto;
-  grid-template-areas:
-    "left center right";
-  column-gap: 32px;
-  align-items: center;
-  width: 100%;
-}
-
-/* LEFT COLUMN – organizer */
-#title-container .field--name-field-organization-ref{
-  grid-column: 1;
-  grid-row: 1 / span 3;
-  justify-self: start;
-  align-self: center;
-}
-
-/* CENTER COLUMN – title */
-#title-container .field--name-field-country {
-  grid-column: 2;
-  grid-row: 1;
-  text-align: center;
-  width: 100%;
-}
-/* CENTER COLUMN – title */
-#title-container .field--name-title{
-  grid-column: 2;
-  grid-row: 2;
-  text-align: center;
-  width: 100%;
-}
-
-/* CENTER COLUMN – subtitle */
-#title-container .field--name-field-subtitle{
-  grid-column: 2;
-  grid-row: 3;
-  text-align: center;
-  width: 100%;
-}
-
-/* RIGHT COLUMN – local tasks */
-#title-container .column-right{
-  grid-column: 3;
-  grid-row: 1 / span 3;
-  justify-self: end;
-  align-self: center;
-}
-#title-container .location-date, 
-#title-container .field--name-title, 
-#title-container .field--name-field-subtitle {
-  grid-column: 2;
-  align-self: center;
-}
-
-/* remove default heading margins */
-#title-container h1,
-#title-container h3 {
-  margin: 0;
-}
-
-/* ========== Listing - Sidebars ========== */
-
-#left-sidebar {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  max-height: 850px;
-  align-items: center;             /* horizontal: center content */
-  text-align: center;   
-}
-#right-sidebar {
-  padding-left: 20px;
-}
-
-
-
-
-/* ========== Paragraphs view mode 3 ========== */
-
-.paragraph--viewmode-vm-3.relevance-paragraph.col2 {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 770px;
-  grid-template-areas:
-    "title title"
-    "left right";
-  gap: 10px;
-  row-gap: 0;
-}
-.paragraph--viewmode-vm-3.col3 .paragraph-center-column,
-.paragraph--viewmode-vm-3.col3 .paragraph-left-column,
-.paragraph--viewmode-vm-3.col3 .paragraph-right-column {
-  max-height: 510px;
-  overflow: hidden;
-  width: 510px;
-}
-.paragraph--viewmode-vm-3.col2 .paragraph-left-column,
-.paragraph--viewmode-vm-3.col2 .paragraph-right-column {
-  max-height: 510px;
-  overflow: hidden;
-  width: 770px;
-}
-
-
-
-
-.combined-map-virtual-field {
-  grid-column: 2;
-}
-.grid-1-row {
-  grid-row: span 1;
-}
-.grid-2-rows {
-  grid-row: span 2;
-}
-.grid-3-rows {
-  grid-row: span 3;
-}
-.grid-2-columns {
-  grid-column: span 2;
-  grid-column: 2 / 4;
-}
-.paragraph--viewmode-vm-2 {
- 
-}
+*/

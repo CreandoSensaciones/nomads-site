@@ -1,0 +1,233 @@
+
+
+
+
+/* ========== Hero Gallery ========== */
+
+#hero-gallery img { 
+  border-radius: 8px;
+}
+.nomads-hero-gallery--max-7 {
+  max-width: 1550px;
+  height: auto;
+  aspect-ratio: 155 / 51;
+}
+
+
+
+
+
+/* ============================
+  Hero slideshow with Text
+=============================== */
+
+#hero-wrapper .swiper-container {
+  margin: 0 auto;
+}
+.field--name-title h1 {
+  margin-top: 30px;
+  line-height: 1.02;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: #202124;
+}
+#hero-wrapper .field--name-field-subtitle {
+  max-width: 760px;
+  margin: 22px auto 0;
+}
+#hero-wrapper .field--name-field-subtitle h2 {
+  margin: 0;
+  line-height: 1.35;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: #5f6368;
+  color: #169ec4;
+  font-style: normal;
+  font-weight: 500;
+}
+
+
+
+
+
+/* Positioning context only for the real top hero */
+#hero-wrapper {
+  position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  overflow: hidden;
+  background: #000;
+}
+
+/* Hero slider container */
+#hero-wrapper > .swiper-container.default.slide-single {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #000;
+  z-index: 1;
+}
+
+/* Keep hero images proportional */
+#hero-wrapper > .swiper-container.default.slide-single .swiper-slide img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Keep slider UI above image */
+#hero-wrapper > .swiper-container.default.slide-single .swiper-pagination,
+#hero-wrapper > .swiper-container.default.slide-single .swiper-scrollbar,
+#hero-wrapper > .swiper-container.default.slide-single .swiper-button-prev,
+#hero-wrapper > .swiper-container.default.slide-single .swiper-button-next {
+  position: absolute;
+  z-index: 6;
+  pointer-events: auto;
+}
+
+/* Arrow buttons */
+#hero-wrapper > .swiper-container.default.slide-single .swiper-button-prev,
+#hero-wrapper > .swiper-container.default.slide-single .swiper-button-next {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52px;
+  height: 52px;
+  margin-top: 0;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(4px);
+}
+
+#hero-wrapper > .swiper-container.default.slide-single .swiper-button-prev:hover,
+#hero-wrapper > .swiper-container.default.slide-single .swiper-button-next:hover {
+  background: rgba(0, 0, 0, 0.42);
+}
+
+#hero-wrapper > .swiper-container.default.slide-single .swiper-button-prev::after,
+#hero-wrapper > .swiper-container.default.slide-single .swiper-button-next::after {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* Pagination */
+#hero-wrapper > .swiper-container.default.slide-single .swiper-pagination {
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+}
+
+#hero-wrapper > .swiper-container.default.slide-single .swiper-pagination-bullet {
+  background: rgba(255, 255, 255, 0.65);
+  opacity: 1;
+}
+
+#hero-wrapper > .swiper-container.default.slide-single .swiper-pagination-bullet-active {
+  background: #fff;
+}
+
+/* Optional scrollbar */
+#hero-wrapper > .swiper-container.default.slide-single .swiper-scrollbar {
+  left: 24px;
+  right: 24px;
+  bottom: 8px;
+  width: auto;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+#hero-wrapper > .swiper-container.default.slide-single .swiper-scrollbar-drag {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+/* Full overlay layer including text */
+#hero-wrapper > .hero-overlay.nomads-breakout {
+  --hero-overlay-opacity: 0.42;
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* Black overlay background */
+#hero-wrapper > .hero-overlay.nomads-breakout::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / var(--hero-overlay-opacity));
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Text sits above overlay */
+#hero-wrapper > .hero-overlay.nomads-breakout > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Shared text width */
+#hero-wrapper > .hero-overlay.nomads-breakout .field--name-title,
+#hero-wrapper > .hero-overlay.nomads-breakout .field--name-field-subtitle {
+  width: min(92vw, 1200px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Title block */
+#hero-wrapper > .hero-overlay.nomads-breakout .field--name-title {
+  margin-top: 0;
+  margin-bottom: 24px;
+}
+
+#hero-wrapper > .hero-overlay.nomads-breakout .field--name-title h1 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  line-height: 0.98;
+  text-wrap: balance;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.8);
+}
+
+/* Subtitle block */
+#hero-wrapper > .hero-overlay.nomads-breakout .field--name-field-subtitle {
+  margin-top: 0;
+  margin-bottom: 0;
+  max-width: 900px;
+}
+#hero-wrapper > .hero-overlay.nomads-breakout .field--name-field-subtitle h2 {
+  color: #fff;
+  font-size: clamp(1rem, 2vw, 2rem);
+  line-height: 1.35;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.75);
+}
+
+/* Mobile tuning */
+@media (max-width: 767px) {
+#hero-wrapper > .swiper-container.default.slide-single .swiper-button-prev,
+  .node--type-landing-page.hero-image #hero-wrapper > .swiper-container.default.slide-single .swiper-button-next {
+    width: 44px;
+    height: 44px;
+  }
+
+#hero-wrapper > .swiper-container.default.slide-single .swiper-button-prev {
+    left: 12px;
+  }
+
+#hero-wrapper > .swiper-container.default.slide-single .swiper-button-next {
+    right: 12px;
+  }
+
+ #hero-wrapper > .hero-overlay.nomads-breakout {
+    padding: 24px 20px 64px;
+  }
+
+#hero-wrapper > .hero-overlay.nomads-breakout .field--name-title {
+    margin-bottom: 16px;
+  }
+}

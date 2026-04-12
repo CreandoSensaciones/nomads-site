@@ -1,0 +1,16 @@
+{#
+/**
+ * @file
+ * Theme override to present a media entity in the media library.
+ */
+#}
+<article{{ attributes }}>
+  {% if content %}
+    <div{{ preview_attributes.addClass('js-media-library-item-preview') }}>
+      {{ content|without('name') }}
+    </div>
+    {% if not status %}
+      {{ "unpublished"|t }}
+    {% endif %}
+  {% endif %}
+</article>

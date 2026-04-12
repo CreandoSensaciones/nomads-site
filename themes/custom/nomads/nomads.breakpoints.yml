@@ -1,0 +1,27 @@
+nomads.mobile:
+  label: Mobile
+  mediaQuery: ''
+  weight: 0
+  multipliers:
+    - 1x
+
+nomads.tablet:
+  label: Tablet
+  mediaQuery: '(min-width: 768px)'
+  weight: 1
+  multipliers:
+    - 1x
+
+nomads.desktop:
+  label: Desktop
+  mediaQuery: '(min-width: 1200px)'
+  weight: 2
+  multipliers:
+    - 1x
+
+nomads.xl:
+  label: XL
+  mediaQuery: '(min-width: 1600px)'
+  weight: 3
+  multipliers:
+    - 1x

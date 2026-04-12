@@ -1,0 +1,477 @@
+<?php
+
+declare(strict_types=1);
+
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
+use Drupal\Core\Form\FormBuilderInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Drupal\Core\Template\Attribute;
+use Drupal\Core\Render\Markup;
+use Drupal\image\Entity\ImageStyle;
+use Drupal\media\MediaInterface;
+use Drupal\node\NodeInterface;
+use Drupal\user\Entity\User;
+use Drupal\user\Form\UserLoginForm;
+use Drupal\user\Form\UserPasswordForm;
+
+/**
+ * Implements hook_theme().
+ */
+function nomads_hero_ui_theme(): array {
+  return [
+    'node__hero__full' => [
+      'base hook' => 'node',
+      'template' => 'node--hero--full',
+      'path' => \Drupal::service('extension.list.module')->getPath('nomads_hero_ui') . '/templates',
+    ],
+    'node__hero__full__99' => [
+      'base hook' => 'node',
+      'template' => 'node--hero--full--99',
+      'path' => \Drupal::service('extension.list.module')->getPath('nomads_hero_ui') . '/templates',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_theme_suggestions_node_alter().
+ */
+function nomads_hero_ui_theme_suggestions_node_alter(array &$suggestions, array $variables): void {
+  $elements = $variables['elements'] ?? [];
+  $node = $elements['#node'] ?? NULL;
+  $view_mode = $elements['#view_mode'] ?? NULL;
+
+  if (!$node instanceof NodeInterface || $node->bundle() !== 'hero' || $view_mode !== 'full') {
+    return;
+  }
+
+  $suggestions[] = 'node__hero__full';
+
+  if ((int) $node->id() === 99) {
+    $suggestions[] = 'node__hero__full__99';
+  }
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ */
+function nomads_hero_ui_theme_registry_alter(array &$theme_registry): void {
+  if (!isset($theme_registry['node'])) {
+    return;
+  }
+
+  $theme_registry['node__hero__full'] = $theme_registry['node'];
+  $theme_registry['node__hero__full']['template'] = 'node--hero--full';
+  $theme_registry['node__hero__full']['path'] = \Drupal::service('extension.list.module')->getPath('nomads_hero_ui') . '/templates';
+
+  $theme_registry['node__hero__full__99'] = $theme_registry['node'];
+  $theme_registry['node__hero__full__99']['template'] = 'node--hero--full--99';
+  $theme_registry['node__hero__full__99']['path'] = \Drupal::service('extension.list.module')->getPath('nomads_hero_ui') . '/templates';
+}
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function nomads_hero_ui_preprocess_node(array &$variables): void {
+  $node = $variables['node'] ?? NULL;
+  $view_mode = $variables['view_mode'] ?? NULL;
+
+  if (!$node instanceof NodeInterface || $node->bundle() !== 'hero' || $view_mode !== 'full') {
+    return;
+  }
+
+  if (empty($variables['attributes']) || is_array($variables['attributes'])) {
+    $variables['attributes'] = new Attribute($variables['attributes'] ?? []);
+  }
+
+  if (empty($variables['content_attributes']) || is_array($variables['content_attributes'])) {
+    $variables['content_attributes'] = new Attribute($variables['content_attributes'] ?? []);
+  }
+
+  $variables['hero_ui_title'] = trim((string) $node->label());
+  $variables['hero_ui_background_render'] = nomads_hero_ui_build_background_media($node, 'field_hero');
+  $variables['hero_ui_subtitle'] = nomads_hero_ui_get_field_render($variables, 'field_subtitle');
+  $variables['hero_ui_teaser'] = nomads_hero_ui_get_field_render($variables, 'field_teaser_line');
+  $variables['hero_ui_body'] = nomads_hero_ui_get_field_render($variables, 'body');
+  $variables['hero_ui_actions'] = nomads_hero_ui_get_field_render($variables, 'field_cta');
+
+  $variables['hero_ui_has_title'] = $variables['hero_ui_title'] !== '';
+  $variables['hero_ui_has_background'] = $variables['hero_ui_background_render'] !== [];
+  $variables['hero_ui_has_subtitle'] = $variables['hero_ui_subtitle'] !== [];
+  $variables['hero_ui_has_teaser'] = $variables['hero_ui_teaser'] !== [];
+  $variables['hero_ui_has_body'] = $variables['hero_ui_body'] !== [];
+  $variables['hero_ui_has_actions'] = $variables['hero_ui_actions'] !== [];
+  $variables['hero_ui_is_authenticated'] = \Drupal::currentUser()->isAuthenticated();
+  $variables['hero_ui_requires_login'] = nomads_hero_ui_node_requires_login($node);
+  $variables['hero_ui_show_auth_gate'] = $variables['hero_ui_requires_login'] && !$variables['hero_ui_is_authenticated'];
+  $variables['hero_ui_content_wrapper_id'] = nomads_hero_ui_get_content_wrapper_id($node);
+  $variables['hero_ui_auth_panel'] = [];
+
+  $variables['elements']['#cache']['contexts'][] = 'user.roles:authenticated';
+
+  if ($variables['hero_ui_show_auth_gate']) {
+    $variables['hero_ui_auth_panel'] = nomads_hero_ui_build_content_slot($node);
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function nomads_hero_ui_form_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
+  if (!in_array($form_id, ['user_login_form', 'user_register_form', 'user_pass'], TRUE)) {
+    return;
+  }
+
+  $node = nomads_hero_ui_resolve_form_gate_node($form_state);
+  if (!$node instanceof NodeInterface || !nomads_hero_ui_node_requires_login($node)) {
+    return;
+  }
+
+  if (empty($form['actions']['submit']) || !is_array($form['actions']['submit'])) {
+    return;
+  }
+
+  $form['nomads_hero_ui_node_id'] = [
+    '#type' => 'hidden',
+    '#name' => 'nomads_hero_ui_node_id',
+    '#value' => (int) $node->id(),
+  ];
+  $form['nomads_hero_ui_form_type'] = [
+    '#type' => 'hidden',
+    '#name' => 'nomads_hero_ui_form_type',
+    '#value' => nomads_hero_ui_get_form_type_from_form_id($form_id),
+  ];
+
+  $form['actions']['submit']['#ajax'] = [
+    'callback' => 'nomads_hero_ui_auth_form_ajax_submit',
+    'wrapper' => nomads_hero_ui_get_content_wrapper_id($node),
+    'progress' => [
+      'type' => 'throbber',
+    ],
+  ];
+  $form['#validate'][] = 'nomads_hero_ui_auth_form_disable_redirect';
+  $form['#submit'][] = 'nomads_hero_ui_auth_form_redirect_to_node';
+  $form['#attributes']['data-nomads-hero-auth-form'] = (string) $node->id();
+}
+
+/**
+ * Builds a direct background image render array for a media reference field.
+ */
+function nomads_hero_ui_build_background_media(NodeInterface $node, string $field_name): array {
+  if (!$node->hasField($field_name) || $node->get($field_name)->isEmpty()) {
+    return [];
+  }
+
+  foreach ($node->get($field_name)->referencedEntities() as $entity) {
+    if ($entity instanceof MediaInterface) {
+      $render = nomads_hero_ui_build_media_background_item($entity);
+      if ($render !== []) {
+        return $render;
+      }
+    }
+  }
+
+  return [];
+}
+
+/**
+ * Builds a direct image render array for supported media background types.
+ */
+function nomads_hero_ui_build_media_background_item(MediaInterface $media): array {
+  $image_item = nomads_hero_ui_get_media_image_item($media);
+  if ($image_item === NULL || empty($image_item->entity)) {
+    return [];
+  }
+
+  $file = $image_item->entity;
+  $alt = trim((string) ($image_item->alt ?? ''));
+  $width = isset($image_item->width) ? (int) $image_item->width : NULL;
+  $height = isset($image_item->height) ? (int) $image_item->height : NULL;
+  $uri = $file->getFileUri();
+
+  $sources = [
+    ['media' => '(min-width: 1600px)', 'style' => 'hero_xl'],
+    ['media' => '(min-width: 1200px)', 'style' => 'hero_lg'],
+    ['media' => '(min-width: 768px)', 'style' => 'hero_md'],
+  ];
+
+  $source_markup = [];
+  foreach ($sources as $source) {
+    $style = ImageStyle::load($source['style']);
+    if (!$style instanceof ImageStyle) {
+      continue;
+    }
+
+    $source_markup[] = '<source media="' . Html::escape($source['media']) . '" srcset="' . Html::escape($style->buildUrl($uri)) . '">';
+  }
+
+  $fallback_style = ImageStyle::load('hero_sm');
+  $fallback_src = $fallback_style instanceof ImageStyle ? $fallback_style->buildUrl($uri) : \Drupal::service('file_url_generator')->generateString($uri);
+
+  $img_attributes = [
+    'src="' . Html::escape($fallback_src) . '"',
+    'alt="' . Html::escape($alt) . '"',
+    'loading="eager"',
+    'fetchpriority="high"',
+    'decoding="async"',
+    'draggable="false"',
+  ];
+
+  if ($width) {
+    $img_attributes[] = 'width="' . $width . '"';
+  }
+
+  if ($height) {
+    $img_attributes[] = 'height="' . $height . '"';
+  }
+
+  return [
+    '#markup' => Markup::create(
+      '<picture class="hero-ui__bg-image">'
+      . implode('', $source_markup)
+      . '<img ' . implode(' ', $img_attributes) . '>'
+      . '</picture>'
+    ),
+  ];
+}
+
+/**
+ * Returns the image field item from a media entity.
+ */
+function nomads_hero_ui_get_media_image_item(MediaInterface $media): ?\Drupal\image\Plugin\Field\FieldType\ImageItem {
+  if ($media->hasField('field_stock_image') && !$media->get('field_stock_image')->isEmpty()) {
+    return $media->get('field_stock_image')->first();
+  }
+
+  if ($media->hasField('field_media_image') && !$media->get('field_media_image')->isEmpty()) {
+    return $media->get('field_media_image')->first();
+  }
+
+  return NULL;
+}
+
+/**
+ * Returns a rendered field array from the node content build.
+ */
+function nomads_hero_ui_get_field_render(array $variables, string $field_name): array {
+  $field = $variables['content'][$field_name] ?? [];
+  return is_array($field) ? $field : [];
+}
+
+/**
+ * Builds the anonymous auth panel for a gated hero node.
+ */
+function nomads_hero_ui_build_auth_panel(NodeInterface $node, string $form_type = 'login', ?array $active_form = NULL): array {
+  return [
+    '#type' => 'container',
+    '#attached' => [
+      'library' => ['core/drupal.ajax'],
+    ],
+    '#cache' => [
+      'contexts' => ['user.roles:authenticated'],
+    ],
+    'form' => $active_form ?? nomads_hero_ui_build_auth_form($node, $form_type),
+    'actions' => nomads_hero_ui_build_auth_switcher($node, $form_type),
+  ];
+}
+
+/**
+ * Builds the current auth form for the anonymous hero panel.
+ */
+function nomads_hero_ui_build_auth_form(NodeInterface $node, string $form_type): array {
+  $destination = $node->toUrl()->toString();
+
+  switch ($form_type) {
+    case 'register':
+      $form = \Drupal::service('entity.form_builder')->getForm(User::create(), 'register');
+      break;
+
+    case 'recover':
+      $form = \Drupal::formBuilder()->getForm(UserPasswordForm::class);
+      break;
+
+    case 'login':
+    default:
+      $form = \Drupal::formBuilder()->getForm(UserLoginForm::class);
+      break;
+  }
+
+  $form['destination'] = [
+    '#type' => 'hidden',
+    '#name' => 'destination',
+    '#value' => $destination,
+  ];
+  $form['nomads_hero_ui_node_id'] = [
+    '#type' => 'hidden',
+    '#name' => 'nomads_hero_ui_node_id',
+    '#value' => (int) $node->id(),
+  ];
+  $form['nomads_hero_ui_form_type'] = [
+    '#type' => 'hidden',
+    '#name' => 'nomads_hero_ui_form_type',
+    '#value' => $form_type,
+  ];
+
+  return $form;
+}
+
+/**
+ * Builds the AJAX form switcher links shown below the auth form.
+ */
+function nomads_hero_ui_build_auth_switcher(NodeInterface $node, string $form_type): array {
+  $links = [];
+
+  if ($form_type === 'login') {
+    $links[] = nomads_hero_ui_build_auth_switch_link($node, 'register', 'Register');
+    $links[] = nomads_hero_ui_build_auth_switch_link($node, 'recover', 'Recover Password');
+  }
+  else {
+    $links[] = nomads_hero_ui_build_auth_switch_link($node, 'login', 'Back to Login');
+  }
+
+  return [
+    '#type' => 'container',
+    'items' => $links,
+  ];
+}
+
+/**
+ * Builds a single AJAX auth switch link.
+ */
+function nomads_hero_ui_build_auth_switch_link(NodeInterface $node, string $form_type, string $label): array {
+  return [
+    '#type' => 'link',
+    '#title' => $label,
+    '#url' => Url::fromRoute('nomads_hero_ui.auth_switch', [
+      'node' => $node->id(),
+      'form_type' => $form_type,
+    ]),
+    '#attributes' => [
+      'class' => ['use-ajax', 'button'],
+    ],
+  ];
+}
+
+/**
+ * Returns whether the hero node is gated by the login hero setting.
+ */
+function nomads_hero_ui_node_requires_login(NodeInterface $node): bool {
+  if ($node->bundle() !== 'hero' || !$node->hasField('field_hero_settings') || $node->get('field_hero_settings')->isEmpty()) {
+    return FALSE;
+  }
+
+  foreach ($node->get('field_hero_settings') as $item) {
+    $value = mb_strtolower(trim((string) ($item->value ?? '')));
+    if (in_array($value, ['login', 'login_portal'], TRUE)) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Builds the replaceable hero content slot for body or auth content.
+ */
+function nomads_hero_ui_build_content_slot(NodeInterface $node, string $form_type = 'login', ?array $active_form = NULL): array {
+  $content = nomads_hero_ui_node_requires_login($node) && !\Drupal::currentUser()->isAuthenticated()
+    ? nomads_hero_ui_build_auth_panel($node, $form_type, $active_form)
+    : nomads_hero_ui_build_body_content($node);
+
+  return [
+    '#type' => 'container',
+    '#attributes' => [
+      'id' => nomads_hero_ui_get_content_wrapper_id($node),
+      'class' => ['hero-ui__body'],
+    ],
+    '#cache' => [
+      'contexts' => ['user.roles:authenticated'],
+    ],
+    'content' => $content,
+  ];
+}
+
+/**
+ * Builds the hero body field in full-display context.
+ */
+function nomads_hero_ui_build_body_content(NodeInterface $node): array {
+  $build = EntityViewDisplay::collectRenderDisplay($node, 'full')->build($node);
+  $body = $build['body'] ?? [];
+
+  return is_array($body) ? $body : [];
+}
+
+/**
+ * Returns the DOM id used for the replaceable hero content wrapper.
+ */
+function nomads_hero_ui_get_content_wrapper_id(NodeInterface $node): string {
+  return 'hero-ui-content-' . (int) $node->id();
+}
+
+/**
+ * AJAX callback for login/register/recover forms inside the hero gate.
+ */
+function nomads_hero_ui_auth_form_ajax_submit(array &$form, FormStateInterface $form_state): array {
+  $node = nomads_hero_ui_resolve_form_gate_node($form_state);
+  if (!$node instanceof NodeInterface) {
+    return $form;
+  }
+
+  $form_id = (string) ($form_state->getBuildInfo()['form_id'] ?? '');
+  $form_type = (string) ($form_state->getValue('nomads_hero_ui_form_type') ?: nomads_hero_ui_get_form_type_from_form_id($form_id));
+
+  if ($form_id === 'user_register_form' && !$form_state->getErrors()) {
+    return nomads_hero_ui_build_content_slot($node);
+  }
+
+  return nomads_hero_ui_build_content_slot($node, $form_type, $form);
+}
+
+/**
+ * Prevents Drupal AJAX auth submits from redirecting away from the hero page.
+ */
+function nomads_hero_ui_auth_form_disable_redirect(array &$form, FormStateInterface $form_state): void {
+  $node = nomads_hero_ui_resolve_form_gate_node($form_state);
+  $request = \Drupal::request();
+  $is_ajax_request = $request->query->has(FormBuilderInterface::AJAX_FORM_REQUEST) || $request->isXmlHttpRequest();
+
+  if ($is_ajax_request && $node instanceof NodeInterface && nomads_hero_ui_node_requires_login($node)) {
+    $form_state->disableRedirect();
+  }
+}
+
+/**
+ * Sends successful gated auth submits back to the hero node.
+ */
+function nomads_hero_ui_auth_form_redirect_to_node(array &$form, FormStateInterface $form_state): void {
+  $node = nomads_hero_ui_resolve_form_gate_node($form_state);
+  if ($node instanceof NodeInterface && nomads_hero_ui_node_requires_login($node)) {
+    $form_state->setRedirectUrl($node->toUrl());
+  }
+}
+
+/**
+ * Resolves the current gated hero node for an auth form interaction.
+ */
+function nomads_hero_ui_resolve_form_gate_node(FormStateInterface $form_state): ?NodeInterface {
+  $node_id = (int) $form_state->getValue('nomads_hero_ui_node_id');
+  if ($node_id > 0) {
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($node_id);
+    return $node instanceof NodeInterface ? $node : NULL;
+  }
+
+  $route_node = \Drupal::routeMatch()->getParameter('node');
+  return $route_node instanceof NodeInterface ? $route_node : NULL;
+}
+
+/**
+ * Maps Drupal auth form IDs to the panel form types.
+ */
+function nomads_hero_ui_get_form_type_from_form_id(string $form_id): string {
+  return match ($form_id) {
+    'user_register_form' => 'register',
+    'user_pass' => 'recover',
+    default => 'login',
+  };
+}

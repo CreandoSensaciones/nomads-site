@@ -1,3 +1,7 @@
+.taxonomy-breadcrumb .field__item {
+  display: inline-block;
+}
+
 /* ========== Basic ========== */
 
 .nomads-taxonomy-icons__icon img {

@@ -12,11 +12,40 @@ use Drupal\Core\Render\Element;
  * Implements hook_form_alter().
  */
 function price_range_widget_form_alter(array &$form, FormStateInterface $form_state, $form_id): void {
-  if (!price_range_widget_has_price_range($form)) {
+  if (!price_range_widget_should_attach($form, $form_state, (string) $form_id)) {
     return;
   }
 
+  price_range_widget_normalize_group_price_range($form);
   $form['#attached']['library'][] = 'price_range_widget/price_range_widget';
+}
+
+/**
+ * Determines whether the widget library should be attached.
+ */
+function price_range_widget_should_attach(array $form, FormStateInterface $form_state, string $form_id): bool {
+  if (price_range_widget_is_listing_form($form_state, $form_id)) {
+    return TRUE;
+  }
+
+  return price_range_widget_has_price_range($form);
+}
+
+/**
+ * Checks whether the current form is the listing add/edit form.
+ */
+function price_range_widget_is_listing_form(FormStateInterface $form_state, string $form_id): bool {
+  if (in_array($form_id, ['node_listing_form', 'node_listing_edit_form'], TRUE)) {
+    return TRUE;
+  }
+
+  $form_object = $form_state->getFormObject();
+  if (!$form_object || !method_exists($form_object, 'getEntity')) {
+    return FALSE;
+  }
+
+  $entity = $form_object->getEntity();
+  return $entity && method_exists($entity, 'bundle') && $entity->bundle() === 'listing';
 }
 
 /**
@@ -69,5 +98,25 @@ function price_range_widget_find_price_fields(array $element, array &$found): vo
       continue;
     }
     price_range_widget_find_price_fields($element[$child_key], $found);
+  }
+}
+
+/**
+ * Normalizes price range field-group selectors for the original JS behavior.
+ */
+function price_range_widget_normalize_group_price_range(array &$element): void {
+  foreach (Element::children($element) as $child_key) {
+    if (!isset($element[$child_key]) || !is_array($element[$child_key])) {
+      continue;
+    }
+
+    if ($child_key === 'group_price_range') {
+      if (!isset($element[$child_key]['#attributes']) || !is_array($element[$child_key]['#attributes'])) {
+        $element[$child_key]['#attributes'] = [];
+      }
+      $element[$child_key]['#attributes']['data-drupal-selector'] = 'group-price-range';
+    }
+
+    price_range_widget_normalize_group_price_range($element[$child_key]);
   }
 }

@@ -1,0 +1,7 @@
+services:
+  nomads_navigation.frontpage_domain_resolver:
+    class: Drupal\nomads_navigation\FrontpageDomainResolver
+    arguments:
+      - '@entity_type.manager'
+      - '@config.storage'
+      - '@path_alias.manager'

@@ -1,5 +1,0 @@
-name: Nomads Title Display
-type: module
-description: Exposes the node title as an extra field for display positioning.
-core_version_requirement: ^11
-package: Custom

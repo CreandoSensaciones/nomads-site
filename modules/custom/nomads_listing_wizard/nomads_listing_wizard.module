@@ -65,6 +65,10 @@ function nomads_listing_wizard_form_alter(array &$form, \Drupal\Core\Form\FormSt
 
   $form['#prefix'] = '<div id="nomads-listing-wizard-wrapper">';
   $form['#suffix'] = '</div>';
+  $is_last_step = nomads_listing_wizard_is_last_step($form_state, $form);
+  $requires_input = nomads_listing_wizard_step_requires_input($form_state, $form);
+  $form['#attributes']['data-nomads-wizard-final-step'] = $is_last_step ? '1' : '0';
+  $form['#attributes']['data-nomads-wizard-requires-input'] = $requires_input ? '1' : '0';
   $form['#attached']['library'][] = 'core/drupal.ajax';
   $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
   $form['#attached']['library'][] = 'nomads_listing_wizard/next_button_gate';
@@ -76,7 +80,6 @@ function nomads_listing_wizard_form_alter(array &$form, \Drupal\Core\Form\FormSt
     return;
   }
 
-  $is_last_step = nomads_listing_wizard_is_last_step($form_state, $form);
   $primary_button_key = NULL;
   $submit_keys = [];
   foreach (\Drupal\Core\Render\Element::children($form['actions']) as $key) {
@@ -105,16 +108,18 @@ function nomads_listing_wizard_form_alter(array &$form, \Drupal\Core\Form\FormSt
     }
   }
 
-  $next_keys = $primary_button_key !== NULL ? [$primary_button_key] : $submit_keys;
-  foreach ($next_keys as $key) {
-    if (!isset($form['actions'][$key]) || !is_array($form['actions'][$key])) {
-      continue;
+  if (!$is_last_step) {
+    $next_keys = $primary_button_key !== NULL ? [$primary_button_key] : $submit_keys;
+    foreach ($next_keys as $key) {
+      if (!isset($form['actions'][$key]) || !is_array($form['actions'][$key])) {
+        continue;
+      }
+      $name = (string) ($form['actions'][$key]['#name'] ?? '');
+      if ($name === 'entity_form_steps_previous' || str_contains($name, 'add_more')) {
+        continue;
+      }
+      $form['actions'][$key]['#attributes']['data-nomads-next-button'] = '1';
     }
-    $name = (string) ($form['actions'][$key]['#name'] ?? '');
-    if ($name === 'entity_form_steps_previous' || str_contains($name, 'add_more')) {
-      continue;
-    }
-    $form['actions'][$key]['#attributes']['data-nomads-next-button'] = '1';
   }
 }
 
@@ -134,6 +139,11 @@ function nomads_listing_wizard_entity_form_steps_complete_form_alter(array &$for
     return;
   }
 
+  $is_last_step = nomads_listing_wizard_is_last_step($form_state, $form);
+  $requires_input = nomads_listing_wizard_step_requires_input($form_state, $form, $state);
+  $form['#attributes']['data-nomads-wizard-final-step'] = $is_last_step ? '1' : '0';
+  $form['#attributes']['data-nomads-wizard-requires-input'] = $requires_input ? '1' : '0';
+
   if (isset($form['actions']) && is_array($form['actions'])) {
     foreach (\Drupal\Core\Render\Element::children($form['actions']) as $key) {
       if (($form['actions'][$key]['#type'] ?? '') !== 'submit') {
@@ -147,7 +157,7 @@ function nomads_listing_wizard_entity_form_steps_complete_form_alter(array &$for
     }
   }
 
-  if (isset($state['complete']) && $state['complete'] === FALSE && isset($form['actions']['submit'])) {
+  if (!$is_last_step && isset($state['complete']) && $state['complete'] === FALSE && isset($form['actions']['submit'])) {
     $form['actions']['submit']['#value'] = t('Next');
     $form['actions']['submit']['#attributes']['data-nomads-next-button'] = '1';
   }
@@ -318,6 +328,76 @@ function nomads_listing_wizard_is_last_step(\Drupal\Core\Form\FormStateInterface
 
   // Conservative default for unknown state: not last.
   return FALSE;
+}
+
+/**
+ * Determines whether the current wizard step should require user input.
+ */
+function nomads_listing_wizard_step_requires_input(\Drupal\Core\Form\FormStateInterface $form_state, array $form, ?array $state = NULL): bool {
+  if (nomads_listing_wizard_is_last_step($form_state, $form)) {
+    return FALSE;
+  }
+
+  $index = nomads_listing_wizard_get_current_step_index($form_state, $form, $state);
+  if ($index === NULL) {
+    return FALSE;
+  }
+
+  return $index >= 0 && $index < 3;
+}
+
+/**
+ * Gets the zero-based wizard step index when Entity Form Steps exposes it.
+ */
+function nomads_listing_wizard_get_current_step_index(\Drupal\Core\Form\FormStateInterface $form_state, array $form, ?array $state = NULL): ?int {
+  $efs = $form_state->get('entity_form_steps')
+    ?? $form_state->getStorage()['entity_form_steps'] ?? NULL;
+  if (is_array($state)) {
+    $efs = $state + (is_array($efs) ? $efs : []);
+  }
+  if (isset($form['#entity_form_steps']) && is_array($form['#entity_form_steps'])) {
+    $efs = $form['#entity_form_steps'];
+  }
+
+  if (is_array($efs) && isset($efs['current'], $efs['steps']) && is_array($efs['steps'])) {
+    $current = (string) $efs['current'];
+    $step_keys = array_values(array_map('strval', array_keys($efs['steps'])));
+    $index = array_search($current, $step_keys, TRUE);
+    return $index === FALSE ? NULL : (int) $index;
+  }
+
+  $current_step = $form_state->get('current_step') ?? $form_state->get('step');
+  if ($current_step !== NULL && is_numeric($current_step)) {
+    $index = (int) $current_step;
+    return $index > 0 ? $index - 1 : $index;
+  }
+
+  $hidden_current = NULL;
+  foreach ($form as $key => $element) {
+    if (is_array($element) && str_contains((string) $key, 'current_step')) {
+      if (isset($element['#value']) || isset($element['#default_value'])) {
+        $hidden_current = (string) ($element['#value'] ?? $element['#default_value']);
+        break;
+      }
+    }
+  }
+
+  if ($hidden_current === NULL || $hidden_current === '') {
+    return NULL;
+  }
+
+  if (is_array($efs) && isset($efs['steps']) && is_array($efs['steps'])) {
+    $step_keys = array_values(array_map('strval', array_keys($efs['steps'])));
+    $index = array_search($hidden_current, $step_keys, TRUE);
+    return $index === FALSE ? NULL : (int) $index;
+  }
+
+  if (is_numeric($hidden_current)) {
+    $index = (int) $hidden_current;
+    return $index > 0 ? $index - 1 : $index;
+  }
+
+  return NULL;
 }
 
 /**

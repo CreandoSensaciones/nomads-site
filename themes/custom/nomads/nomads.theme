@@ -26,7 +26,8 @@ function nomads_preprocess_image_widget(array &$variables): void {
 function nomads_preprocess_page(array &$variables): void {
   $menu_tree = \Drupal::menuTree();
   $request = \Drupal::request();
-  $current_path = $request->getPathInfo();
+  $request_path = $request->getPathInfo();
+  $current_path = $request_path;
 
   // Normalize trailing slash (except root) so Twig checks are predictable.
   if ($current_path !== '/' && substr($current_path, -1) === '/') {
@@ -35,9 +36,8 @@ function nomads_preprocess_page(array &$variables): void {
 
   $parameters = (new \Drupal\Core\Menu\MenuTreeParameters())
     ->setMaxDepth(1);
-  $allowed_query_keys = ['q', 'view', 'tags', 'from', 'to'];
-  $current_query = \Drupal::request()->query->all();
-  $whitelisted_query = array_intersect_key($current_query, array_flip($allowed_query_keys));
+  $current_query = $request->query->all();
+  $domain_target_path = _nomads_domain_menu_target_path($request_path);
 
   $main_tree = $menu_tree->load('main', $parameters);
   $main_tree = $menu_tree->transform(
@@ -70,10 +70,9 @@ function nomads_preprocess_page(array &$variables): void {
   foreach ($domains_tree as $element) {
     $link = $element->link;
     $url = $link->getUrlObject();
-    $url->setOption('query', $whitelisted_query);
     $domains[] = [
       'title' => $link->getTitle(),
-      'url' => $url,
+      'url' => _nomads_rewrite_domain_menu_url($url, $domain_target_path, $current_query),
     ];
   }
 
@@ -81,6 +80,100 @@ function nomads_preprocess_page(array &$variables): void {
   $variables['nomads_accountmenu'] = $menu_tree->build($account_tree);
   $variables['nomads_domainsmenu_items'] = $domains;
   $variables['nomads_current_path'] = $current_path;
+  $variables['nomads_domain_prefix'] = _nomads_domain_prefix($request->getHost());
+  $variables['#cache']['contexts'][] = 'url.site';
+}
+
+/**
+ * Returns the current domain prefix for domain-specific navbar assets.
+ */
+function _nomads_domain_prefix(string $host): string {
+  $host_parts = explode('.', strtolower($host));
+  $prefix = $host_parts[0] ?? '';
+  if ($prefix === 'www' && isset($host_parts[1])) {
+    $prefix = $host_parts[1];
+  }
+
+  return preg_replace('/[^a-z0-9-]/', '', $prefix) ?: 'coliving';
+}
+
+/**
+ * Returns the path to keep when switching domains from the domains menu.
+ */
+function _nomads_domain_menu_target_path(string $current_path): string {
+  $first_segment = strtok(trim($current_path, '/'), '/');
+
+  if (in_array($first_segment, ['list', 'map', 'cal'], TRUE)) {
+    return $current_path === '' ? '/' : $current_path;
+  }
+
+  return '/';
+}
+
+/**
+ * Rewrites a domains menu URL to the current view path and query string.
+ */
+function _nomads_rewrite_domain_menu_url(\Drupal\Core\Url $url, string $target_path, array $query): string {
+  if (!$url->isExternal()) {
+    $url->setOption('query', $query);
+    return $url->toString();
+  }
+
+  $parts = parse_url($url->toString());
+  if (empty($parts['scheme']) || empty($parts['host'])) {
+    $url->setOption('query', $query);
+    return $url->toString();
+  }
+
+  $authority = $parts['host'];
+  if (isset($parts['port'])) {
+    $authority .= ':' . $parts['port'];
+  }
+
+  $rewritten_url = $parts['scheme'] . '://' . $authority . $target_path;
+  if ($query !== []) {
+    $rewritten_url .= '?' . \Drupal\Component\Utility\UrlHelper::buildQuery($query);
+  }
+
+  return $rewritten_url;
+}
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function nomads_preprocess_node(array &$variables): void {
+  $node = $variables['node'] ?? NULL;
+  if (
+    !$node instanceof \Drupal\node\NodeInterface ||
+    $node->bundle() !== 'landing_page' ||
+    !$node->hasField('field_hero') ||
+    $node->get('field_hero')->isEmpty()
+  ) {
+    return;
+  }
+
+  if (empty($variables['attributes']) || is_array($variables['attributes'])) {
+    $variables['attributes'] = new \Drupal\Core\Template\Attribute($variables['attributes'] ?? []);
+  }
+
+  $variables['attributes']->addClass('hero-image');
+}
+
+/**
+ * Implements hook_preprocess_views_view().
+ */
+function nomads_preprocess_views_view(array &$variables): void {
+  $css_class = trim((string) ($variables['css_class'] ?? ''));
+  if ($css_class === '') {
+    return;
+  }
+
+  $classes = preg_split('/\s+/', $css_class) ?: [];
+  if (!in_array('js-horizontal-swiper', $classes, TRUE)) {
+    return;
+  }
+
+  $variables['view_array']['#attached']['library'][] = 'nomads/horizontal_swiper';
 }
 
 /**
@@ -88,7 +181,7 @@ function nomads_preprocess_page(array &$variables): void {
  */
 function _nomads_is_listing_full_group_title(array $variables): bool {
   $route_name = \Drupal::routeMatch()->getRouteName();
-  if ($route_name !== 'entity.node.canonical') {
+  if (!in_array($route_name, ['entity.node.canonical', 'entity.node.latest_version'], TRUE)) {
     return FALSE;
   }
 
@@ -100,6 +193,18 @@ function _nomads_is_listing_full_group_title(array $variables): bool {
   $group_name = $variables['group_name'] ?? ($variables['element']['#group_name'] ?? '');
   if ($group_name === 'group_title') {
     return TRUE;
+  }
+
+  $element_id = $variables['element']['#id'] ?? '';
+  if ($element_id === 'title-container') {
+    return TRUE;
+  }
+
+  if (!empty($variables['attributes']) && $variables['attributes'] instanceof \Drupal\Core\Template\Attribute) {
+    $attribute_id = $variables['attributes']->offsetGet('id');
+    if ($attribute_id === 'title-container') {
+      return TRUE;
+    }
   }
 
   if (!empty($variables['attributes']) && $variables['attributes'] instanceof \Drupal\Core\Template\Attribute) {
@@ -117,11 +222,24 @@ function _nomads_is_listing_full_group_title(array $variables): bool {
 }
 
 /**
+ * Determines whether the current field group is group_left.
+ */
+function _nomads_is_group_left(array $variables): bool {
+  $element = $variables['element'] ?? [];
+
+  return ($variables['group_name'] ?? ($element['#group_name'] ?? '')) === 'group_left';
+}
+
+/**
  * Implements hook_theme_suggestions_field_group_html_element_alter().
  */
 function nomads_theme_suggestions_field_group_html_element_alter(array &$suggestions, array $variables): void {
   if (_nomads_is_listing_full_group_title($variables)) {
     $suggestions[] = 'field_group_html_element__listing_full_group_title';
+  }
+
+  if (_nomads_is_group_left($variables)) {
+    $suggestions[] = 'field_group_html_element__group_paragraph3_left';
   }
 }
 
@@ -129,11 +247,12 @@ function nomads_theme_suggestions_field_group_html_element_alter(array &$suggest
  * Implements hook_preprocess_field_group_html_element().
  */
 function nomads_preprocess_field_group_html_element(array &$variables): void {
-  if (!_nomads_is_listing_full_group_title($variables)) {
+  $variables['nomads_is_listing_full_group_title'] = _nomads_is_listing_full_group_title($variables);
+  $variables['nomads_group_title_local_tasks'] = [];
+
+  if (!$variables['nomads_is_listing_full_group_title']) {
     return;
   }
-
-  $variables['nomads_group_title_local_tasks'] = [];
 
   $block_manager = \Drupal::service('plugin.manager.block');
   /** @var \Drupal\Core\Block\BlockPluginInterface $local_tasks */
@@ -144,7 +263,10 @@ function nomads_preprocess_field_group_html_element(array &$variables): void {
   }
 
   $build = $local_tasks->build();
-  if (is_array($build) && !empty($build)) {
+  if (
+    is_array($build) &&
+    (!empty($build['#primary']) || !empty($build['#secondary']))
+  ) {
     $variables['nomads_group_title_local_tasks'] = $build;
   }
 }

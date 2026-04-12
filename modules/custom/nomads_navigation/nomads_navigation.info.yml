@@ -1,0 +1,13 @@
+name: 'Nomads navigation'
+type: module
+description: 'Provides domain-specific navigation settings.'
+package: 'Nomads'
+core_version_requirement: ^11
+dependencies:
+  - drupal:path_alias
+  - drupal:taxonomy
+  - drupal:views
+  - domain:domain_config
+  - domain:domain_config_ui
+  - paragraphs:paragraphs
+configure: nomads_navigation.settings

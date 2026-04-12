@@ -1,9 +1,11 @@
 .node--type-listing.node--view-mode-teaser {
   padding: 7px;
 }
+
 .node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper .teaser-column-center {
   text-align: center;
 }
+
 .node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper .teaser-column-center .paragraph-relevance-key-aspects {
   width: 100%;
 }
@@ -11,22 +13,18 @@
 .node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper > .node__content .teaser-column {
   height: 266px;
 }
-.node--type-listing.node--view-mode-teaser  .field--name-field-subtitle {
+
+.node--type-listing.node--view-mode-teaser .field--name-field-subtitle {
   padding: 0 20px;
 }
 
-/* Make sure the 4 column wrappers behave as grid items */
 .node--type-listing.node--view-mode-teaser .teaser-column {
-  min-width: 0;           /* prevents overflow from long content */
+  min-width: 0;
 }
 
-/* Optional: if any column contains big images/sliders, keep them inside */
-.node--type-listing.node--view-mode-teaser img,
-.node--type-listing.node--view-mode-teaser .splide {
+.node--type-listing.node--view-mode-teaser img {
   max-width: 100%;
 }
-
-
 
 .teaser-column.teaser-column-center {
   display: flex;
@@ -34,25 +32,25 @@
   justify-content: space-between;
   height: 100%;
 }
+
 article.node--type-listing.node--view-mode-teaser {
-    position: relative;
-  }
-article.node--type-listing.node--view-mode-teaser .teaser-column {
-    text-align: center;
-}
-/* Teaser box shadow (soft, clean, clickable) */
-article.node--type-listing.node--view-mode-teaser {
+  position: relative;
   background: #f8f8f8;
   border-radius: 18px;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.10);
   border: 1px solid rgba(0, 0, 0, 0.06);
-  /* overflow: hidden; keeps rounded corners clean */
   transition: box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease;
 }
+
+article.node--type-listing.node--view-mode-teaser .teaser-column {
+  text-align: center;
+}
+
 article.node--type-listing.node--view-mode-teaser .teaser-inner-wrapper {
   border-radius: 12px;
   background: #fafafa;
 }
+
 article.node--type-listing.node--view-mode-teaser:hover {
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14);
   border-color: rgba(0, 0, 0, 0.10);
@@ -60,7 +58,7 @@ article.node--type-listing.node--view-mode-teaser:hover {
 
 .teaser-action-calls .nomads-pill {
   position: relative;
-  padding-right: 18px !important; /* space for arrow */
+  padding-right: 18px !important;
 }
 
 .teaser-action-calls .nomads-pill::after {
@@ -74,50 +72,62 @@ article.node--type-listing.node--view-mode-teaser:hover {
   border-right: 2px solid currentColor;
   transform: rotate(45deg);
 }
+
 .teaser-action-calls .nomads-pill.perk-teaser::after {
   top: 5px;
 }
 
-article.node--type-listing.node--view-mode-teaser  div.teaser-action-calls .nomads-pill {
-  font-size: 9pt;
+article.node--type-listing.node--view-mode-teaser div.teaser-action-calls .nomads-pill {
+  font-size: 11pt;
 }
+
 div.teaser-action-calls .perk-teaser.nomads-pill {
   background: #fff;
-  color:#015180;
+  color: #015180;
   border: 2px solid #015180;
-  font-weight: 600;
-  padding: 2px 6px;
+  font-weight: 400;
+  padding: 1px 6px;
+  font-size: 8pt !important;
+  display: inline-flex;
+  align-items: center;
 }
-
-
+div.teaser-action-calls .perk-teaser .perk-teaser__percentage {
+  font-weight: 700;
+  font-size: 12pt;
+  margin: 0 3px
+}
 
 /* ----- Teaser Categories ----- */
 
-
-article.node--type-listing.node--view-mode-teaser .categories  {
+article.node--type-listing.node--view-mode-teaser .categories {
   text-align: center;
-} 
+}
+
 article.node--type-listing.node--view-mode-teaser .categories .nomads-icon-formatter__item {
   display: inline-block;
 }
+
 article.node--type-listing.node--view-mode-teaser .categories .nomads-pill {
-  background:#128bc3;
+  background: #128bc3;
 }
+
 article.node--type-listing.node--view-mode-teaser .categories .nomads-pill:first-of-type {
   background: #015180;
 }
+
 article.node--type-listing.node--view-mode-teaser .field--name-title h2 {
   margin-bottom: 0;
 }
+
 article.node--type-listing.node--view-mode-teaser .field--name-field-subtitle {
   margin-bottom: 5px;
   font-size: 11pt;
   max-height: 60px;
   overflow: hidden;
 }
+
 article.node--type-listing.node--view-mode-teaser .nomads-taxonomy-breadcrumb,
-article.node--type-listing.node--view-mode-teaser .nomads-taxonomy-breadcrumb a
- {
+article.node--type-listing.node--view-mode-teaser .nomads-taxonomy-breadcrumb a {
   font-size: 10pt;
   color: #999;
   font-weight: 600;
@@ -125,67 +135,10 @@ article.node--type-listing.node--view-mode-teaser .nomads-taxonomy-breadcrumb a
   text-decoration: none;
   margin-bottom: 3px;
 }
+
 article.node--type-listing.node--view-mode-teaser .nomads-taxonomy-breadcrumb .country a {
   color: #555;
 }
-/* Multi-bundle layout: evenly spaced columns across full width */
-.location-date.location-date--multi-bundles > div {
-  display: flex;
-  justify-content: space-evenly; /* equal gaps, edges flush */
-  width: 100%;
-}
-
-/* Optional: if you want the same gap to also exist at left/right edges,
-   use space-evenly instead of space-between */
-.location-date.location-date--multi-bundles.location-date--space-evenly > div {
-  justify-content: space-evenly;
-}
-
-/* Bundle becomes a 2-line stack: location on top, date centered below */
-.location-date.location-date--multi-bundles .bundle {
-  display: flex;
-  flex-direction: column;
-  align-items: center;   /* centers date and location text */
-  text-align: center;
-  line-height: 1;
-  white-space: nowrap;   /* keep "Apr - May" on one line */
-}
-
-/* Make the top line visually dominant */
-.location-date.location-date--multi-bundles .bundle .location {
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
-
-/* Slightly smaller date */
-.location-date.location-date--multi-bundles .bundle .date {
-  font-size: 0.7rem;
-  opacity: 0.75;
-}
-
-/* Prevent links from breaking the centering */
-.location-date.location-date--multi-bundles .bundle .location a {
-  display: inline-block;
-}
-
-/* If you want bundles to share width equally (nice symmetry), enable this */
-.location-date.location-date--multi-bundles.location-date--equal-columns > div {
-  justify-content: space-between;
-  gap: 0;                 /* keep math clean */
-}
-.location-date.location-date--multi-bundles.location-date--equal-columns .bundle {
-  flex: 1 1 0;
-}
-
-/* If you want a consistent inner padding (without affecting equal gaps),
-   add it to the wrapper (not to the inner flex container). */
-.location-date.location-date--multi-bundles {
-  padding-left: 12px;
-  padding-right: 12px;
-  box-sizing: border-box;
-}
-
-
 
 
 
@@ -194,53 +147,45 @@ article.node--type-listing.node--view-mode-teaser h3 {
   text-transform: uppercase;
   margin: 3px auto 1px auto;
 }
+
 article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects > div {
   display: inline-block;
 }
+
 article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects__items {
   gap: 5px;
 }
+
 article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects .nomads-pill {
   background: #01a6ab;
 }
+
 article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects__group--important_aspect .nomads-pill {
-  ackground: #1dc6cc;
+  background: #1dc6cc;
 }
+
 article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspects__group--minor_relevance .nomads-pill {
   background: #3ed2d7;
 }
-
-
 
 .node--type-listing.node--view-mode-teaser .field--name-title h2 a {
   text-decoration: none;
   color: #000;
 }
+
 .node--type-listing.node--view-mode-teaser .field--name-field-subtitle {
   text-align: center;
 }
-
-.splide__slide.slide--text {
-  display: flex;
-  align-items: center;
-}
-
-.splide-text-slide {
-  width: 100%;
-  padding: 16px;
-}
-
-
 
 /* ----- Teaser Tags ----- */
 
 .node--type-listing.node--view-mode-teaser .nomads-icon-formatter__icon img {
   opacity: 0.6;
 }
+
 .node--type-listing.node--view-mode-teaser:hover .nomads-icon-formatter__icon img {
   opacity: 1;
 }
-
 
 /* ========= Calendar teasers ========== */
 
@@ -250,11 +195,12 @@ article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspec
   padding-left: 80px;
   position: relative;
 }
+
 .cal-teaser-header-inner {
   position: relative;
-  z-index: 500;
+  z-index: 400;
   width: 400px;
-  background:rgb(1, 166, 171);
+  background: rgb(1, 166, 171);
   border-radius: 999px;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.10);
   border: 1px solid rgba(0, 0, 0, 0.06);
@@ -264,22 +210,374 @@ article.node--type-listing.node--view-mode-teaser .paragraph-relevance-key-aspec
   color: #fff;
   padding: 5px;
 }
+
 .cal-teaser-header-inner .date {
   font-size: 12pt;
   font-weight: 600;
   color: #fff;
 }
+
 .cal-teaser-header-inner .geo {
   font-size: 11pt;
   font-weight: 600;
   color: #fff;
   opacity: 0.7;
 }
+
 .view-calendar.teaser-list .location-date {
   opacity: 0;
 }
+
 .teaser-list .view-content .views-row:hover {
   transform: translateY(-2px);
 }
 
+/* ===== Teaser slideshow, Swiper only ===== */
+
+.node--type-listing.node--view-mode-teaser .teaser-column-left {
+  overflow: hidden;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+  position: relative;
+}
+
+.node--type-listing.node--view-mode-teaser .teaser-column-left .swiper-container,
+.node--type-listing.node--view-mode-teaser .teaser-column-left .swiper,
+.node--type-listing.node--view-mode-teaser .teaser-column-left .swiper-wrapper,
+.node--type-listing.node--view-mode-teaser .teaser-column-left .swiper-slide {
+  height: 100%;
+}
+
+.node--type-listing.node--view-mode-teaser .teaser-column-left .swiper-slide {
+  overflow: hidden;
+}
+
+.node--type-listing.node--view-mode-teaser .teaser-column-left picture,
+.node--type-listing.node--view-mode-teaser .teaser-column-left .field--name-field-media-image,
+.node--type-listing.node--view-mode-teaser .teaser-column-left .field--name-field-media-image .field__item,
+.node--type-listing.node--view-mode-teaser .teaser-column-left .media,
+.node--type-listing.node--view-mode-teaser .teaser-column-left a {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.node--type-listing.node--view-mode-teaser .teaser-column-left img {
+  display: block;
+  width: 100%;
+  height: 266px;
+  object-fit: cover;
+  max-width: none;
+}
+
+.node--type-listing.node--view-mode-teaser .teaser-column-left .swiper-button-prev,
+.node--type-listing.node--view-mode-teaser .teaser-column-left .swiper-button-next {
+  width: 20px;
+  height: 20px;
+  margin-top: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.14);
+  backdrop-filter: none;
+  border: 0;
+}
+
+.node--type-listing.node--view-mode-teaser .teaser-column-left .swiper-button-prev:hover,
+.node--type-listing.node--view-mode-teaser .teaser-column-left .swiper-button-next:hover {
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+}
+
+.node--type-listing.node--view-mode-teaser .teaser-column-left .swiper-button-prev {
+  left: 10px;
+}
+
+.node--type-listing.node--view-mode-teaser .teaser-column-left .swiper-button-next {
+  right: 10px;
+}
+
+.node--type-listing.node--view-mode-teaser .teaser-column-left .swiper-button-prev::after,
+.node--type-listing.node--view-mode-teaser .teaser-column-left .swiper-button-next::after {
+  font-size: 12px;
+  font-weight: 700;
+  color: #444;
+}
+
+.node--type-listing.node--view-mode-teaser .teaser-column-left .swiper-pagination-bullet {
+  background: rgba(255, 255, 255, 0.75);
+  opacity: 1;
+}
+
+.node--type-listing.node--view-mode-teaser .teaser-column-left .swiper-pagination-bullet-active {
+  background: #fff;
+}
+
+.node--type-listing.node--view-mode-teaser .swiper-container {
+  margin: 0 auto;
+}
+
+
+
+
+
+
+
+/* ======== Horizontal Teaser ========= */
+
+/* =========================================================
+   HORIZONTAL TEASER LIST
+   fresh start for node--view-mode-mini-teaser
+   ========================================================= */
+
+/* whole view */
+.horizontal-teaser-list {
+  position: relative;
+  margin: 0;
+}
+
+/* horizontal rail */
+.horizontal-teaser-list .view-content {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 24px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 8px 20px 20px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* optional scrollbar styling */
+.horizontal-teaser-list .view-content::-webkit-scrollbar {
+  height: 10px;
+}
+
+.horizontal-teaser-list .view-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.horizontal-teaser-list .view-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 999px;
+}
+
+/* one item */
+.horizontal-teaser-list .views-row {
+  flex: 0 0 300px;
+  width: 300px;
+  min-width: 300px;
+  scroll-snap-align: start;
+}
+
+/* teaser card */
+.horizontal-teaser-list .node--type-listing.node--view-mode-mini-teaser {
+  position: relative;
+  width: 300px;
+  min-width: 300px;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  height: 300px;
+}
+
+.horizontal-teaser-list .node--type-listing.node--view-mode-mini-teaser:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.14);
+}
+
+/* hide drupal contextual in teaser layout */
+.horizontal-teaser-list .contextual {
+  display: none;
+}
+
+/* content wrapper */
+.horizontal-teaser-list .node--view-mode-mini-teaser .node__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* image */
+.horizontal-teaser-list .field--name-field-images {
+  margin: 0;
+}
+
+.horizontal-teaser-list .field--name-field-images .field__item {
+  display: block;
+  line-height: 0;
+}
+
+.horizontal-teaser-list .field--name-field-images img {
+  display: block;
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* body spacing */
+.horizontal-teaser-list .node__content > .location-date,
+.horizontal-teaser-list .node__content > .field--name-title,
+.horizontal-teaser-list .node__content > .field--name-field-type,
+.horizontal-teaser-list .node__content > .field--name-field-teaser-teaser,
+.horizontal-teaser-list .node__content > .perk-teaser {
   
+}
+
+/* location line */
+.horizontal-teaser-list .location-date {
+  margin-top: 5px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #667787;
+}
+
+.horizontal-teaser-list .location-date a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.horizontal-teaser-list .location-date a:hover {
+  text-decoration: underline;
+}
+
+/* title */
+.horizontal-teaser-list .field--name-title {
+  margin-top: 5px;
+}
+
+.horizontal-teaser-list .field--name-title h3 {
+  margin: 0;
+  font-size: 1.28rem;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.horizontal-teaser-list .field--name-title a {
+  color: #10344a;
+  text-decoration: none;
+}
+
+.horizontal-teaser-list .field--name-title a:hover {
+  color: #0b6fa4;
+}
+
+.horizontal-teaser-list .nomads-pill {
+  font-size: 10pt;
+  padding: 3px 6px;
+}
+
+
+/* teaser text */
+.horizontal-teaser-list .field--name-field-teaser-teaser {
+  margin-top: 5px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: #415768;
+}
+
+/* perk pill */
+.horizontal-teaser-list .perk-teaser {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  margin-top: 14px;
+  margin-bottom: 18px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #10344a;
+  color: #fff;
+  font-size: 0.8rem;
+  line-height: 1.2;
+}
+
+/* if some cards have many pills, keep layout calm */
+.horizontal-teaser-list .field--name-field-type .field__item {
+  display: block;
+}
+
+/* mobile */
+@media (max-width: 767px) {
+  .horizontal-teaser-list .view-content {
+    gap: 16px;
+    padding-left: 12px;
+    padding-right: 12px;
+    box-sizing: border-box;
+  }
+
+  .horizontal-teaser-list .views-row {
+    flex: 0 0 84vw;
+    width: 84vw;
+    min-width: 84vw;
+    max-width: 300px;
+  }
+
+  .horizontal-teaser-list .node--type-listing.node--view-mode-mini-teaser {
+    width: 84vw;
+    min-width: 84vw;
+    max-width: 300px;
+  }
+
+}
+
+.horizontal-teaser-list .field--name-field-type {
+  position: absolute;
+  margin: 0 !important;
+  top: 7px;
+  left: 7px;
+}
+
+.horizontal-teaser-list .perk-teaser {
+  position: absolute;
+  margin: 0 !important;
+  top: 170px;
+  right: 5px;
+  font-size: 10pt;
+  padding: 3px 6px;
+}
+
+
+/* ========= Mini teaser ========== */
+
+.node--view-mode-mini-teaser img {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.node--view-mode-mini-teaser .location-date span a {
+  font-size: 9pt;
+}
+.horizontal-teaser-list .node--view-mode-mini-teaser .node__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+}
+
+
+/* ========= Horizontal Swipe ========= */
+
+.horizontal-teaser-list {
+  width: 100vw;
+  box-sizing: border-box;
+  padding: 15px;
+}
+.horizontal-teaser-list .swiper-slide {
+  width: 300px;
+}
+.horizontal-teaser-list .swiper-container {
+  padding-bottom: 20px;
+  margin: 0 auto;
+}
+.horizontal-teaser-list .view-header {
+  font-size: 10pt;
+  color: #888;
+  margin: -20px 0 0 1000px;
+}
+

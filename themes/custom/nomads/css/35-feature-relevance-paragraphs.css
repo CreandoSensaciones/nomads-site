@@ -29,6 +29,16 @@
 
 /* ========== Paragraphs view mode 3 ========== */
 
+.paragraph-left-column {
+}
+
+.paragraph-left-column .icon-placeholder {
+  display: block;
+  float: left;
+  width: 110px;
+  height: 90px;
+}
+
 .paragraph--viewmode-vm-3 {
   width: auto;
   margin: 0 auto;
@@ -45,8 +55,7 @@
   text-align: left;
 }
 .paragraph--viewmode-vm-3 h2 {
-  margin: 15px 0 20px 100px;
-  text-indent: 170px;
+  margin: 25px 10px 0;
 }
 
 /* ??? welcher ??? */
@@ -86,11 +95,16 @@
 
 
 .paragraph--viewmode-vm-3.relevance-paragraph .paragraph-left-column .field--name-field-country {
-  margin: 15px 0 0 200px;
+  margin: 15px 0 5px 110px;
+  text-align: center;
+}
+.paragraph--viewmode-vm-3.relevance-paragraph .paragraph-left-column .field--name-field-country a {
+  color: #035c8f;
 }
 .paragraph--viewmode-vm-3.relevance-paragraph .paragraph-left-column .field--name-field-date {
   font-size: 16px;
   font-weight: 600;
+  margin: 5px 0 5px 110px;
   text-align: center;
 }
 
@@ -389,4 +403,8 @@
 
 
 /* ========== Paragraphs view mode modal ========== */
+
+
+
+
 

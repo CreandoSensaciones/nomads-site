@@ -30,12 +30,12 @@ h1 {
 }
 
 h2 {
-  font-size: 20pt;
+  font-size: clamp(1.7rem, 2.7vw, 3rem);
   font-weight: 500;
 }
 
 h3 {
-  font-size: 16pt;
+  font-size: clamp(1.5rem, 1.7vw, 2.2rem);
   font-weight: 500;
 }
 
@@ -47,4 +47,7 @@ h3 {
 }
 .small {
   font-size: 0.8em;
+}
+.width-250-max {
+  max-width: 250px;
 }

@@ -265,7 +265,7 @@ class LocationExtraFieldBuilder {
 
     $classes = [
       'location-date',
-      'nomads-taxonomy-breadcrumb',
+      'taxonomy-breadcrumb',
       $bundle_count === 1 ? 'location-date--single' : 'location-date--multi',
       'location-date--' . $variant,
       'location-date--count-' . $render_count,

@@ -42,12 +42,17 @@ function nomads_perks_entity_view(array &$build, EntityInterface $entity, Entity
     return;
   }
 
+  $perk_percentage = mt_rand(10, 50);
+
   $build['perk_teaser'] = [
     '#type' => 'html_tag',
     '#tag' => 'span',
-    '#value' => t('Up to 33% member perks'),
+    '#value' => t('Up to <span class="perk-teaser__percentage">@percentage%</span> perks', ['@percentage' => $perk_percentage]),
     '#attributes' => [
       'class' => ['nomads-pill', 'perk-teaser'],
+    ],
+    '#cache' => [
+      'max-age' => 0,
     ],
     '#weight' => $component['weight'] ?? 0,
     '#region' => $component['region'] ?? 'content',

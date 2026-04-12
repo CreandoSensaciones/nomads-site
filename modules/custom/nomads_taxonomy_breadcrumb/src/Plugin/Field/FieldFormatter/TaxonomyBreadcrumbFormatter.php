@@ -2,6 +2,7 @@
 
 namespace Drupal\nomads_taxonomy_breadcrumb\Plugin\Field\FieldFormatter;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -116,6 +117,18 @@ class TaxonomyBreadcrumbFormatter extends FormatterBase implements ContainerFact
   /**
    * {@inheritdoc}
    */
+  public function view(FieldItemListInterface $items, $langcode = NULL): array {
+    $elements = parent::view($items, $langcode);
+    if (($elements['#theme'] ?? NULL) === 'field') {
+      $elements['#attributes']['class'][] = 'taxonomy-breadcrumb';
+    }
+
+    return $elements;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function viewElements(FieldItemListInterface $items, $langcode): array {
     if ($items->isEmpty()) {
       return [];
@@ -160,10 +173,16 @@ class TaxonomyBreadcrumbFormatter extends FormatterBase implements ContainerFact
    * Build a breadcrumb render array.
    */
   protected function buildBreadcrumbElement(array $breadcrumb_terms, bool $link_term, bool $link_parents): array {
+    $item_classes = ['taxonomy-breadcrumb-item'];
+    $current_term = end($breadcrumb_terms);
+    if ($current_term instanceof TermInterface) {
+      $item_classes = array_merge($item_classes, $this->getTermTypeClasses($current_term));
+    }
+
     $element = [
       '#type' => 'container',
       '#attributes' => [
-        'class' => ['nomads-taxonomy-breadcrumb'],
+        'class' => array_values(array_unique($item_classes)),
       ],
     ];
 
@@ -179,19 +198,30 @@ class TaxonomyBreadcrumbFormatter extends FormatterBase implements ContainerFact
       $should_link = $is_last ? $link_term : $link_parents;
 
       $crumb_key = 'crumb_' . $index;
+      $crumb_classes = ['taxonomy-breadcrumb-item__term'];
+      $crumb_classes = array_merge($crumb_classes, $this->getTermTypeClasses($term));
+      if ($is_last) {
+        $crumb_classes[] = 'last';
+      }
+      $crumb_prefix = '<span class="' . Html::escape(implode(' ', $crumb_classes)) . '">';
+      $crumb_suffix = '</span>';
       if ($should_link) {
         $element[$crumb_key] = [
           '#type' => 'link',
           '#title' => $term->label(),
           '#url' => $term->toUrl(),
           '#attributes' => [
-            'class' => ['nomads-taxonomy-breadcrumb__link'],
+            'class' => ['taxonomy-breadcrumb-item__link'],
           ],
+          '#prefix' => $crumb_prefix,
+          '#suffix' => $crumb_suffix,
         ];
       }
       else {
         $element[$crumb_key] = [
           '#plain_text' => $term->label(),
+          '#prefix' => $crumb_prefix,
+          '#suffix' => $crumb_suffix,
         ];
       }
 
@@ -266,6 +296,25 @@ class TaxonomyBreadcrumbFormatter extends FormatterBase implements ContainerFact
     }
 
     return FALSE;
+  }
+
+  /**
+   * Get field_type values as CSS classes for supported country info terms.
+   */
+  protected function getTermTypeClasses(TermInterface $term): array {
+    if ($term->bundle() !== 'cit_countries_information' || !$term->hasField('field_type') || $term->get('field_type')->isEmpty()) {
+      return [];
+    }
+
+    $classes = [];
+    foreach ($term->get('field_type')->getValue() as $item) {
+      $value = trim((string) ($item['value'] ?? ''));
+      if ($value !== '') {
+        $classes[] = Html::cleanCssIdentifier($value);
+      }
+    }
+
+    return array_values(array_unique($classes));
   }
 
   /**

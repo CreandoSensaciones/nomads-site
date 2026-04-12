@@ -38,3 +38,69 @@
   margin: 0;
   text-align: center;
 }
+
+
+/* ========= Map in Paragraphs ========== */
+
+/* --------- Data field overlay ---------- */
+
+/* 1) Make the parent a 1-cell grid so siblings can stack */
+.vm3-map-column {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto;
+  position: relative;
+}
+
+/* 2) Base layer: the map */
+.vm3-map-column > .field__item {
+  grid-row: 1;
+  grid-column: 1;
+  z-index: 1;
+}
+
+/* Overlay both fields on top of the map (same grid cell) */
+.vm3-map-column .field--name-field-settlement,
+.vm3-map-column .field--name-field-surroundings{
+  z-index: 6;
+  margin: 12px;
+}
+
+/* Settlement pill: top-left */
+.vm3-map-column .field--name-field-settlement{
+  z-index: 6;
+  margin: 12px;
+  align-self: start;        /* top */
+  justify-self: start;      /* left */
+}
+
+/* Surroundings: bottom-center, pills stacked bottom-up */
+.vm3-map-column .field--name-field-surroundings{
+  z-index: 6;
+  margin: 12px;
+  align-self: end;          /* bottom */
+  justify-self: center;     /* center */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* pack to bottom */
+  gap: 8px;
+  max-height: calc(100% - 24px); /* needed so bottom-packing is visible */
+  overflow: auto;
+}
+.vm3-map-column .field--name-field-surroundings .nomads-pills {
+  text-align: center;
+}
+
+
+
+
+
+
+
+
+
+.paragraph-relevance-virtual-field-2 .paragraph-relevance-virtual-field-items {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 40px;
+}

@@ -1,0 +1,32 @@
+
+.main-navigation .view-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+.main-navigation .view-header h1 {
+  margin: 15px auto;
+  font-size: 20pt;
+  color: #777;
+}
+.main-navigation .view-header p {
+  color:#118bb0;
+}
+.view-calendar.teaser-list .view-content > h3 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+
+  margin: 10px 0;
+  font-size: 28pt;
+  color: #999;
+  text-align: center;
+}
+
+.view-calendar.teaser-list .view-content > h3::before,
+.view-calendar.teaser-list .view-content > h3::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid #ccc;
+  margin: 0 20px;
+}

@@ -1,0 +1,8 @@
+nomads_hero_ui.auth_switch:
+  path: '/nomads-hero-ui/auth-switch/{node}/{form_type}'
+  defaults:
+    _controller: '\Drupal\nomads_hero_ui\Controller\NomadsHeroUiAuthController::switchForm'
+  requirements:
+    _access: 'TRUE'
+    node: '\d+'
+    form_type: 'login|register|recover'

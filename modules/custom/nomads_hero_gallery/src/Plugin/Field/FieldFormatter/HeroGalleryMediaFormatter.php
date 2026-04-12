@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\nomads_hero_gallery\Plugin\Field\FieldFormatter;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -18,12 +19,13 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\image\ImageStyleStorageInterface;
 use Drupal\media\MediaInterface;
+use Drupal\responsive_image\Entity\ResponsiveImageStyle;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 #[FieldFormatter(
   id: 'nomads_hero_gallery_media',
   label: new TranslatableMarkup('Hero gallery (media images)'),
-  description: new TranslatableMarkup('Render media image references with per-position image styles.'),
+  description: new TranslatableMarkup('Render media image references with per-position responsive image styles.'),
   field_types: [
     'entity_reference',
   ],
@@ -34,6 +36,11 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
    * The image style storage.
    */
   protected ImageStyleStorageInterface $imageStyleStorage;
+
+  /**
+   * The responsive image style storage.
+   */
+  protected EntityStorageInterface $responsiveImageStyleStorage;
 
   /**
    * The renderer service.
@@ -57,11 +64,13 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
     string $view_mode,
     array $third_party_settings,
     ImageStyleStorageInterface $image_style_storage,
+    EntityStorageInterface $responsive_image_style_storage,
     RendererInterface $renderer,
     FileUrlGeneratorInterface $file_url_generator,
   ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
     $this->imageStyleStorage = $image_style_storage;
+    $this->responsiveImageStyleStorage = $responsive_image_style_storage;
     $this->renderer = $renderer;
     $this->fileUrlGenerator = $file_url_generator;
   }
@@ -79,6 +88,7 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
       $configuration['view_mode'],
       $configuration['third_party_settings'],
       $container->get('entity_type.manager')->getStorage('image_style'),
+      $container->get('entity_type.manager')->getStorage('responsive_image_style'),
       $container->get('renderer'),
       $container->get('file_url_generator'),
     );
@@ -100,27 +110,25 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
    * {@inheritdoc}
    */
   public function settingsForm(array $form, FormStateInterface $form_state): array {
-    $style_options = function_exists('image_style_options') ? image_style_options(TRUE) : [
-      '' => $this->t('None (original image)'),
-    ];
+    $style_options = ['' => $this->t('- None (original image) -')] + $this->getResponsiveImageStyleOptions();
 
     $elements['image_style_first'] = [
       '#type' => 'select',
-      '#title' => $this->t('Image style for first image'),
+      '#title' => $this->t('Responsive image style for first image'),
       '#default_value' => $this->getSetting('image_style_first'),
       '#options' => $style_options,
     ];
 
     $elements['image_style_second'] = [
       '#type' => 'select',
-      '#title' => $this->t('Image style for second image'),
+      '#title' => $this->t('Responsive image style for second image'),
       '#default_value' => $this->getSetting('image_style_second'),
       '#options' => $style_options,
     ];
 
     $elements['image_style_rest'] = [
       '#type' => 'select',
-      '#title' => $this->t('Image style for remaining images'),
+      '#title' => $this->t('Responsive image style for remaining images'),
       '#default_value' => $this->getSetting('image_style_rest'),
       '#options' => $style_options,
     ];
@@ -138,6 +146,21 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
   }
 
   /**
+   * Builds responsive image style option labels keyed by machine name.
+   */
+  protected function getResponsiveImageStyleOptions(): array {
+    $options = [];
+    $styles = $this->responsiveImageStyleStorage->loadMultiple();
+    uasort($styles, '\Drupal\responsive_image\Entity\ResponsiveImageStyle::sort');
+
+    foreach ($styles as $machine_name => $style) {
+      $options[$machine_name] = $style->label();
+    }
+
+    return $options;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function settingsSummary(): array {
@@ -147,19 +170,31 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
     $max = (int) $this->getSetting('max_images');
 
     return [
-      $this->t('First image style: @style', [
-        '@style' => $first !== '' ? $first : $this->t('Original'),
+      $this->t('First responsive image style: @style', [
+        '@style' => $this->getResponsiveImageStyleLabel($first),
       ]),
-      $this->t('Second image style: @style', [
-        '@style' => $second !== '' ? $second : $this->t('Original'),
+      $this->t('Second responsive image style: @style', [
+        '@style' => $this->getResponsiveImageStyleLabel($second),
       ]),
-      $this->t('Remaining image style: @style', [
-        '@style' => $rest !== '' ? $rest : $this->t('Original'),
+      $this->t('Remaining responsive image style: @style', [
+        '@style' => $this->getResponsiveImageStyleLabel($rest),
       ]),
       $this->t('Max images: @max', [
         '@max' => $max > 0 ? $max : $this->t('None'),
       ]),
     ];
+  }
+
+  /**
+   * Gets a display label for a responsive image style setting value.
+   */
+  protected function getResponsiveImageStyleLabel(string $style_id): string|TranslatableMarkup {
+    if ($style_id === '') {
+      return $this->t('Original');
+    }
+
+    $style = $this->responsiveImageStyleStorage->load($style_id);
+    return $style ? $style->label() : $style_id;
   }
 
   /**
@@ -172,21 +207,18 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
     $gallery_items = $this->buildGalleryItems($gallery_media_items);
     $gallery_id = $this->buildGalleryId($items);
 
-    if (empty($media_items)) {
-      return $elements;
-    }
-
     $max_images = (int) $this->getSetting('max_images');
     $first_style = (string) $this->getSetting('image_style_first');
     $second_style = (string) $this->getSetting('image_style_second');
     $rest_style = (string) $this->getSetting('image_style_rest');
 
-    $limit = $max_images > 0 ? min($max_images, count($media_items)) : count($media_items);
-    $styles_to_cache = [];
+    $limit = $max_images > 0 ? min($max_images, 7, count($media_items)) : min(7, count($media_items));
+    $responsive_styles_to_cache = [];
+    $image_styles_to_cache = [];
 
     $rendered_images = [];
     $count = 0;
-    foreach ($media_items as $delta => $media) {
+    foreach ($media_items as $media) {
       if ($count >= $limit) {
         break;
       }
@@ -216,23 +248,141 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
       }
 
       if ($image_style !== '') {
-        $styles_to_cache[$image_style] = TRUE;
+        $responsive_styles_to_cache[$image_style] = TRUE;
       }
 
-      $elements[$delta] = [
-        '#theme' => 'image_formatter',
+      $image_render = [
+        '#theme' => 'responsive_image_formatter',
         '#item' => $image_item,
-        '#image_style' => $image_style,
+        '#item_attributes' => ['loading' => 'lazy'],
+        '#responsive_image_style_id' => $image_style,
       ];
 
-      $elements[$delta] = $this->wrapImageWithGalleryLink($elements[$delta], $media, $gallery_id);
-
-      $this->renderer->addCacheableDependency($elements[$delta], $media);
-      $rendered_images[] = $elements[$delta];
+      $rendered_images[] = [
+        'image' => $image_render,
+        'media' => $media,
+      ];
       $count++;
     }
 
-    foreach (array_keys($styles_to_cache) as $style_name) {
+    $gallery_slots = array_slice($rendered_images, 0, 7);
+    while (count($gallery_slots) < 7) {
+      $gallery_slots[] = NULL;
+    }
+
+    $lead = $gallery_slots[0];
+    $secondary_images = array_slice($gallery_slots, 1, 6);
+
+    $desktop = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['nomads-hero-gallery__desktop'],
+      ],
+      'lead' => [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['nomads-hero-gallery__lead'],
+        ],
+        'image' => $lead
+          ? $this->wrapImageWithGalleryLink($lead['image'], $lead['media'], $gallery_id, [
+            'nomads-hero-gallery__trigger--lead',
+          ])
+          : $this->buildPlaceholderItem(TRUE),
+      ],
+      'grid' => [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['nomads-hero-gallery__grid'],
+        ],
+      ],
+    ];
+
+    foreach ($secondary_images as $index => $rendered_image) {
+      $cell_classes = ['nomads-hero-gallery__cell'];
+      if ($index >= 4) {
+        $cell_classes[] = 'nomads-hero-gallery__cell--tablet-hidden';
+      }
+      $desktop['grid']['cell_' . $index] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => $cell_classes,
+        ],
+        'image' => $rendered_image
+          ? $this->wrapImageWithGalleryLink($rendered_image['image'], $rendered_image['media'], $gallery_id)
+          : $this->buildPlaceholderItem(),
+      ];
+    }
+
+    $mobile = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['nomads-hero-gallery__mobile'],
+      ],
+      'swiper' => [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['nomads-hero-gallery__mobile-swiper', 'swiper'],
+          'aria-label' => $this->t('Hero gallery slideshow'),
+        ],
+        'wrapper' => [
+          '#type' => 'container',
+          '#attributes' => [
+            'class' => ['swiper-wrapper'],
+          ],
+        ],
+        'pagination' => [
+          '#type' => 'container',
+          '#attributes' => [
+            'class' => ['swiper-pagination'],
+          ],
+        ],
+      ],
+    ];
+
+    foreach ($gallery_slots as $index => $rendered_image) {
+      $mobile['swiper']['wrapper']['slide_' . $index] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['swiper-slide', 'nomads-hero-gallery__slide'],
+        ],
+        'image' => $rendered_image
+          ? $this->wrapImageWithGalleryLink($rendered_image['image'], $rendered_image['media'], $gallery_id, [
+            'nomads-hero-gallery__trigger--slide',
+          ])
+          : $this->buildPlaceholderItem(),
+      ];
+    }
+
+    $elements = [
+      0 => [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['nomads-hero-gallery', 'nomads-hero-gallery--responsive'],
+          'data-gallery-id' => $gallery_id,
+          'data-swiper-breakpoint' => '768',
+        ],
+        'desktop' => $desktop,
+        'mobile' => $mobile,
+        'gallery_items' => $this->buildHiddenGalleryLinks($gallery_items, $gallery_id, count($rendered_images)),
+      ],
+      '#attached' => [
+        'library' => [
+          'nomads_hero_gallery/hero_gallery',
+          'nomads_hero_gallery/glightbox',
+          'nomads_hero_gallery/mobile_swiper',
+        ],
+      ],
+    ];
+
+    foreach (array_keys($responsive_styles_to_cache) as $style_name) {
+      if ($responsive_image_style = $this->responsiveImageStyleStorage->load($style_name)) {
+        $this->renderer->addCacheableDependency($elements, $responsive_image_style);
+        foreach ($responsive_image_style->getImageStyleIds() as $image_style_id) {
+          $image_styles_to_cache[$image_style_id] = TRUE;
+        }
+      }
+    }
+    foreach (array_keys($image_styles_to_cache) as $style_name) {
       if ($image_style = $this->imageStyleStorage->load($style_name)) {
         $this->renderer->addCacheableDependency($elements, $image_style);
       }
@@ -240,59 +390,45 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
     if ($lightbox_style = $this->imageStyleStorage->load('lightbox')) {
       $this->renderer->addCacheableDependency($elements, $lightbox_style);
     }
-
-    if ($max_images === 7 && count($rendered_images) > 0) {
-      $lead_image = array_shift($rendered_images);
-      $grid = [
-        '#type' => 'container',
-        '#attributes' => [
-          'class' => ['nomads-hero-gallery__grid'],
-        ],
-      ];
-      foreach ($rendered_images as $index => $image_render) {
-        $grid['cell_' . $index] = [
-          '#type' => 'container',
-          '#attributes' => [
-            'class' => ['nomads-hero-gallery__cell'],
-          ],
-          'image' => $image_render,
-        ];
-      }
-
-      $elements = [
-        0 => [
-          '#type' => 'container',
-          '#attributes' => [
-            'class' => ['nomads-hero-gallery', 'nomads-hero-gallery--max-7'],
-            'data-gallery-id' => $gallery_id,
-          ],
-          'lead' => [
-            '#type' => 'container',
-            '#attributes' => [
-              'class' => ['nomads-hero-gallery__lead'],
-            ],
-            'image' => $lead_image,
-          ],
-          'grid' => $grid,
-          'gallery_items' => $this->buildHiddenGalleryLinks($gallery_items, $gallery_id, $count),
-        ],
-        '#attached' => [
-          'library' => [
-            'nomads_hero_gallery/hero_gallery',
-            'nomads_hero_gallery/glightbox',
-          ],
-        ],
-      ];
-      return $elements;
+    foreach ($rendered_images as $rendered_image) {
+      $this->renderer->addCacheableDependency($elements, $rendered_image['media']);
     }
 
-    $elements['#attached']['library'][] = 'nomads_hero_gallery/hero_gallery';
-    $elements['#attached']['library'][] = 'nomads_hero_gallery/glightbox';
-    $elements['#prefix'] = '<div class="nomads-hero-gallery" data-gallery-id="' . $gallery_id . '">';
-    $elements['gallery_items'] = $this->buildHiddenGalleryLinks($gallery_items, $gallery_id, $count);
-    $elements['#suffix'] = '</div>';
-
     return $elements;
+  }
+
+  /**
+   * Builds a non-clickable placeholder block for empty gallery slots.
+   */
+  protected function buildPlaceholderItem(bool $is_lead = FALSE): array {
+    $classes = ['nomads-hero-gallery__placeholder'];
+    if ($is_lead) {
+      $classes[] = 'nomads-hero-gallery__placeholder--lead';
+    }
+
+    return [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => $classes,
+        'aria-hidden' => 'true',
+      ],
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function calculateDependencies(): array {
+    $dependencies = parent::calculateDependencies();
+
+    foreach (['image_style_first', 'image_style_second', 'image_style_rest'] as $setting) {
+      $style_id = $this->getSetting($setting);
+      if ($style_id && $style = ResponsiveImageStyle::load($style_id)) {
+        $dependencies[$style->getConfigDependencyKey()][] = $style->getConfigDependencyName();
+      }
+    }
+
+    return $dependencies;
   }
 
   /**
@@ -339,7 +475,7 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
   /**
    * Wraps one rendered image in a GLightbox trigger link.
    */
-  protected function wrapImageWithGalleryLink(array $image_render, MediaInterface $media, string $gallery_id): array {
+  protected function wrapImageWithGalleryLink(array $image_render, MediaInterface $media, string $gallery_id, array $trigger_classes = []): array {
     $current_image = $this->getMediaImageData($media);
     if (!$current_image) {
       return $image_render;
@@ -348,14 +484,14 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
     return [
       '#type' => 'container',
       '#attributes' => [
-        'class' => ['nomads-hero-gallery__trigger'],
+        'class' => array_merge(['nomads-hero-gallery__trigger'], $trigger_classes),
       ],
       'image' => [
         '#type' => 'link',
         '#title' => $image_render,
         '#url' => Url::fromUri($current_image['full_url']),
         '#attributes' => [
-          'class' => ['nomads-hero-gallery-glightbox', 'nomads-hero-gallery__link'],
+          'class' => ['nomads-hero-gallery__lightbox-link', 'nomads-hero-gallery__link'],
           'data-gallery' => $gallery_id,
           'aria-label' => $this->t('Open gallery image'),
         ],
@@ -370,7 +506,7 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
     $gallery_markup = '';
 
     foreach (array_slice($gallery_items, $visible_count) as $gallery_item) {
-      $gallery_markup .= '<a href="' . Html::escape($gallery_item['full_url']) . '" class="nomads-hero-gallery-glightbox visually-hidden" data-gallery="' . Html::escape($gallery_id) . '" aria-hidden="true" tabindex="-1"></a>';
+      $gallery_markup .= '<a href="' . Html::escape($gallery_item['full_url']) . '" class="nomads-hero-gallery-glightbox nomads-hero-gallery__lightbox-hidden visually-hidden" data-gallery="' . Html::escape($gallery_id) . '" aria-hidden="true" tabindex="-1"></a>';
     }
 
     return [

@@ -1,0 +1,16 @@
+<section{{ attributes.addClass('nomads-parent-teaser-map-panel', panel_classes) }}>
+  <button type="button" class="nomads-parent-teaser-map-panel__close js-nomads-parent-teaser-close" data-target-selector=".map-detail-panel" aria-label="Close details">&times;</button>
+  {% if panel_title %}
+    <header class="nomads-parent-teaser-map-panel__header">
+      <h2 class="nomads-parent-teaser-map-panel__title">{{ panel_title }}</h2>
+    </header>
+  {% endif %}
+
+  <div class="nomads-parent-teaser-map-panel__content">
+    {% if content %}
+      {{ content }}
+    {% elseif empty_message %}
+      <p class="nomads-parent-teaser-map-panel__empty">{{ empty_message }}</p>
+    {% endif %}
+  </div>
+</section>

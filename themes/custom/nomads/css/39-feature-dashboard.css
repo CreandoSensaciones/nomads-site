@@ -1,0 +1,487 @@
+
+/* ========== Dashboard ========== */
+
+/* ===== Table base ===== */
+
+.views-table.views-view-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.views-table.views-view-table thead th,
+.views-table.views-view-table tbody td {
+  padding: 14px 18px;
+  vertical-align: top;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.views-table.views-view-table thead th {
+  font-weight: 700;
+}
+
+.views-table.views-view-table tbody tr + tr td {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ===== Column widths ===== */
+/* first column is the title/image tile */
+.views-table.views-view-table .views-field-title {
+  width: 190px;
+}
+
+/* categories */
+.views-table.views-view-table .views-field-field-type {
+  width: 26%;
+}
+
+/* created */
+.views-table.views-view-table .views-field-created {
+  width: 18%;
+}
+
+/* view */
+.views-table.views-view-table .views-field-view {
+  width: auto;
+}
+
+/* ===== Thumbnail tile ===== */
+
+.views-table.views-view-table td.views-field-title {
+  padding: 14px 18px;
+}
+
+.views-table.views-view-table .listing-thumb {
+  position: relative;
+  width: 150px;
+  min-width: 150px;
+  max-width: 150px;
+  line-height: 0;
+}
+
+.views-table.views-view-table .listing-thumb > a:first-child {
+  display: block;
+  width: 150px;
+  height: 150px;
+  position: relative;
+  overflow: hidden;
+}
+
+.views-table.views-view-table .listing-thumb > a:first-child img {
+  display: block;
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+}
+
+/* dark bottom shadow/gradient */
+.views-table.views-view-table .listing-thumb::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 60%;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.82) 0%,
+    rgba(0, 0, 0, 0.45) 35%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* title over image */
+.views-table.views-view-table .listing-thumb > a:last-child {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 8px;
+  z-index: 2;
+  display: block;
+  color: #fff;
+  text-decoration: none;
+  line-height: 1.05;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.views-table.views-view-table .listing-thumb > a:last-child:hover,
+.views-table.views-view-table .listing-thumb > a:last-child:focus {
+  color: #fff;
+  text-decoration: none;
+}
+
+/* ===== Categories ===== */
+
+.views-table.views-view-table .views-field-field-type .item-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.views-table.views-view-table .views-field-field-type .item-list li {
+  margin: 0 0 6px 0;
+  line-height: 1.25;
+}
+
+/* ===== Created ===== */
+
+.views-table.views-view-table .views-field-created {
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.views-table.views-view-table .views-field-created div + div {
+  margin-top: 8px;
+}
+
+.views-table.views-view-table .views-field-created span {
+  font-weight: 600;
+}
+
+/* ===== Nested paragraph view ===== */
+
+.views-table.views-view-table .views-field-view .view-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.views-table.views-view-table .views-field-view .views-row {
+  line-height: 1.3;
+}
+
+/* ===== Optional tighter mobile handling ===== */
+
+@media (max-width: 900px) {
+  .views-table.views-view-table {
+    table-layout: auto;
+  }
+
+  .views-table.views-view-table thead {
+    display: none;
+  }
+
+  .views-table.views-view-table,
+  .views-table.views-view-table tbody,
+  .views-table.views-view-table tr,
+  .views-table.views-view-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .views-table.views-view-table tbody tr {
+    padding: 18px 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .views-table.views-view-table tbody tr:first-child {
+    border-top: 0;
+  }
+
+  .views-table.views-view-table tbody td {
+    padding: 10px 0;
+  }
+
+  .views-table.views-view-table .listing-thumb {
+    width: 180px;
+    min-width: 180px;
+    max-width: 180px;
+  }
+
+  .views-table.views-view-table .listing-thumb > a:first-child,
+  .views-table.views-view-table .listing-thumb > a:first-child img {
+    width: 180px;
+    height: 180px;
+  }
+}
+
+/* ===== ORGANIZER HEADER BAR ===== */
+
+.views-table.views-view-table caption {
+  caption-side: top;
+  padding: 0;
+  margin: 0;
+}
+
+.organizer-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100px;
+  width: 100%;
+  padding: 0 24px;
+  box-sizing: border-box;
+  background: #015180;
+  color: #fff;
+  overflow: hidden;
+}
+
+/* left text block */
+.organizer-header > div:first-child {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  max-width: 40%;
+  line-height: 1.15;
+  text-align: left;
+}
+
+.organizer-header .label {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.88);
+  white-space: nowrap;
+}
+
+.organizer-header > div:first-child a {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.organizer-header > div:first-child a:hover,
+.organizer-header > div:first-child a:focus {
+  color: #fff;
+  text-decoration: none;
+}
+
+/* center logo wrapper */
+.organizer-header > article,
+.organizer-header > .media {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 220px;
+  max-width: 30%;
+  height: 80px;
+  margin: 0;
+  pointer-events: none;
+}
+
+/* remove extra spacing from media internals */
+.organizer-header .field,
+.organizer-header .field__item,
+.organizer-header .field--name-field-media-image {
+  margin: 0;
+  height: 100%;
+}
+
+.organizer-header img {
+  display: block;
+  max-width: 100%;
+  max-height: 80px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+/* hide contextual controls in the bar */
+.organizer-header .contextual {
+  display: none;
+}
+
+/* no logo case, keep text nicely centered vertically */
+.organizer-header:not(:has(article)) {
+  justify-content: flex-start;
+}
+
+/* optional: give table a cleaner connection to the bar */
+.views-table.views-view-table {
+  width: 100%;
+}
+
+/* responsive */
+@media (max-width: 900px) {
+  .organizer-header {
+    min-height: 100px;
+    padding: 12px 16px;
+  }
+
+  .organizer-header > div:first-child {
+    max-width: 55%;
+  }
+
+  .organizer-header .label {
+    font-size: 1rem;
+  }
+
+  .organizer-header > div:first-child a {
+    font-size: 1.2rem;
+  }
+
+  .organizer-header > article,
+  .organizer-header > .media {
+    width: 160px;
+    height: 70px;
+  }
+
+  .organizer-header img {
+    max-height: 70px;
+  }
+}
+
+/* merge the thead visually with organizer header */
+.views-table.views-view-table caption {
+  margin-bottom: 0;
+}
+
+.views-table.views-view-table thead th {
+  background: #015180;
+  color: #fff;
+  padding: 8px 18px;
+  font-size: 0.82rem;
+  line-height: 1.1;
+  font-weight: 600;
+  border: 0;
+}
+
+/* remove gap between caption and thead */
+.views-table.views-view-table caption + thead th {
+  border-top: 0;
+}
+
+/* make header row slimmer */
+.views-table.views-view-table thead tr {
+  height: 34px;
+}
+
+/* slightly softer than organizer title */
+.views-table.views-view-table thead .views-field {
+  vertical-align: middle;
+}
+
+/* optional, first and last cell align with bar edges a bit better */
+.views-table.views-view-table thead th:first-child {
+  padding-left: 24px;
+}
+
+.views-table.views-view-table thead th:last-child {
+  padding-right: 24px;
+}
+
+/* ===== table: no global spacing ===== */
+
+.views-table.views-view-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* ===== organizer header + thead stay merged ===== */
+
+.views-table.views-view-table caption {
+  margin: 0;
+  padding: 0;
+}
+
+.views-table.views-view-table thead th {
+  background: #015180;
+  color: #fff;
+  padding: 8px 18px;
+  font-size: 0.82rem;
+  line-height: 1.1;
+  font-weight: 600;
+  border: 0;
+}
+
+.views-table.views-view-table thead th:first-child {
+  padding-left: 24px;
+}
+
+.views-table.views-view-table thead th:last-child {
+  padding-right: 24px;
+}
+
+/* ===== teaser row look without border-spacing ===== */
+
+.views-table.views-view-table tbody tr {
+  filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.12));
+}
+
+.views-table.views-view-table tbody td {
+  background: #fff;
+  padding: 18px;
+  vertical-align: top;
+
+  /* fake vertical row gap */
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  background-clip: padding-box;
+}
+
+/* first and last row spacing */
+.views-table.views-view-table tbody tr:first-child td {
+  border-top-width: 18px;
+}
+
+.views-table.views-view-table tbody tr:last-child td {
+  border-bottom-width: 18px;
+}
+
+/* rounded outer corners */
+.views-table.views-view-table tbody tr td:first-child {
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+  overflow: hidden;
+}
+
+.views-table.views-view-table tbody tr td:last-child {
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+  overflow: hidden;
+}
+.status-1 {
+  color: #157a2c;
+  font-weight: 600;
+}
+
+.status-1::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: #24c552;
+  vertical-align: middle;
+}
+
+.status-0 {
+  color: #777;
+}
+
+.status-0::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: #bbb;
+  vertical-align: middle;
+}
+.status-1::before,
+.status-0::before {
+  position: relative;
+  top: -1px;
+}

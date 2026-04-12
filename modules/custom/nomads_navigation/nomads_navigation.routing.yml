@@ -1,0 +1,7 @@
+nomads_navigation.settings:
+  path: '/admin/config/search/nomads-navigation'
+  defaults:
+    _form: '\Drupal\nomads_navigation\Form\NomadsNavigationSettingsForm'
+    _title: 'Nomads navigation'
+  requirements:
+    _permission: 'administer site configuration'

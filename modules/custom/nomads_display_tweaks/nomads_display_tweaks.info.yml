@@ -3,3 +3,5 @@ type: module
 description: 'Display tweaks for field and formatter output.'
 package: 'Nomads Display'
 core_version_requirement: ^10 || ^11
+dependencies:
+  - nomads_block_visibility:nomads_block_visibility

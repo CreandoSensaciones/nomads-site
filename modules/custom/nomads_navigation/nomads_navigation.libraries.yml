@@ -1,0 +1,4 @@
+settings_form:
+  css:
+    theme:
+      css/nomads-navigation-settings-form.css: {}

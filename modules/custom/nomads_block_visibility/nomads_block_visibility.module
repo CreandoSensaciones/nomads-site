@@ -1,0 +1,257 @@
+<?php
+
+/**
+ * @file
+ * Helper API for Nomads block visibility condition rules.
+ */
+
+use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
+/**
+ * Returns available Nomads visibility rule definitions.
+ *
+ * Modules may add or alter rules via hook_nomads_block_visibility_rules_alter().
+ *
+ * Each rule definition should contain:
+ * - label: Human-readable checkbox label.
+ * - callback: Callable receiving ($rule_id, $definition, $condition) and
+ *   returning a boolean outcome.
+ *
+ * Optional keys:
+ * - description: Help text shown below the checkbox.
+ * - default: Default enabled state for the checkbox.
+ * - cache_contexts: Cache contexts required by the rule.
+ * - cache_tags: Cache tags required by the rule.
+ * - cache_max_age: Cache max-age required by the rule.
+ */
+function nomads_block_visibility_get_rule_definitions(): array {
+  $definitions = [
+    'site_wide_announcement' => [
+      'label' => t('Side wide Announcement'),
+      'description' => t('Shows the block on landing page full-page views and on /front, /front/*, /list, /list/*, /cal, and /cal/* paths.'),
+      'callback' => 'nomads_block_visibility_site_wide_announcement',
+      'cache_contexts' => ['url.path', 'route'],
+    ],
+    'not_listing' => [
+      'label' => t('Not Listing'),
+      'description' => t('Shows the block everywhere except on full listing node pages.'),
+      'callback' => 'nomads_block_visibility_not_listing',
+      'cache_contexts' => ['route'],
+    ],
+    'not_landing_page' => [
+      'label' => t('Not Landing Page'),
+      'description' => t('Shows the block everywhere except on full landing page node pages.'),
+      'callback' => 'nomads_block_visibility_not_landing_page',
+      'cache_contexts' => ['route'],
+    ],
+  ];
+
+  \Drupal::moduleHandler()->alter('nomads_block_visibility_rules', $definitions);
+
+  foreach ($definitions as $rule_id => &$definition) {
+    if (!is_string($rule_id) || $rule_id === '' || !is_array($definition)) {
+      unset($definitions[$rule_id]);
+      continue;
+    }
+
+    if (empty($definition['label'])) {
+      unset($definitions[$rule_id]);
+      continue;
+    }
+
+    if (empty($definition['callback']) || !is_callable($definition['callback'])) {
+      unset($definitions[$rule_id]);
+      continue;
+    }
+
+    $definition['description'] = isset($definition['description']) ? $definition['description'] : '';
+    $definition['default'] = !empty($definition['default']);
+    $definition['cache_contexts'] = nomads_block_visibility_normalize_string_list($definition['cache_contexts'] ?? []);
+    $definition['cache_tags'] = nomads_block_visibility_normalize_string_list($definition['cache_tags'] ?? []);
+    $definition['cache_max_age'] = isset($definition['cache_max_age']) ? (int) $definition['cache_max_age'] : Cache::PERMANENT;
+  }
+  unset($definition);
+
+  return $definitions;
+}
+
+/**
+ * Built-in rule callback for site-wide announcement block visibility.
+ */
+function nomads_block_visibility_site_wide_announcement(string $rule_id, array $definition, ?object $condition = NULL): bool {
+  $route_match = \Drupal::routeMatch();
+  $node = $route_match->getParameter('node');
+
+  if (is_scalar($node) && $node !== '') {
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($node);
+  }
+
+  if (
+    $node instanceof \Drupal\node\NodeInterface
+    && $route_match->getRouteName() === 'entity.node.canonical'
+    && $node->bundle() === 'landing_page'
+  ) {
+    return TRUE;
+  }
+
+  $request = \Drupal::requestStack()->getCurrentRequest();
+  $current_path = \Drupal::service('path.current')->getPath($request);
+  $current_path = $current_path === '/' ? $current_path : rtrim($current_path, '/');
+  $current_alias = \Drupal::service('path_alias.manager')->getAliasByPath($current_path);
+  $patterns = "/front\n/front/*\n/list\n/list/*\n/cal\n/cal/*";
+
+  return \Drupal::service('path.matcher')->matchPath($current_alias, $patterns)
+    || ($current_path !== $current_alias && \Drupal::service('path.matcher')->matchPath($current_path, $patterns));
+}
+
+/**
+ * Built-in rule callback for excluding full listing node pages.
+ */
+function nomads_block_visibility_not_listing(string $rule_id, array $definition, ?object $condition = NULL): bool {
+  return !nomads_block_visibility_is_canonical_node_bundle('listing');
+}
+
+/**
+ * Built-in rule callback for excluding full landing page node pages.
+ */
+function nomads_block_visibility_not_landing_page(string $rule_id, array $definition, ?object $condition = NULL): bool {
+  return !nomads_block_visibility_is_canonical_node_bundle('landing_page');
+}
+
+/**
+ * Determines whether the current route is a canonical node page for a bundle.
+ */
+function nomads_block_visibility_is_canonical_node_bundle(string $bundle): bool {
+  $route_match = \Drupal::routeMatch();
+  $node = $route_match->getParameter('node');
+
+  if (is_scalar($node) && $node !== '') {
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($node);
+  }
+
+  return $node instanceof \Drupal\node\NodeInterface
+    && $route_match->getRouteName() === 'entity.node.canonical'
+    && $node->bundle() === $bundle;
+}
+
+/**
+ * Returns enabled rule IDs from condition configuration.
+ */
+function nomads_block_visibility_get_enabled_rules(array $configuration): array {
+  $enabled_rules = NestedArray::getValue($configuration, ['enabled_rules']) ?? [];
+  if (!is_array($enabled_rules)) {
+    return [];
+  }
+
+  $definitions = nomads_block_visibility_get_rule_definitions();
+  $enabled = [];
+
+  foreach ($enabled_rules as $rule_id) {
+    if (is_string($rule_id) && isset($definitions[$rule_id])) {
+      $enabled[] = $rule_id;
+    }
+  }
+
+  return array_values(array_unique($enabled));
+}
+
+/**
+ * Evaluates a specific Nomads rule against the current request context.
+ */
+function nomads_block_visibility_evaluate_rule(string $rule_id, array $configuration, ?object $condition = NULL): bool {
+  $definitions = nomads_block_visibility_get_rule_definitions();
+  $definition = $definitions[$rule_id] ?? NULL;
+  if ($definition === NULL) {
+    return TRUE;
+  }
+
+  return (bool) ($definition['callback'])($rule_id, $definition, $condition);
+}
+
+/**
+ * Builds a short summary string for selected rule labels.
+ */
+function nomads_block_visibility_build_summary(array $configuration): string|TranslatableMarkup {
+  $definitions = nomads_block_visibility_get_rule_definitions();
+  $enabled_rules = nomads_block_visibility_get_enabled_rules($configuration);
+
+  if ($enabled_rules === []) {
+    return t('No Nomads tweaks selected.');
+  }
+
+  $labels = [];
+  foreach ($enabled_rules as $rule_id) {
+    if (isset($definitions[$rule_id]['label'])) {
+      $labels[] = (string) $definitions[$rule_id]['label'];
+    }
+  }
+
+  if ($labels === []) {
+    return t('No Nomads tweaks selected.');
+  }
+
+  return t('Active Nomads tweaks: @rules', ['@rules' => implode(', ', $labels)]);
+}
+
+/**
+ * Aggregates cache contexts for selected rules.
+ */
+function nomads_block_visibility_get_cache_contexts(array $configuration): array {
+  $definitions = nomads_block_visibility_get_rule_definitions();
+  $contexts = [];
+
+  foreach (nomads_block_visibility_get_enabled_rules($configuration) as $rule_id) {
+    $contexts = Cache::mergeContexts($contexts, $definitions[$rule_id]['cache_contexts'] ?? []);
+  }
+
+  return $contexts;
+}
+
+/**
+ * Aggregates cache tags for selected rules.
+ */
+function nomads_block_visibility_get_cache_tags(array $configuration): array {
+  $definitions = nomads_block_visibility_get_rule_definitions();
+  $tags = [];
+
+  foreach (nomads_block_visibility_get_enabled_rules($configuration) as $rule_id) {
+    $tags = Cache::mergeTags($tags, $definitions[$rule_id]['cache_tags'] ?? []);
+  }
+
+  return $tags;
+}
+
+/**
+ * Aggregates cache max-age for selected rules.
+ */
+function nomads_block_visibility_get_cache_max_age(array $configuration): int {
+  $definitions = nomads_block_visibility_get_rule_definitions();
+  $max_age = Cache::PERMANENT;
+
+  foreach (nomads_block_visibility_get_enabled_rules($configuration) as $rule_id) {
+    $rule_max_age = $definitions[$rule_id]['cache_max_age'] ?? Cache::PERMANENT;
+    $max_age = Cache::mergeMaxAges($max_age, $rule_max_age);
+  }
+
+  return $max_age;
+}
+
+/**
+ * Normalizes string-list config values.
+ */
+function nomads_block_visibility_normalize_string_list(mixed $values): array {
+  if (!is_array($values)) {
+    return [];
+  }
+
+  $normalized = [];
+  foreach ($values as $value) {
+    if (is_string($value) && $value !== '') {
+      $normalized[] = $value;
+    }
+  }
+
+  return array_values(array_unique($normalized));
+}

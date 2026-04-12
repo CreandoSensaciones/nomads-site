@@ -13,3 +13,20 @@ field.field.*.*.third_party.paragraph_relevance:
     open_default:
       type: boolean
       label: 'Open empty paragraph by default'
+
+field.formatter.settings.paragraph_relevance_rendered_relevant_paragraph:
+  type: mapping
+  label: 'Rendered relevant paragraph formatter settings'
+  mapping:
+    view_mode:
+      type: string
+      label: 'View mode'
+    link:
+      type: boolean
+      label: 'Show links'
+    relevance_values:
+      type: sequence
+      label: 'Relevance values'
+      sequence:
+        type: string
+        label: 'Relevance value'

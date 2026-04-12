@@ -13,6 +13,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\paragraphs\ParagraphInterface;
 use Drupal\taxonomy\TermInterface;
+use Drupal\views\Views;
 
 /**
  * Implements hook_entity_extra_field_info().
@@ -42,6 +43,12 @@ function paragraph_relevance_vfields_entity_extra_field_info(): array {
             'weight' => 1,
             'visible' => FALSE,
           ],
+          'relevance_1_block' => [
+            'label' => $t->translate('Relevance 1 Block'),
+            'description' => $t->translate('Renders the relevance_paragraphs view block display relevance1block for the current listing.'),
+            'weight' => 2,
+            'visible' => FALSE,
+          ],
         ],
       ],
     ],
@@ -66,6 +73,10 @@ function paragraph_relevance_vfields_entity_view(array &$build, EntityInterface 
 
   if ($view_mode !== 'teaser' && $display->getComponent('relevant_paragraphs_2') !== NULL) {
     $build['relevant_paragraphs_2'] = paragraph_relevance_vfields_build($entity, 2);
+  }
+
+  if ($view_mode !== 'teaser' && $display->getComponent('relevance_1_block') !== NULL) {
+    $build['relevance_1_block'] = paragraph_relevance_vfields_build_relevance_1_block($entity, $display);
   }
 }
 
@@ -145,6 +156,51 @@ function paragraph_relevance_vfields_build(EntityInterface $listing, int $target
   }
 
   $cacheability->applyTo($build);
+  return $build;
+}
+
+/**
+ * Build render array for the relevance 1 views block.
+ */
+function paragraph_relevance_vfields_build_relevance_1_block(EntityInterface $listing, EntityViewDisplayInterface $display): array {
+  $cacheability = (new CacheableMetadata())
+    ->addCacheableDependency($listing)
+    ->addCacheableDependency($display);
+
+  $view = Views::getView('relevance_paragraphs');
+  if ($view === NULL || !$view->access('relevance1block')) {
+    return ['#access' => FALSE];
+  }
+
+  $view_render_array = $view->buildRenderable('relevance1block', [$listing->id()], FALSE);
+  if (empty($view_render_array)) {
+    $build = ['#access' => FALSE];
+    $cacheability->applyTo($build);
+    return $build;
+  }
+
+  $component = $display->getComponent('relevance_1_block') ?? [];
+  $build = [
+    '#type' => 'container',
+    '#attributes' => [
+      'class' => ['paragraph-relevance-vfield', 'paragraph-relevance-vfield--relevance-1-block'],
+    ],
+  ];
+
+  if (($component['label'] ?? 'hidden') !== 'hidden') {
+    $build['label'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'h2',
+      '#value' => (string) ($component['label'] === 'above' ? t('Relevance 1 Block') : t('Relevance 1 Block')),
+      '#attributes' => [
+        'class' => ['paragraph-relevance-vfield__label'],
+      ],
+    ];
+  }
+
+  $build['content'] = $view_render_array;
+  $cacheability->applyTo($build);
+
   return $build;
 }
 

@@ -1,33 +1,12 @@
 {#
 /**
  * @file
- * Default theme implementation for a fieldgroup html element.
+ * Theme override for field group html elements.
  *
- * Available variables:
- * - title: Title of the group.
- * - title_element: Element to wrap the title.
- * - children: The children of the group.
- * - wrapper_element: The html element to use
- * - attributes: A list of HTML attributes for the group wrapper.
- *
- * @see template_preprocess_field_group_html_element()
- *
- * @ingroup themeable
+ * Keeps the default field_group markup and injects local tasks when the
+ * listing title container is rendered.
  */
 #}
-
-{% set selector = attributes['data-drupal-selector']|default('') %}
-{% if selector and selector matches '/^edit-field-([a-z0-9_]+)-widget-[0-9]+-subform-group-relevance$/' %}
-  {% set selector_trimmed = selector|replace({
-    'edit-field-': '',
-    '-subform-group-relevance': ''
-  }) %}
-  {% set bundle = selector_trimmed|split('-widget-')|first %}
-  {% set attributes = attributes
-    .setAttribute('data-paragraph-relevance-group', bundle)
-    .addClass('relevance-ui')
-  %}
-{% endif %}
 
 <{{ wrapper_element }} {{ attributes }}>
 {% if title %}
@@ -36,7 +15,20 @@
   {% if collapsible %}
 <div class="field-group-wrapper">
   {% endif %}
-  {{children}}
+  {% if nomads_is_listing_full_group_title and nomads_group_title_local_tasks %}
+    <div class="column-right">
+      <div class="nomads-group-title__local-tasks" data-nomads-local-tasks>
+        <div class="nomads-title-local-tasks__select-wrap" data-nomads-local-tasks-select-wrap hidden>
+         <label class="visually-hidden">{{ 'Select tab'|t }}</label>
+         <select class="nomads-title-local-tasks__select" data-nomads-local-tasks-select></select>
+        </div>
+        <div class="nomads-title-local-tasks__tabs" data-nomads-local-tasks-tabs>
+          {{ nomads_group_title_local_tasks }}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+  {{ children }}
   {% if collapsible %}
 </div>
 {% endif %}

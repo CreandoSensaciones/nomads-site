@@ -6,9 +6,11 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\Element\EntityAutocomplete;
 use Drupal\Core\Field\Attribute\FieldWidget;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\taxonomy\TermInterface;
 
@@ -157,6 +159,28 @@ class GeoCountryPlacesWidget extends WidgetBase {
 
     $this->sanitizeCountryUserInput($form_state, $parents);
 
+    $field_title = isset($element['#title']) ? (string) $element['#title'] : '';
+    $field_description = $element['#description'] ?? '';
+    if ($field_title !== '' || $field_description !== '') {
+      $field_meta_markup = '';
+      $subtitle = $this->getFieldSubtitle($this->fieldDefinition);
+      if ($subtitle !== NULL) {
+        $field_meta_markup = '<span class="form-item__prefix"><span class="field-subtitle-text">'
+          . Html::escape($subtitle) . '</span></span>';
+      }
+
+      $element['field_meta'] = [
+        '#type' => 'item',
+        '#title' => $field_title,
+        '#markup' => Markup::create($field_meta_markup),
+        '#weight' => -100,
+      ];
+      if ($subtitle !== NULL) {
+        $element['field_meta']['#wrapper_attributes']['class'][] = 'field-subtitle-enabled';
+        $element['field_meta']['#attached']['library'][] = 'field_subtitle/field_subtitle';
+      }
+    }
+
     $element['country'] = [
       '#type' => 'entity_autocomplete',
       '#title' => $this->t('Country or region'),
@@ -177,7 +201,7 @@ class GeoCountryPlacesWidget extends WidgetBase {
         'wrapper' => $wrapper_id,
       ],
       '#element_validate' => [[$this, 'validateCountryElement']],
-      '#description' => $this->t('Select a country or region to load direct child terms. Country prefill uses the configured host entity field when available.'),
+      '#description' => '',
     ];
 
     $element['places_wrapper'] = [
@@ -188,11 +212,19 @@ class GeoCountryPlacesWidget extends WidgetBase {
       ],
     ];
 
-    if (!$root_tid) {
-      $element['places_wrapper']['empty'] = [
-        '#type' => 'item',
-        '#markup' => $this->t('Choose a country or region to continue.'),
+    if ($field_description !== '') {
+      $element['field_help'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['description', 'nomads-geo-widget__description'],
+        ],
+        'content' => [
+          '#markup' => $field_description,
+        ],
       ];
+    }
+
+    if (!$root_tid) {
       return $element;
     }
 
@@ -222,7 +254,7 @@ class GeoCountryPlacesWidget extends WidgetBase {
     $element['places_wrapper']['places_checkboxes_ui']['places_checkboxes'] = [
       '#type' => 'checkboxes',
       '#pretty_option' => TRUE,
-      '#title' => $is_region_root ? $this->t('Countries') : $this->t('Places'),
+      '#title' => $is_region_root ? $this->t('Select all relevant countries') : $this->t('Select all relevant places'),
       '#options' => $place_options,
       '#default_value' => $checkbox_defaults,
       '#parents' => array_merge($parents, ['places_checkboxes']),
@@ -412,6 +444,23 @@ class GeoCountryPlacesWidget extends WidgetBase {
     }
 
     return $massaged;
+  }
+
+  /**
+   * Gets the configured subtitle for the current field, if any.
+   */
+  protected function getFieldSubtitle(FieldDefinitionInterface $field_definition): ?string {
+    if (!method_exists($field_definition, 'getThirdPartySetting')) {
+      return NULL;
+    }
+
+    $subtitle = $field_definition->getThirdPartySetting('field_subtitle', 'subtitle', '');
+    if (!is_string($subtitle)) {
+      return NULL;
+    }
+
+    $subtitle = trim($subtitle);
+    return $subtitle !== '' ? $subtitle : NULL;
   }
 
   /**

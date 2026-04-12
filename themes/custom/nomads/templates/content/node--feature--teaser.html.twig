@@ -1,0 +1,56 @@
+{#
+/**
+ * @file
+ * Theme override for feature teasers opened in a Drupal AJAX modal.
+ */
+#}
+{%
+  set classes = [
+    'node',
+    'node--type-' ~ node.bundle|clean_class,
+    node.isPromoted() ? 'node--promoted',
+    node.isSticky() ? 'node--sticky',
+    not node.isPublished() ? 'node--unpublished',
+    view_mode ? 'node--view-mode-' ~ view_mode|clean_class,
+  ]
+%}
+{% set subtitle = node.hasField('field_subtitle') and not node.get('field_subtitle').isEmpty() ? node.get('field_subtitle').value : '' %}
+{% set teaser_line = content.field_teaser_line is defined ? content.field_teaser_line|render|striptags|trim : '' %}
+
+{{ attach_library('nomads/feature-teaser-modal') }}
+<article{{ attributes.addClass(classes, 'contextual-region') }}>
+  {{ title_prefix }}
+  {{ title_suffix }}
+
+  <a
+    href="{{ url('nomads_display_tweaks.node_modal', {'node': node.id}) }}"
+    class="feature-teaser-modal-link use-ajax"
+    data-dialog-type="modal"
+    data-dialog-options='{"width":900}'
+    aria-label="{{ node.label }}"
+  >
+    <div{{ content_attributes.addClass('node__content') }}>
+      {% if content.field_icon is defined %}
+        {{ content.field_icon }}
+      {% endif %}
+
+      <div class="field field--name-title field--type-string field--label-hidden">
+        <div class="field__item">
+          <h3{{ title_attributes }}>{{ node.label }}</h3>
+        </div>
+      </div>
+
+      {% if subtitle %}
+        <div class="field field--name-field-subtitle field--type-string field--label-hidden">
+          <div class="field__item">{{ subtitle }}</div>
+        </div>
+      {% endif %}
+
+      {% if teaser_line %}
+        <div class="field field--name-field-teaser-line field--type-string field--label-hidden">
+          <div class="field__item">{{ teaser_line }}</div>
+        </div>
+      {% endif %}
+    </div>
+  </a>
+</article>

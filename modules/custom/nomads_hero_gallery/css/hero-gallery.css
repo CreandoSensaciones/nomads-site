@@ -1,52 +1,125 @@
 /*
- * Hero gallery layout for max_images = 7.
- * Assumes markup:
- * .nomads-hero-gallery--max-7
- *   .nomads-hero-gallery__lead
- *   .nomads-hero-gallery__grid > .nomads-hero-gallery__cell * 6
+ * Responsive hero gallery.
+ *
+ * Desktop: lead image + 3x2 secondary grid.
+ * Tablet: lead image + 2x2 secondary grid.
+ * Mobile: Swiper slideshow.
  */
 
-.nomads-hero-gallery--max-7 {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 10px;
-  align-items: stretch;
-  /* 
-  height: clamp(280px, 38vw, 520px);
-  max-width: 1550px;
-  max-height: 510px; */
+.nomads-hero-gallery {
+  --nomads-hero-gallery-gap: 10px;
+  --nomads-hero-gallery-radius: 8px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
-.nomads-hero-gallery--max-7 .nomads-hero-gallery__lead {
-  grid-column: 1;
-  min-height: 0;
+.nomads-hero-gallery__desktop,
+.nomads-hero-gallery__mobile {
+  min-width: 0;
 }
 
-.nomads-hero-gallery--max-7 .nomads-hero-gallery__grid {
-  grid-column: 2;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  min-height: 0;
+.nomads-hero-gallery__desktop {
+  display: none;
 }
 
-.nomads-hero-gallery--max-7 .nomads-hero-gallery__lead,
-.nomads-hero-gallery--max-7 .nomads-hero-gallery__cell {
-  position: relative;
+.nomads-hero-gallery__mobile {
+  display: block;
+}
+
+.nomads-hero-gallery__lead,
+.nomads-hero-gallery__cell,
+.nomads-hero-gallery__slide {
+  min-width: 0;
   overflow: hidden;
+  border-radius: var(--nomads-hero-gallery-radius);
 }
 
-.nomads-hero-gallery--max-7 img {
+.nomads-hero-gallery__trigger,
+.nomads-hero-gallery__link,
+.nomads-hero-gallery__placeholder,
+.nomads-hero-gallery__link picture,
+.nomads-hero-gallery__link img {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
 }
 
 .nomads-hero-gallery__link {
-  display: block;
-  width: 100%;
-  height: 100%;
   cursor: zoom-in;
+}
+
+.nomads-hero-gallery__link img {
+  object-fit: cover;
+}
+
+.nomads-hero-gallery__placeholder {
+  background: #d9d9d9;
+}
+
+.nomads-hero-gallery__mobile-swiper {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.nomads-hero-gallery__slide {
+  aspect-ratio: 4 / 3;
+  height: auto;
+}
+
+.nomads-hero-gallery__mobile .swiper-pagination {
+  position: static;
+  margin-top: 8px;
+}
+
+@media (min-width: 768px) {
+  .nomads-hero-gallery__desktop {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: var(--nomads-hero-gallery-gap);
+    align-items: stretch;
+    height: clamp(300px, 42vw, 500px);
+  }
+
+  .nomads-hero-gallery__mobile {
+    display: none;
+  }
+
+  .nomads-hero-gallery__lead {
+    min-height: 0;
+  }
+
+  .nomads-hero-gallery__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: var(--nomads-hero-gallery-gap);
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .nomads-hero-gallery__cell {
+    min-height: 0;
+  }
+
+  .nomads-hero-gallery__cell--tablet-hidden {
+    display: none;
+  }
+}
+
+@media (min-width: 1200px) {
+  .nomads-hero-gallery__desktop {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    height: clamp(320px, 38vw, 520px);
+  }
+
+  .nomads-hero-gallery__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+  }
+
+  .nomads-hero-gallery__cell--tablet-hidden {
+    display: block;
+  }
 }

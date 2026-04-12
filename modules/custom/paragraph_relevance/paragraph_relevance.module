@@ -7,6 +7,7 @@
 
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Template\Attribute;
 use Drupal\Core\Url;
@@ -881,6 +882,7 @@ function paragraph_relevance_entity_presave(EntityInterface $entity): void {
     $entity->bundle() === 'listing'
   ) {
     paragraph_relevance_with_listing_save_guard($entity, function () use ($entity): void {
+      paragraph_relevance_sync_listing_paragraph_relevance2($entity);
       paragraph_relevance_sync_listing_paragraph_effective_relevance($entity);
     });
   }
@@ -1056,6 +1058,111 @@ function paragraph_relevance_hide_static_form_mode_paragraph_fields(array &$form
 
     $form[$field_name]['#access'] = FALSE;
   }
+}
+
+/**
+ * Sync paragraph field_relevance2 values on listing save.
+ *
+ * Standard relevance-enabled paragraphs keep the higher value between stored
+ * field_relevance2 and the paragraph's desired field_relevance. Location
+ * paragraphs are treated as if their desired relevance were always 3.
+ */
+function paragraph_relevance_sync_listing_paragraph_relevance2(EntityInterface $listing): void {
+  if ($listing->getEntityTypeId() !== 'node' || !method_exists($listing, 'bundle')) {
+    return;
+  }
+  if ($listing->bundle() !== 'listing' || !method_exists($listing, 'getFieldDefinitions')) {
+    return;
+  }
+
+  foreach ($listing->getFieldDefinitions() as $field_name => $definition) {
+    if (!method_exists($definition, 'getType') || $definition->getType() !== 'entity_reference_revisions') {
+      continue;
+    }
+    if (!method_exists($definition, 'getSetting') || $definition->getSetting('target_type') !== 'paragraph') {
+      continue;
+    }
+    if (!$listing->hasField($field_name) || $listing->get($field_name)->isEmpty()) {
+      continue;
+    }
+
+    $items = $listing->get($field_name);
+    foreach ($items as $delta => $item) {
+      $paragraph = $item->entity;
+      if (!$paragraph instanceof EntityInterface) {
+        continue;
+      }
+      if (!$paragraph->hasField('field_relevance2')) {
+        continue;
+      }
+
+      $desired_relevance = paragraph_relevance_get_desired_relevance_for_sync($paragraph);
+      if (paragraph_relevance_relevance_is_empty($desired_relevance)) {
+        continue;
+      }
+
+      $existing_relevance = paragraph_relevance_extract_value($paragraph->get('field_relevance2')->getValue());
+      $effective_relevance = paragraph_relevance_pick_higher_relevance($existing_relevance, $desired_relevance);
+      if ((string) $existing_relevance === (string) $effective_relevance) {
+        continue;
+      }
+
+      if (paragraph_relevance_relevance_is_empty($effective_relevance)) {
+        $paragraph->set('field_relevance2', []);
+      }
+      else {
+        $paragraph->set('field_relevance2', $effective_relevance);
+      }
+
+      if ($paragraph->id()) {
+        paragraph_relevance_persist_synced_paragraph($paragraph, $items, (int) $delta, $item);
+      }
+    }
+  }
+}
+
+/**
+ * Save a synced paragraph and update the parent item revision reference.
+ */
+function paragraph_relevance_persist_synced_paragraph(EntityInterface $paragraph, FieldItemListInterface $items, int $delta, $item): void {
+  if (!method_exists($paragraph, 'save') || !method_exists($paragraph, 'setNewRevision')) {
+    return;
+  }
+
+  $paragraph->setNewRevision(TRUE);
+  $paragraph->save();
+
+  $new_value = [
+    'target_id' => $paragraph->id(),
+    'target_revision_id' => method_exists($paragraph, 'getRevisionId') ? $paragraph->getRevisionId() : NULL,
+  ];
+
+  $items->set($delta, $new_value);
+
+  if (is_object($item) && property_exists($item, 'target_id')) {
+    $item->target_id = $new_value['target_id'];
+  }
+  if (is_object($item) && property_exists($item, 'target_revision_id')) {
+    $item->target_revision_id = $new_value['target_revision_id'];
+  }
+}
+
+/**
+ * Determine the desired paragraph relevance used for field_relevance2 sync.
+ */
+function paragraph_relevance_get_desired_relevance_for_sync(EntityInterface $paragraph): ?string {
+  if ($paragraph->hasField('field_relevance')) {
+    $desired = paragraph_relevance_extract_value($paragraph->get('field_relevance')->getValue());
+    if (!paragraph_relevance_relevance_is_empty($desired)) {
+      return $desired;
+    }
+  }
+
+  if (method_exists($paragraph, 'bundle') && $paragraph->bundle() === 'location') {
+    return '3';
+  }
+
+  return NULL;
 }
 
 /**
@@ -2094,22 +2201,30 @@ function paragraph_relevance_collect_term_ids_from_element(array $element): arra
  * Extract a scalar value from a field widget value array.
  */
 function paragraph_relevance_extract_value($value): ?string {
-  if (is_array($value)) {
-    if (array_key_exists('value', $value) && !is_array($value['value'])) {
-      return (string) $value['value'];
-    }
-    if (isset($value[0]) && is_array($value[0]) && array_key_exists('value', $value[0])) {
-      return (string) $value[0]['value'];
-    }
-    if (isset($value[0]) && !is_array($value[0])) {
-      return (string) $value[0];
-    }
-  }
   if ($value === NULL) {
     return NULL;
   }
 
-  return (string) $value;
+  if (is_scalar($value)) {
+    return (string) $value;
+  }
+
+  if (is_array($value)) {
+    if (array_key_exists('value', $value)) {
+      return paragraph_relevance_extract_value($value['value']);
+    }
+
+    foreach ($value as $item) {
+      $extracted = paragraph_relevance_extract_value($item);
+      if ($extracted !== NULL) {
+        return $extracted;
+      }
+    }
+
+    return NULL;
+  }
+
+  return method_exists($value, '__toString') ? (string) $value : NULL;
 }
 
 /**

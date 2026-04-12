@@ -1,0 +1,20 @@
+nomads_navigation.settings:
+  type: config_object
+  label: 'Nomads navigation settings'
+  mapping:
+    filter_tid:
+      type: integer
+      label: 'Filter term ID'
+      nullable: true
+    filter_tids:
+      type: sequence
+      label: 'Filter term IDs'
+      sequence:
+        type: integer
+        label: 'Filter term ID'
+    sort_key_tids:
+      type: sequence
+      label: 'Sort key term IDs'
+      sequence:
+        type: integer
+        label: 'Sort key term ID'

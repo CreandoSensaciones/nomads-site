@@ -1,8 +1,10 @@
 name: Hero Gallery
 type: module
-description: 'Provides a media entity-reference field formatter that renders hero galleries with per-position image styles and an optional dedicated 7-image layout.'
+description: 'Provides a media entity-reference field formatter that renders responsive hero galleries with GLightbox and mobile Swiper support.'
 package: 'Nomads Display'
 core_version_requirement: ^11
 dependencies:
   - media:media
   - image:image
+  - responsive_image:responsive_image
+  - swiper_formatter:swiper_formatter
