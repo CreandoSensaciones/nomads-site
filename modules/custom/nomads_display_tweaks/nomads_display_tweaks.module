@@ -13,9 +13,42 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\Render\RendererInterface;
 
 /**
+ * Implements hook_entity_extra_field_info().
+ */
+function nomads_display_tweaks_entity_extra_field_info(): array {
+  $title_vfield = [
+    'label' => t('Title vfield'),
+    'description' => t('Renders the node title in an H1 inside a title wrapper.'),
+    'weight' => 0,
+    'visible' => FALSE,
+  ];
+
+  return [
+    'node' => [
+      'listing' => [
+        'display' => [
+          'title_vfield' => $title_vfield,
+        ],
+      ],
+      'landing_page' => [
+        'display' => [
+          'title_vfield' => $title_vfield,
+        ],
+      ],
+    ],
+  ];
+}
+
+/**
  * Implements hook_entity_view().
  */
 function nomads_display_tweaks_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, string $view_mode): void {
+  if ($entity->getEntityTypeId() === 'node') {
+    nomads_display_tweaks_add_cache_context_recursive($build, 'user.node_grants:view');
+  }
+
+  nomads_display_tweaks_build_title_vfield($build, $entity, $display);
+
   $entity_css_classes = nomads_display_tweaks_get_entity_css_classes($entity);
   if ($entity_css_classes !== []) {
     if (!isset($build['#attributes']['class']) || !is_array($build['#attributes']['class'])) {
@@ -59,9 +92,51 @@ function nomads_display_tweaks_entity_view(array &$build, EntityInterface $entit
 }
 
 /**
+ * Renders the title virtual field for configured node displays.
+ */
+function nomads_display_tweaks_build_title_vfield(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display): void {
+  if ($entity->getEntityTypeId() !== 'node' || !in_array($entity->bundle(), ['listing', 'landing_page'], TRUE)) {
+    return;
+  }
+
+  $component = $display->getComponent('title_vfield');
+  if (empty($component) || ($component['region'] ?? 'hidden') === 'hidden') {
+    return;
+  }
+
+  $build['title_vfield'] = [
+    '#markup' => Markup::create('<div class="title title-vfield"><h1>' . Html::escape($entity->label()) . '</h1></div>'),
+    '#weight' => $component['weight'] ?? 0,
+    '#region' => $component['region'] ?? 'content',
+  ];
+}
+
+/**
+ * Adds a cache context to a render array and all render-cacheable children.
+ */
+function nomads_display_tweaks_add_cache_context_recursive(array &$element, string $context): void {
+  $element['#cache']['contexts'][] = $context;
+  $element['#cache']['contexts'] = array_values(array_unique($element['#cache']['contexts']));
+
+  foreach ($element as $key => &$child) {
+    if (is_string($key) && str_starts_with($key, '#')) {
+      continue;
+    }
+
+    if (is_array($child)) {
+      nomads_display_tweaks_add_cache_context_recursive($child, $context);
+    }
+  }
+}
+
+/**
  * Implements hook_entity_view_alter().
  */
 function nomads_display_tweaks_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display): void {
+  if ($entity->getEntityTypeId() === 'node') {
+    nomads_display_tweaks_add_cache_context_recursive($build, 'user.node_grants:view');
+  }
+
   nomads_display_tweaks_wrap_prefix_suffix_values($build);
 
   if (isset($build['field_subdomain']) && is_array($build['field_subdomain'])) {
@@ -151,6 +226,12 @@ function nomads_display_tweaks_preprocess_node(array &$variables): void {
   if (!$node instanceof \Drupal\node\NodeInterface) {
     return;
   }
+
+  $variables['display_submitted'] = FALSE;
+  $variables['author_picture'] = [];
+  $variables['author_name'] = '';
+  $variables['date'] = '';
+  $variables['metadata'] = '';
 
   $class_names = nomads_display_tweaks_get_entity_css_classes($node);
   if ($class_names === []) {
