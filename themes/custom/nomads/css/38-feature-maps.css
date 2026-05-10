@@ -1,7 +1,3 @@
-.path-map section.region-bottom,
-.path-map section.region-footer {
-  display: none;
-}
 
 
 
@@ -39,6 +35,18 @@
   left: auto;
   right: 4rem;
 }
+
+@media (max-width: 980px) {
+.nomads-content .map-detail-panel {
+  left: 2%;
+  right: auto;
+  top: 10%;
+  width: 96%;
+  max-width: none;
+  box-sizing: border-box;
+}
+}
+
 .nomads-map .node--view-mode-teaser .field--name-field-defaults-tags.field__items {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     margin-top: 20px;
@@ -114,12 +122,8 @@ body.path-map .nomads-navbar {
   right: 0;
   z-index: 1000;
   background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  padding: 0 50px;
-}
-body.path-map .region-title {
-  display: none;
+/*  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px); bricht nav positionierung */
 }
 
 /* Keep navbar inner full width too */
@@ -154,15 +158,4 @@ body.path-map #toolbar-administration {
   height: 695px;
 }
 
-
-.date-location-table table {
-  table-layout: fixed;
-  font-size: 15pt;
-  font-weight: 600;
-  color:#0570A1;
-  margin: 0 auto 15px;
-}
-.date-location-table td {
-  padding: 3px 30px;
-}
 

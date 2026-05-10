@@ -64,16 +64,7 @@ class PriceVirtualFieldBuilder {
     }
 
     $label = $this->t('Price Range');
-    if (count($groups) === 1 && isset($groups['day'])) {
-      $label = $this->t('Price Range per day');
-    }
-    elseif (count($groups) === 1 && isset($groups['week'])) {
-      $label = $this->t('Price Range per week');
-    }
-    elseif (count($groups) === 1 && isset($groups['month'])) {
-      $label = $this->t('Price Range per month');
-    }
-
+   
     // At most two visible segments. If all 3 groups have data, keep day+month.
     if (isset($groups['day'], $groups['week'], $groups['month'])) {
       $groups = [

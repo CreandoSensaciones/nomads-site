@@ -1,0 +1,159 @@
+<?php
+
+declare(strict_types=1);
+
+use Drupal\Core\Block\BlockPluginInterface;
+use Drupal\Core\Render\BubbleableMetadata;
+
+/**
+ * @file
+ * Provides Nomads tokens and resolves them in menu labels.
+ */
+
+/**
+ * Implements hook_token_info().
+ */
+function nomads_tokens_token_info(): array {
+  return [
+    'types' => [
+      'nomads' => [
+        'name' => t('Nomads'),
+        'description' => t('Tokens for Nomads site values.'),
+      ],
+    ],
+    'tokens' => [
+      'nomads' => [
+        'domain' => [
+          'name' => t('Domain'),
+          'description' => t('The Nomads site domain.'),
+        ],
+        'subdomain-label' => [
+          'name' => t('Subdomain label'),
+          'description' => t('The Nomads site subdomain label.'),
+        ],
+        'subdomain-label-cap' => [
+          'name' => t('Capitalized subdomain label'),
+          'description' => t('The Nomads site subdomain label with an initial capital.'),
+        ],
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function nomads_tokens_tokens(string $type, array $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata): array {
+  if ($type !== 'nomads') {
+    return [];
+  }
+
+  $bubbleable_metadata->addCacheContexts(['url.site']);
+  $values = nomads_tokens_values();
+
+  $replacements = [];
+  foreach ($tokens as $name => $original) {
+    if (isset($values[$name])) {
+      $replacements[$original] = $values[$name];
+    }
+  }
+
+  return $replacements;
+}
+
+/**
+ * Implements hook_block_view_BASE_BLOCK_ID_alter() for 'system_menu_block'.
+ */
+function nomads_tokens_block_view_system_menu_block_alter(array &$build, BlockPluginInterface $block): void {
+  if (empty($build['#items']) || !is_array($build['#items'])) {
+    return;
+  }
+
+  if (nomads_tokens_replace_menu_item_titles($build['#items'], nomads_tokens_menu_replacements())) {
+    $build['#cache']['contexts'][] = 'url.site';
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for menu.html.twig.
+ */
+function nomads_tokens_preprocess_menu(array &$variables): void {
+  if (empty($variables['items']) || !is_array($variables['items'])) {
+    return;
+  }
+
+  nomads_tokens_replace_menu_item_titles($variables['items'], nomads_tokens_menu_replacements());
+}
+
+/**
+ * Replaces Nomads tokens in a menu tree.
+ *
+ * @return bool
+ *   TRUE if any menu item title was changed.
+ */
+function nomads_tokens_replace_menu_item_titles(array &$items, array $replacements): bool {
+  $changed = FALSE;
+
+  foreach ($items as &$item) {
+    if (isset($item['title'])) {
+      $title = (string) $item['title'];
+      if (str_contains($title, '[nomads:')) {
+        $item['title'] = strtr($title, $replacements);
+        $changed = $changed || $item['title'] !== $title;
+      }
+    }
+
+    if (!empty($item['below']) && is_array($item['below'])) {
+      $changed = nomads_tokens_replace_menu_item_titles($item['below'], $replacements) || $changed;
+    }
+  }
+
+  return $changed;
+}
+
+/**
+ * Returns the current request's Nomads token values keyed by token name.
+ */
+function nomads_tokens_values(): array {
+  $domain = nomads_tokens_current_domain();
+  $label = nomads_tokens_subdomain_label($domain);
+
+  return [
+    'domain' => $domain,
+    'subdomain-label' => $label,
+    'subdomain-label-cap' => ucfirst($label),
+  ];
+}
+
+/**
+ * Returns static replacements for raw Nomads menu label tokens.
+ */
+function nomads_tokens_menu_replacements(): array {
+  $replacements = [];
+  foreach (nomads_tokens_values() as $name => $value) {
+    $replacements['[nomads:' . $name . ']'] = $value;
+  }
+
+  return $replacements;
+}
+
+/**
+ * Returns the current request host without scheme or port.
+ */
+function nomads_tokens_current_domain(): string {
+  $request = \Drupal::requestStack()->getCurrentRequest();
+  if ($request === NULL) {
+    return '';
+  }
+
+  return $request->getHost();
+}
+
+/**
+ * Returns the first host segment as the subdomain label.
+ */
+function nomads_tokens_subdomain_label(string $domain): string {
+  $host_parts = explode('.', $domain);
+
+  return $host_parts[0] ?? '';
+}

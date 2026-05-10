@@ -1,7 +1,40 @@
 /* ========== Paragraphs general ========== */
 
+/* ========== Location ========== */
+
+#edit-group-location-date .tabledrag-toggle-weight-wrapper {
+  display: none;
+}
+tbody .paragraph-type--location > td > div > .form-wrapper {
+  border: 2px solid #000;
+  margin: 20px 0;
+  padding: 20px;
+  border-radius: 12px;
+  background: #ddd;
+}
 
 
+/* ========= paragraphs base ========= */
+
+.paragraph--viewmode-vm-3 h2 {
+      font-size: clamp(1.2rem, 1.8vw, 2.4rem);
+}
+@media (max-width: 1300px) {
+  .paragraph--viewmode-vm-3 h2 {
+      font-size: clamp(1.2rem, 2.2vw, 2.4rem);
+}
+}
+
+
+.page-node-type-listing .field .suffix {
+  font-size: 12px;
+  line-height: 1.1em;
+  color: #666;
+  font-weight: 400;
+  max-width: 70px;
+  display: inline-block;
+  margin-left: 5px;
+}
 
 /* ------- Paragraph Header ------ */
 /* Defaults */
@@ -61,13 +94,13 @@
 
 /* Overlay both fields on top of the map (same grid cell) */
 .vm3-map-column .field--name-field-settlement,
-.vm3-map-column .field--name-field-surroundings{
+.vm3-map-column .field--name-field-surroundings {
   z-index: 6;
   margin: 12px;
 }
 
 /* Settlement pill: top-left */
-.vm3-map-column .field--name-field-settlement{
+.vm3-map-column .field--name-field-settlement {
   z-index: 6;
   margin: 12px;
   align-self: start;        /* top */
@@ -75,7 +108,9 @@
 }
 
 /* Surroundings: bottom-center, pills stacked bottom-up */
-.vm3-map-column .field--name-field-surroundings{
+.vm3-map-column .field--name-field-surroundings {
+  grid-row: 1;
+  grid-column: 1;
   z-index: 6;
   margin: 12px;
   align-self: end;          /* bottom */
@@ -103,4 +138,9 @@
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 40px;
+}
+
+
+.paragraph h2 {
+  color: #666;
 }

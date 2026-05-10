@@ -1,0 +1,7 @@
+field.formatter.third_party.nomads_display_tweaks:
+  type: mapping
+  label: 'Nomads display tweaks formatter settings'
+  mapping:
+    parent_entity_link:
+      type: boolean
+      label: 'Link image to parent entity'

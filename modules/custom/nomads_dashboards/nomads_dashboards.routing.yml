@@ -1,0 +1,43 @@
+nomads_dashboards.user:
+  path: '/user/{user}/dashboard'
+  defaults:
+    _controller: '\Drupal\nomads_dashboards\Controller\NomadsDashboardsController::userDashboard'
+    _title_callback: '\Drupal\nomads_dashboards\Controller\NomadsDashboardsController::userDashboardTitle'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+  options:
+    parameters:
+      user:
+        type: entity:user
+
+nomads_dashboards.team:
+  path: '/user/{user}/team-dashboard'
+  defaults:
+    _controller: '\Drupal\nomads_dashboards\Controller\NomadsDashboardsController::teamDashboard'
+    _title: 'Team Dashboard'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+  options:
+    parameters:
+      user:
+        type: entity:user
+
+nomads_dashboards.node:
+  path: '/node/{node}/dashboard'
+  defaults:
+    _controller: '\Drupal\nomads_dashboards\Controller\NomadsDashboardsController::nodeDashboard'
+    _title_callback: '\Drupal\nomads_dashboards\Controller\NomadsDashboardsController::nodeDashboardTitle'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+  options:
+    parameters:
+      node:
+        type: entity:node
+
+nomads_dashboards.settings:
+  path: '/admin/config/user-interface/dashboards'
+  defaults:
+    _form: '\Drupal\nomads_dashboards\Form\NomadsDashboardsSettingsForm'
+    _title: 'Dashboards'
+  requirements:
+    _permission: 'administer site configuration'

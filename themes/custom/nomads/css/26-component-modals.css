@@ -5,6 +5,7 @@
   height: 400px;
   border: 0;
   padding: 20px;
+  max-width: 95vw !important;
 }
 .ui-widget-content,
 .ui-widget-content form {
@@ -25,6 +26,15 @@
 }
 .ui-widget-overlay {
   z-index: 1000 !important;
+}
+
+@media (max-width: 960px) {
+  .ui-dialog.ui-widget {
+    padding: 15px 2px;
+  }
+  #drupal-modal #nomads-listing-wizard-wrapper {
+    padding: 0;
+  }
 }
 
 
@@ -80,7 +90,7 @@
   padding: 16px 20px;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 14px;
-  background: #ffffff;
+  background: #eee;
 }
 
 #media-library-add-form-wrapper .form-item-upload {
@@ -438,11 +448,6 @@
 .website-feedback-dialog .field--name-summary input {
   padding: 8px !important;
   margin: 0;
-}
-.website-feedback-dialog .field--name-uid,
-.website-feedback-dialog .field--name-created,
-.website-feedback-dialog .field--type-image .description {
-  display: none;
 }
 .website-feedback-dialog .field--name-screenshot,
 .website-feedback-dialog .field--name-image {

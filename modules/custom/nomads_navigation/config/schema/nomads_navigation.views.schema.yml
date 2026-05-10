@@ -14,3 +14,22 @@ views.filter.nomads_navigation_has_domain_term:
     bypass_domain_assigned:
       type: boolean
       label: 'Bypass listings assigned to the active domain'
+views.field.nomads_navigation_listing_domains:
+  type: views_field
+  label: 'Listing domains'
+  mapping:
+    selected_paragraph_bundles:
+      type: sequence
+      label: 'Selected paragraph bundles'
+      sequence:
+        type: string
+        label: 'Paragraph bundle'
+    paragraph_bundle_selection_initialized:
+      type: boolean
+      label: 'Paragraph bundle selection initialized'
+    bypass_domain_assigned:
+      type: boolean
+      label: 'Include listings assigned to each domain'
+    display_style:
+      type: string
+      label: 'Display style'

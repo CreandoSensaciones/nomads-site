@@ -18,7 +18,7 @@
   width: 100%;
 
   margin: 10px 0;
-  font-size: 28pt;
+  font-size: clamp(18pt, 2.8vw, 36px);
   color: #999;
   text-align: center;
 }

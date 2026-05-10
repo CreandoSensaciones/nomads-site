@@ -5,6 +5,7 @@
  * Selection Tweaks module.
  */
 
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -23,6 +24,44 @@ function selection_tweaks_form_alter(array &$form, FormStateInterface $form_stat
   if (($form['#base_form_id'] ?? '') === 'node_form') {
     selection_tweaks_form_node_form_alter($form, $form_state, $form_id);
   }
+}
+
+/**
+ * Implements hook_field_widget_single_element_WIDGET_TYPE_form_alter().
+ */
+function selection_tweaks_field_widget_single_element_options_buttons_form_alter(array &$element, FormStateInterface $form_state, array $context): void {
+  selection_tweaks_add_cardinality_attribute($element, $context);
+}
+
+/**
+ * Implements hook_field_widget_single_element_WIDGET_TYPE_form_alter().
+ */
+function selection_tweaks_field_widget_single_element_options_pretty_form_alter(array &$element, FormStateInterface $form_state, array $context): void {
+  selection_tweaks_add_cardinality_attribute($element, $context);
+}
+
+/**
+ * Implements hook_field_widget_single_element_WIDGET_TYPE_form_alter().
+ */
+function selection_tweaks_field_widget_single_element_options_select_form_alter(array &$element, FormStateInterface $form_state, array $context): void {
+  selection_tweaks_add_cardinality_attribute($element, $context);
+}
+
+/**
+ * Adds finite field cardinality metadata for client-side option limiting.
+ */
+function selection_tweaks_add_cardinality_attribute(array &$element, array $context): void {
+  if (!isset($context['items'])) {
+    return;
+  }
+
+  $field_definition = $context['items']->getFieldDefinition();
+  $cardinality = (int) $field_definition->getFieldStorageDefinition()->getCardinality();
+  if ($cardinality === FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED || $cardinality < 1) {
+    return;
+  }
+
+  $element['#attributes']['data-selection-tweaks-cardinality'] = (string) $cardinality;
 }
 
 /**

@@ -1,0 +1,11 @@
+nomads_display_tweaks.node_modal:
+  path: '/node/{node}/modal'
+  defaults:
+    _controller: '\Drupal\nomads_display_tweaks\Controller\NodeModalController::view'
+    _title_callback: '\Drupal\nomads_display_tweaks\Controller\NodeModalController::title'
+  requirements:
+    _entity_access: 'node.view'
+  options:
+    parameters:
+      node:
+        type: entity:node

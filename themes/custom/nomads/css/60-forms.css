@@ -137,11 +137,11 @@ form details.field-group-toggle .fieldset-wrapper {
 
 
 
-.node-listing-form .vertical-tabs__pane > div > .details-description {
-  margin-right: 220px;
+.page-node-type-listing form .vertical-tabs__pane > div > .details-description {
+  margin: 20px 160px 0 0;
 }
 .node-listing-form .vertical-tabs__pane  > div > .details-description p:first-of-type {
-  margin-right: 350px;
+  
 }
 .relevance-paragraph .paragraph-top {
   margin: 0;
@@ -611,7 +611,7 @@ form .paragraphs-tabs-wrapper img.paragraph-type-icon {
 }
 form .paragraphs-tabs-wrapper .paragraph-type-label {
   position: absolute;
-  top: 20px;
+  top: 7px;
   right: 220px;
   text-align: right;
   display: block;
@@ -626,7 +626,10 @@ form .paragraphs-tabs-wrapper .paragraph-top {
 
 
 form .field-group-tabs-wrapper li.vertical-tabs__menu-item.relevance-paragraph {
-   margin-left: 20px;
+   margin-left: 50px;
+}
+form .field-group-tabs-wrapper li.vertical-tabs__menu-item.relevance-info {
+   margin-left: 25px;
 }
 form .field-group-tabs-wrapper li.vertical-tabs__menu-item.optional-paragraph {
    margin-left: 40px;
@@ -775,7 +778,7 @@ details.inline-widgets.col4 .details-wrapper {
 
 .relevance-ui .field--name-field-relevance2 .pretty-element {
   padding: 0 30px;
-  margin-top: -21px;
+  margin-top: -11px;
 }
 .relevance-ui .field--name-field-relevance2 .pretty-element label {
   border-radius: 15px;
@@ -800,6 +803,11 @@ details.inline-widgets.col4 .details-wrapper {
 }
 .fieldset-hosting-capacity .field--type-integer input {
   width: 100px;
+}
+
+.field-subtitle-enabled .field-prefix:has(.field-subtitle-text) {
+  display: block;
+  width: 100%;
 }
 
 
@@ -836,12 +844,15 @@ form.node-listing-text-form {
   background: #eee;
   border-radius: 12px;
 }
-form.node-listing-text-form .field-multiple-table thead,
+form.node-listing-text-form .field-multiple-table .paragraphs-actions,
 form.node-listing-text-form td.field-multiple-drag,
 form.node-listing-text-form .paragraphs-add-wrapper,
 form.node-listing-text-form .paragraphs-actions,
 form.node-listing-text-form .tabledrag-toggle-weight-wrapper {
   display: none;
+}
+form.node-listing-text-form thead h4 {
+  font-size: 24pt;
 }
 form.node-listing-text-form .paragraph-top {
   grid-template-columns: 300px auto 1fr auto;
@@ -1113,8 +1124,8 @@ form.user-form .form-submit {
   padding: 12px 22px;
   font-size: 1rem;
   font-weight: 600;
-  color: #0f2f43;
-  background: #ffffff;
+  color: #fff;
+  background: #0b6fa4;
   border: 1px solid #bfc9d1;
   border-radius: 999px;
   text-decoration: none;
@@ -1125,9 +1136,9 @@ form.user-form .form-submit {
 form.user-form .button:hover,
 form.user-form input.button:hover,
 form.user-form .form-submit:hover {
-  background: #f2f7fa;
+  background: #0b6fa4;
   border-color: #0b6fa4;
-  color: #0b6fa4;
+  color: #fff;
   transform: translateY(-1px);
 }
 /* Buttons */
@@ -1141,8 +1152,8 @@ form.user-login-form .form-submit {
   padding: 12px 22px;
   font-size: 1rem;
   font-weight: 600;
-  color: #0f2f43;
-  background: #ffffff;
+  color: #fff;
+  background: #0b6fa4;
   border: 1px solid #bfc9d1;
   border-radius: 999px;
   text-decoration: none;
@@ -1153,9 +1164,9 @@ form.user-login-form .form-submit {
 form.user-login-form .button:hover,
 form.user-login-form input.button:hover,
 form.user-login-form .form-submit:hover {
-  background: #f2f7fa;
+  background: #0b6fa4;
   border-color: #0b6fa4;
-  color: #0b6fa4;
+  color: #fff;
   transform: translateY(-1px);
 }
 
@@ -1316,4 +1327,41 @@ form.user-form #edit-account > .form-item:last-child {
 
 
 
+/* ========== Media add ========= */
 
+.js-media-library-add-form ul li {
+  display: inline-block;
+  max-width: 150px;
+  margin: 10px;
+  padding: 10px;
+  border: 1px solid #666;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+.js-media-library-add-form ul {
+  padding: 0;
+}
+.js-media-library-add-form ul li label {
+  display: none !important;
+}
+.js-media-library-add-form ul li .form-type-item {
+  font-size: 8pt;
+  margin-bottom: 5px;
+  overflow-wrap: break-word;   /* Standard */
+  word-break: break-word;
+}
+.ui-dialog .media-library-selected-count {
+  color: #fff;
+}
+.ui-dialog {
+    height: 90vh !important;
+    display: flex;
+  flex-direction: column;
+}
+
+#media-library-add-form-wrapper {
+  flex: 1 1 auto; /* nimmt den restlichen Platz */
+  min-height: 0;  /* ganz wichtig in flex layouts */
+  overflow-y: auto;
+}

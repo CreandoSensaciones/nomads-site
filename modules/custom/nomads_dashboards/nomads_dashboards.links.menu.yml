@@ -1,0 +1,6 @@
+nomads_dashboards.settings:
+  title: 'Dashboards'
+  description: 'Configure help content references for virtual dashboards.'
+  route_name: nomads_dashboards.settings
+  parent: system.admin_config_ui
+  weight: 20

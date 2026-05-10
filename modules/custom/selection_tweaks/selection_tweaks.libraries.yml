@@ -1,4 +1,7 @@
 selection_tweaks:
+  css:
+    theme:
+      css/selection_tweaks.css: {}
   js:
     js/selection_tweaks.js: {}
   dependencies:

@@ -24,6 +24,14 @@ function nomads_navigation_views_data_alter(array &$data): void {
       'id' => 'nomads_navigation_has_domain_term',
     ],
   ];
+
+  $data['node_field_data']['nomads_navigation_listing_domains'] = [
+    'title' => t('Listing domains'),
+    'help' => t('Lists domains whose navigation term filter matches the listing.'),
+    'field' => [
+      'id' => 'nomads_navigation_listing_domains',
+    ],
+  ];
 }
 
 /**

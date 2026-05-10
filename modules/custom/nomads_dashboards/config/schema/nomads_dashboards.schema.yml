@@ -1,0 +1,124 @@
+nomads_dashboards.settings:
+  type: config_object
+  label: 'Nomads dashboards settings'
+  mapping:
+    titles:
+      type: mapping
+      label: 'Dashboard tile titles'
+      mapping:
+        user:
+          type: sequence
+          label: 'User dashboard tile titles'
+          sequence:
+            type: string
+            label: 'Tile title'
+        team:
+          type: sequence
+          label: 'Team dashboard tile titles'
+          sequence:
+            type: string
+            label: 'Tile title'
+        listing:
+          type: sequence
+          label: 'Listing dashboard tile titles'
+          sequence:
+            type: string
+            label: 'Tile title'
+        organizer:
+          type: sequence
+          label: 'Organizer dashboard tile titles'
+          sequence:
+            type: string
+            label: 'Tile title'
+    help_nodes:
+      type: mapping
+      label: 'Dashboard help content nodes'
+      mapping:
+        user:
+          type: sequence
+          label: 'User dashboard help content nodes'
+          sequence:
+            type: integer
+            label: 'Help node ID'
+            nullable: true
+        team:
+          type: sequence
+          label: 'Team dashboard help content nodes'
+          sequence:
+            type: integer
+            label: 'Help node ID'
+            nullable: true
+        listing:
+          type: sequence
+          label: 'Listing dashboard help content nodes'
+          sequence:
+            type: integer
+            label: 'Help node ID'
+            nullable: true
+        organizer:
+          type: sequence
+          label: 'Organizer dashboard help content nodes'
+          sequence:
+            type: integer
+            label: 'Help node ID'
+            nullable: true
+    views:
+      type: mapping
+      label: 'Dashboard tile view references'
+      mapping:
+        user:
+          type: sequence
+          label: 'User dashboard view references'
+          sequence:
+            type: mapping
+            label: 'View reference'
+            nullable: true
+            mapping:
+              view_id:
+                type: string
+                label: 'View ID'
+              display_id:
+                type: string
+                label: 'Display ID'
+        team:
+          type: sequence
+          label: 'Team dashboard view references'
+          sequence:
+            type: mapping
+            label: 'View reference'
+            nullable: true
+            mapping:
+              view_id:
+                type: string
+                label: 'View ID'
+              display_id:
+                type: string
+                label: 'Display ID'
+        listing:
+          type: sequence
+          label: 'Listing dashboard view references'
+          sequence:
+            type: mapping
+            label: 'View reference'
+            nullable: true
+            mapping:
+              view_id:
+                type: string
+                label: 'View ID'
+              display_id:
+                type: string
+                label: 'Display ID'
+        organizer:
+          type: sequence
+          label: 'Organizer dashboard view references'
+          sequence:
+            type: mapping
+            label: 'View reference'
+            nullable: true
+            mapping:
+              view_id:
+                type: string
+                label: 'View ID'
+              display_id:
+                type: string
+                label: 'Display ID'

@@ -26,9 +26,19 @@
 }
 
 
+/* =============================
+  Z index
+================================= */
 
-/* ========== Buttons ========== */
-/* ============================= */
+/* keep contextual UI above images/sliders */
+.contextual {
+  z-index: 4;
+}
+
+
+/* ===============================
+  Buttons
+================================== */
 
 /* Nomads.site blue pill button */
 
@@ -69,8 +79,30 @@
   outline: none;
 }
 
+a.button {
+    
+    display: inline-block;
+    margin: 5px 10px;
+    background: #0b6fa4;
+    border-radius: 8px;
+    border-color: #0b6fa4;
+    color: #fff;
+    transform: translateY(-1px);
+    text-decoration: none;
+    padding: 5px 12px;
+}
+a.button-primary {
+    display: inline-block;
+    font-size: 22pt;
+    padding: 10px 50px;
+    margin: 5px;
+    border-radius: 16px;
+}
 
-/* ========= Button ======== */
+
+/* ===============================
+  Action Buttons
+================================== */
 
 #edit-actions {
   margin-top: 24px;
@@ -84,7 +116,6 @@
   color: #fff;
   border-radius: 8px;
   padding: 10px 18px;
-  min-height: 42px;
   font-size: 1.1rem;
   font-weight: 600;
   line-height: 1.2;
@@ -93,6 +124,11 @@
   transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
   margin: 0 auto;
   width: auto;
+}
+#edit-actions .button#edit-delete {
+  background: #fff;
+  color: #710101;
+  border: 1px solid  #710101;
 }
 
 #edit-actions .button:hover,
@@ -132,11 +168,17 @@
 
 
 
+/* =======================================
+==========================================
+  Field Display
+==========================================
+========================================== */
 
 
 
-
-/* ========== Icon formatter ========== */
+/* =======================================
+  Icon formatter
+========================================== */
 
 /* Shared icon formatter typography */
 .nomads-icon-formatter__label {
@@ -178,7 +220,9 @@
 
 
 
-/* ========== Pills ========== */
+/* =================================
+  Pills
+===================================== */
 
 div .nomads-pill,
 div .nomads-pill__label,
@@ -187,7 +231,6 @@ div .nomads-pill__label,
   display: inline-block;
   border-radius: 999px;
   padding: 4px 8px;
-  margin: 2px;
   font-size: 10pt;
   line-height: 1.2;
   vertical-align: middle;
@@ -195,7 +238,6 @@ div .nomads-pill__label,
   font-weight: 500;
   background-color: #0570A1;
   color: #fff;
-  text-decoration: none;
 }
 div .nomads-pill a {
   text-decoration: none;
@@ -207,19 +249,6 @@ div .nomads-pill a {
 .listing-menu-virtual-field a.listing-menu-virtual-field__link {
   font-size: 1.1em;
 }
-
-/* Shared pills base styles 
-.nomads-pills:not(.nomads-pills--fitted-pills) {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 8px 12px;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-*/
 
 .nomads-pill__link {
   color: inherit;
@@ -241,6 +270,7 @@ div .nomads-pill a {
   color: #fff;
 }
 */
+
 
 
 
@@ -269,7 +299,9 @@ div .nomads-pill a {
 
 
 
-/* ========== Data icons inline ========== */
+/* =====================================
+  Data icons inline
+======================================== */
 
 .data-icons-inline .field {
   display: inline-block;
@@ -291,7 +323,9 @@ div .nomads-pill a {
 
 
 
-/* ========== Tooltips ========== */
+/* =================================
+  Tooltips
+  ================================== */
 
 /* Tooltip anchor */
 [data-tooltip]{
@@ -354,30 +388,32 @@ div .nomads-pill a {
 .special-category-select__tree-link[data-tooltip]::before {
   transform: translate(-50%, -30px);
 } */
-.special-category-select__tree-label[data-tooltip]::after,
-.special-category-select__tree-label[data-tooltip]::before {
-  display: none;
-}
 
 
 
 
 
 
-/* ========== Taxonomy Breadcrumb ========== */
+/* ==========================================
+  Taxonomy Breadcrumb
+  ============================================ */
 
-.taxonomy-breadcrumb span,
-.taxonomy-breadcrumb span a {
+.taxonomy-breadcrumb span {
   text-align: center;
-  text-transform: uppercase;
-  text-decoration: none;
-  color: #777;
   font-size: 12pt;
   font-weight: 600;
 }
+.taxonomy-breadcrumb span a {
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #777;
+}
 
 
 
+/* ========================================
+  Links
+=========================================== */
 
 .promoted-link {
   display: block;
@@ -401,53 +437,3 @@ div .nomads-pill a {
 
 
 
-/* =========== Subdomain slideshow arrows ============ */
-
-/* Swiper arrows as bold white circles */
-.swiper-container {
-  position: relative;
-}
-
-.swiper-button-prev,
-.swiper-button-next {
-  width: 32px;
-  height: 32px;
-  margin-top: -16px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.28);
-  border: 3px solid rgba(255,255,255,0.95);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
-}
-
-.swiper-button-prev:hover,
-.swiper-button-next:hover {
-  transform: scale(1.08);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.35);
-}
-
-.swiper-button-prev::after,
-.swiper-button-next::after {
-  font-size: 16px;
-  font-weight: 900;
-  color: #000;
-}
-
-.swiper-button-prev {
-  left: 10px;
-}
-
-.swiper-button-next {
-  right: 10px;
-}
-
-.swiper-button-disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-/* optional: vertically center better if autoheight jumps */
-.swiper-button-prev,
-.swiper-button-next {
-  top: 50%;
-}

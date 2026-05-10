@@ -8,14 +8,8 @@ function nomads_listing_form_alter(array &$form, \Drupal\Core\Form\FormStateInte
 
 /**
  * Implements hook_entity_type_build().
- *
- * Keep base field title in $content when display-configurable in full view.
- * This follows the core/manage_display rendering path, not custom injection.
  */
 function nomads_listing_entity_type_build(array &$entity_types): void {
-  if (isset($entity_types['node'])) {
-    $entity_types['node']->set('enable_base_field_custom_preprocess_skipping', TRUE);
-  }
 }
 
 /**

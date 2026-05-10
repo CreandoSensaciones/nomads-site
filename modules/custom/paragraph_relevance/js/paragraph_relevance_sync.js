@@ -332,7 +332,6 @@
     var fieldKinds = detectFieldKinds(groups);
     var fieldNames = Object.keys(groups);
 
-    var totalDataFields = fieldNames.length;
     var filledDataFields = 0;
 
     fieldNames.forEach(function (fieldName) {
@@ -361,30 +360,25 @@
       }
     });
 
-    var oneThirdThreshold = Math.ceil(totalDataFields / 3);
-    var oneThirdRule = filledDataFields >= oneThirdThreshold;
-
     var computed = 0;
     if (
       titleFilled &&
-      descriptionLength >= 500 &&
-      imagesCount >= 5 &&
       otherFilled >= 2 &&
-      oneThirdRule
+      descriptionLength >= 500 &&
+      imagesCount >= 5
     ) {
       computed = 3;
     }
     else if (
       titleFilled &&
-      descriptionFilled &&
       otherFilled >= 2 &&
-      oneThirdRule
+      descriptionFilled
     ) {
       computed = 2;
     }
     else if (
       titleFilled &&
-      otherFilled >= 3
+      otherFilled >= 2
     ) {
       computed = 1;
     }
@@ -399,10 +393,8 @@
       desired: desired,
       computed: computed,
       effective: effective,
-      totalDataFields: totalDataFields,
       filledDataFields: filledDataFields,
-      otherFilled: otherFilled,
-      oneThirdRule: oneThirdRule
+      otherFilled: otherFilled
     };
   }
 

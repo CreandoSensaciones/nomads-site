@@ -33,13 +33,13 @@ function paragraph_relevance_vfields_entity_extra_field_info(): array {
           ],
           'core_focus_paragraphs_3' => [
             'label' => $t->translate('Core Focus Paragraphs (3)'),
-            'description' => $t->translate('Renders all Listing paragraphs whose field_relevance2 value is 3, using Paragraph view mode "3".'),
+            'description' => $t->translate('Renders all Listing paragraphs from bundles whose listing field_<bundle>_relevance value is 3, using Paragraph view mode "3".'),
             'weight' => 0,
             'visible' => FALSE,
           ],
           'relevant_paragraphs_2' => [
             'label' => $t->translate('Relevant Paragraphs (2)'),
-            'description' => $t->translate('Renders all Listing paragraphs whose field_relevance2 value is 2, using Paragraph view mode "2".'),
+            'description' => $t->translate('Renders all Listing paragraphs from bundles whose listing field_<bundle>_relevance value is 2, using Paragraph view mode "2".'),
             'weight' => 1,
             'visible' => FALSE,
           ],
@@ -343,28 +343,7 @@ function paragraph_relevance_vfields_group_paragraphs_by_bundle(array $paragraph
  */
 function paragraph_relevance_vfields_collect_key_aspect_sections(EntityInterface $listing, array $key_aspect_terms, int $target_relevance, CacheableMetadata $cacheability): array {
   $paragraphs = paragraph_relevance_vfields_collect_paragraphs($listing, $cacheability);
-  $all_paragraphs_by_bundle = paragraph_relevance_vfields_group_paragraphs_by_bundle($paragraphs);
-  $paragraphs_by_bundle = [];
-  $seen = [];
-
-  foreach ($paragraphs as $paragraph) {
-    $bundle = (string) $paragraph->bundle();
-    if ($bundle === '') {
-      continue;
-    }
-    $relevance_value = paragraph_relevance_vfields_extract_paragraph_relevance_value($paragraph);
-    if ($relevance_value !== $target_relevance) {
-      continue;
-    }
-    $id = $paragraph->id();
-    if ($id !== NULL && isset($seen[$bundle][$id])) {
-      continue;
-    }
-    if ($id !== NULL) {
-      $seen[$bundle][$id] = TRUE;
-    }
-    $paragraphs_by_bundle[$bundle][] = $paragraph;
-  }
+  $paragraphs_by_bundle = paragraph_relevance_vfields_group_paragraphs_by_bundle($paragraphs);
 
   $sections = [];
   foreach ($key_aspect_terms as $term) {
@@ -372,7 +351,13 @@ function paragraph_relevance_vfields_collect_key_aspect_sections(EntityInterface
       continue;
     }
     $bundle = trim((string) ($term->get('field_paragraph_bundle')->value ?? ''));
-    if ($bundle === '' || empty($paragraphs_by_bundle[$bundle])) {
+    if ($bundle === '') {
+      continue;
+    }
+    if (paragraph_relevance_vfields_listing_bundle_relevance($listing, $bundle) !== $target_relevance) {
+      continue;
+    }
+    if (empty($paragraphs_by_bundle[$bundle])) {
       continue;
     }
     $sections[] = [

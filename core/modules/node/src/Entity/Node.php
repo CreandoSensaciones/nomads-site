@@ -284,8 +284,7 @@ class Node extends EditorialContentEntityBase implements NodeInterface {
     $fields = parent::baseFieldDefinitions($entity_type);
     $fields += static::ownerBaseFieldDefinitions($entity_type);
 
-    
-  $fields['title'] = BaseFieldDefinition::create('string')
+    $fields['title'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Title'))
       ->setRequired(TRUE)
       ->setTranslatable(TRUE)
@@ -300,8 +299,7 @@ class Node extends EditorialContentEntityBase implements NodeInterface {
         'type' => 'string_textfield',
         'weight' => -5,
       ])
-      ->setDisplayConfigurable('form', TRUE)
-      ->setDisplayConfigurable('view', TRUE);
+      ->setDisplayConfigurable('form', TRUE);
 
     $fields['uid']
       ->setLabel(t('Authored by'))

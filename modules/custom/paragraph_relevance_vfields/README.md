@@ -8,8 +8,8 @@
   - `key_aspects`
   - `core_focus_paragraphs_3`
   - `relevant_paragraphs_2`
-- Renders paragraphs with `field_relevance2 = 3` in `core_focus_paragraphs_3`.
-- Renders paragraphs with `field_relevance2 = 2` in `relevant_paragraphs_2`.
+- Renders paragraphs from bundles with listing `field_<bundle>_relevance = 3` in `core_focus_paragraphs_3`.
+- Renders paragraphs from bundles with listing `field_<bundle>_relevance = 2` in `relevant_paragraphs_2`.
 - Builds key-aspect grouped output (`3/2/1`) with configurable output style:
   - `icon`
   - `pill`
@@ -18,7 +18,7 @@
 - Resolves ordering from taxonomy chain:
   - `subsites.field_hostname` -> `subsites.field_key_aspects` -> `key_aspects.field_paragraph_bundle`
 - Applies hostname fallback to `field_hostname = default` when no exact match exists.
-- Copies paragraph `field_relevance` into `field_relevance2` during listing presave and updates bundle-level `field_<bundle>_relevance` maxima.
+- Copies paragraph `field_relevance` into `field_relevance2` during listing presave and copies the first bundle paragraph's `field_relevance2` into `field_<bundle>_relevance`.
 
 ## Files
 - `paragraph_relevance_vfields.module`
@@ -34,7 +34,7 @@
 
 ## Runtime Behavior
 1. On listing display, module injects enabled virtual fields (`key_aspects`, relevance 3, relevance 2).
-2. Paragraphs are collected from paragraph reference fields and filtered by `field_relevance2`.
+2. Paragraphs are collected from paragraph reference fields and filtered by the listing's `field_<bundle>_relevance` value.
 3. Order is determined by hostname-matched `subsites` term and its ordered `field_key_aspects` references.
 4. Paragraphs render in view mode `3`/`2` (fallback `default` when missing).
 5. Presave keeps `field_relevance2` and per-bundle relevance summary fields synchronized.
@@ -52,6 +52,6 @@
 - Remove or gate presave debug logging before non-prototype environments.
 - Add tests for:
   - hostname -> subsite resolution and default fallback
-  - relevance filtering by `field_relevance2`
+  - relevance filtering by listing `field_<bundle>_relevance`
   - key-aspect ordering and output mode settings
   - presave synchronization of paragraph/node relevance fields

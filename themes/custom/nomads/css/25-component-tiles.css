@@ -23,7 +23,15 @@
   cursor: zoom-in;
 }
 
+/* ========== test ========= */
 
+
+.nomads-tiles .data-tile .tile-items > div {
+   flex-basis: 100%;
+}
+.nomads-tiles .data-tile .tile-items .inline {
+  flex: 0 0 auto;
+}
 
 /* --------- Tiles layout -------- */
 
@@ -38,15 +46,17 @@
   flex: 0 0 auto;
 }
 .nomads-tiles .data-tile .tile-items {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  align-content: space-evenly;
+  display: flex;
+  flex-wrap: wrap;
+    justify-content: space-around;
   height: 235px;
 }
+.nomads-tiles .data-tile h3 {
+  margin-bottom: 15px;
+}
 .nomads-tiles .data-tile .tile-items > div {
-  grid-column: 1/-1;
-  width: 240px;
-  text-align: center;
+  /* grid-column: 1/-1;
+  text-align: center; */
 }
 .nomads-tiles .data-tile .tile-items > div.span2 {
   grid-column: span 2;
@@ -160,6 +170,16 @@
     font-weight: 700;
     line-height: 1;
 }
+
+
+
+
+
+
+
+
+
+
 
 
 

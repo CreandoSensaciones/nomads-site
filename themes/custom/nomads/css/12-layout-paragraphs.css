@@ -2,6 +2,41 @@
 .nomads-paragraph-modal-link-wrapper {
   display: none !important;
 }
+/* ==== Tweak ====== */
+/* to make boxes getting max height */
+.paragraph-relevance-vfield--relevant .field--name-field-description {
+  height: 700px;
+}
+
+/* ========== Paragraphs ========== */
+
+.paragraph--bundle-view > .field {
+  margin-left: 5vw;
+  margin-right: 5vw;
+}
+.paragraph--bundle-view > .field--name-field-view {
+  margin-left: 1vw;
+  margin-right: 1vw;
+  margin: 0;
+}
+.paragraph--bundle-text {
+  width: 100%;
+  max-width: 960px;
+  box-sizing: border-box;
+  margin-left: auto;
+  margin-right: auto;
+}
+@media (max-width: 1000px) {
+.paragraph--bundle-text {
+  padding-left: 2vw;
+  padding-right: 2vw;
+}
+}
+
+
+
+
+
 
 
 div #paragraphs-container {
@@ -11,11 +46,12 @@ div #paragraphs-container {
   row-gap: 60px;  
   margin-bottom: 50px;
   grid-auto-flow: dense;
+  align-items: stretch;
 }
 #paragraphs-container > * {
   min-width: 0;
 }
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
 div #paragraphs-container {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -36,6 +72,7 @@ div #paragraphs-container {
 #paragraphs-container .paragraph-relevance-vfield--relevant .paragraph-relevance-vfield__section {
   grid-column: span 1;
   grid-row: span 3;
+  height: 100%;
 }
 
 @media (max-width: 980px) {
@@ -77,7 +114,7 @@ div #paragraphs-container {
         "title title title"
         "left center right";
 }
-@media (max-width: 1200px) {
+@media (max-width: 1300px) {
   .paragraph--viewmode-vm-3.col2 {
   grid-template-columns: minmax(0, 1fr) 510px;
 }
@@ -104,6 +141,18 @@ div #paragraphs-container {
     "right"
     "left";
 }
+#paragraphs-container .paragraph--viewmode-vm-3 .paragraph-left-column,
+#paragraphs-container .paragraph--viewmode-vm-3 .paragraph-center-column,
+#paragraphs-container .paragraph--viewmode-vm-3 .paragraph-right-column {
+  height: auto;
+  margin: 5px 0;
+}
+.paragraph-left-column div.icon-placeholder {
+  display: none;
+}
+#paragraphs-container .paragraph--viewmode-vm-3  .geolocation-map-container {
+  height: 400px !important;
+}
 .paragraph--viewmode-vm-3.col3 {
     grid-template-columns: 1fr;
     grid-template-areas:
@@ -116,7 +165,6 @@ div #paragraphs-container {
 
 .paragraph--viewmode-vm-3 .nomads-paragraph-header {
   grid-area: title;
-  height: 0;
   position: relative;
 }
 .paragraph--viewmode-vm-3 > .paragraph-right-column {

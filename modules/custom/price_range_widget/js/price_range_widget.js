@@ -112,7 +112,20 @@
       .filter(function (item) {
         return !!item;
       });
-    var primaryCurrencyItem = currencyItems[0] || null;
+
+    var primaryCurrencyItem = null;
+
+    wrappers.some(function (wrapper) {
+      if (priceWrapperHasNumber(wrapper)) {
+        primaryCurrencyItem = findCurrencyItem(wrapper);
+        return true;
+      }
+      return false;
+    });
+
+    if (!primaryCurrencyItem) {
+      primaryCurrencyItem = currencyItems[0] || null;
+    }
 
     if (primaryCurrencyItem) {
       if (primaryCurrencyItem.parentNode !== row) {
@@ -124,13 +137,18 @@
       primaryCurrencyItem.classList.remove('price-range-widget__currency-hidden');
     }
 
-    currencyItems.slice(1).forEach(function (item) {
-      item.classList.add('price-range-widget__currency-hidden');
+    currencyItems.forEach(function (item) {
+      if (item !== primaryCurrencyItem) {
+        item.classList.add('price-range-widget__currency-hidden');
+        item.classList.remove('price-range-widget__currency');
+      }
     });
 
     updateCurrencyLabel(primaryCurrencyItem);
     moveDescription(group, primaryCurrencyItem);
-    syncCurrencyGroup(primaryCurrencyItem, currencyItems.slice(1));
+    syncCurrencyGroup(primaryCurrencyItem, currencyItems.filter(function (item) {
+      return item !== primaryCurrencyItem;
+    }));
   }
 
   function updateCurrencyLabel(minCurrencyItem) {
@@ -168,6 +186,33 @@
     holder.appendChild(description);
   }
 
+  function priceWrapperHasNumber(wrapper) {
+    var number = wrapper ? wrapper.querySelector('input[name$="[number]"]') : null;
+    return !!(number && number.value && number.value.trim() !== '');
+  }
+
+  function setCurrencySelectToEuroIfPriceIsEmpty(select) {
+    if (!select || !select.querySelector('option[value="EUR"]')) {
+      return;
+    }
+
+    var wrapper = select.closest('.field--type-commerce-price');
+    if (wrapper && priceWrapperHasNumber(wrapper)) {
+      return;
+    }
+
+    if (select.value !== 'EUR') {
+      select.value = 'EUR';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+
+  function setAllEmptyPriceCurrencyFieldsToEuro(context) {
+    Array.prototype.slice
+      .call(context.querySelectorAll('select[name$="[currency_code]"]'))
+      .forEach(setCurrencySelectToEuroIfPriceIsEmpty);
+  }
+
   function syncCurrencyGroup(primaryItem, otherItems) {
     if (!primaryItem || !otherItems || !otherItems.length) {
       return;
@@ -190,21 +235,13 @@
       return;
     }
 
-    var primaryValue = primarySelect.value;
-    if (!primaryValue) {
-      for (var i = 0; i < otherSelects.length; i += 1) {
-        if (otherSelects[i].value) {
-          primaryValue = otherSelects[i].value;
-          break;
-        }
-      }
-      if (primaryValue) {
-        primarySelect.value = primaryValue;
-      }
-    }
-
     otherSelects.forEach(function (select) {
-      select.value = primarySelect.value;
+      setCurrencySelectToEuroIfPriceIsEmpty(select);
+
+      var wrapper = select.closest('.field--type-commerce-price');
+      if (!priceWrapperHasNumber(wrapper)) {
+        select.value = primarySelect.value;
+      }
     });
 
     primarySelect.addEventListener('change', function () {
@@ -217,6 +254,8 @@
 
   Drupal.behaviors.priceRangeWidget = {
     attach: function (context) {
+      setAllEmptyPriceCurrencyFieldsToEuro(context);
+
       once('price-range-widget-group', '[data-drupal-selector$="group-price-range"]', context)
         .forEach(function (group) {
           setupPriceRangeGroup(group);
@@ -232,3 +271,4 @@
     }
   };
 })(Drupal, once);
+

@@ -350,6 +350,10 @@ function nomads_listing_virtual_fields_add_location_display_settings(array &$for
 
   $default_link_terms = (bool) $display->getThirdPartySetting('nomads_listing_virtual_fields', 'link_terms', TRUE);
   $default_max_bundles = max(1, (int) $display->getThirdPartySetting('nomads_listing_virtual_fields', 'max_bundles', 6));
+  $default_output_mode = (string) $display->getThirdPartySetting('nomads_listing_virtual_fields', 'output_mode', 'detailed');
+  if (!in_array($default_output_mode, ['detailed', 'combined', 'switch'], TRUE)) {
+    $default_output_mode = 'detailed';
+  }
 
   $form['location_virtual_field_settings'] = [
     '#type' => 'details',
@@ -364,6 +368,18 @@ function nomads_listing_virtual_fields_add_location_display_settings(array &$for
     '#description' => t('Link region, country and place terms to their term pages.'),
     '#default_value' => $default_link_terms,
   ];
+  $form['location_virtual_field_settings']['output_mode'] = [
+    '#type' => 'radios',
+    '#title' => t('Output mode'),
+    '#options' => [
+      'detailed' => t('Detailed'),
+      'combined' => t('Combined'),
+      'switch' => t('Switch'),
+    ],
+    '#description' => t('Detailed keeps the current location output. Combined renders country/date summaries and collapses multiple dated locations to their shared geo region and full month span. Switch uses Detailed up to the maximal number of bundles, then Combined above that threshold.'),
+    '#default_value' => $default_output_mode,
+    '#required' => TRUE,
+  ];
   $form['location_virtual_field_settings']['max_bundles'] = [
     '#type' => 'number',
     '#title' => t('Maximal number of bundles'),
@@ -374,36 +390,35 @@ function nomads_listing_virtual_fields_add_location_display_settings(array &$for
     '#required' => TRUE,
   ];
 
-  if (!isset($form['#submit']) || !is_array($form['#submit'])) {
-    $form['#submit'] = [];
+  if (!isset($form['#entity_builders']) || !is_array($form['#entity_builders'])) {
+    $form['#entity_builders'] = [];
   }
-  if (!in_array('nomads_listing_virtual_fields_entity_view_display_edit_form_submit', $form['#submit'], TRUE)) {
-    $form['#submit'][] = 'nomads_listing_virtual_fields_entity_view_display_edit_form_submit';
+  if (!in_array('nomads_listing_virtual_fields_entity_view_display_builder', $form['#entity_builders'], TRUE)) {
+    $form['#entity_builders'][] = 'nomads_listing_virtual_fields_entity_view_display_builder';
   }
 }
 
 /**
- * Submit callback for entity view display forms.
+ * Entity builder for location virtual field display settings.
  */
-function nomads_listing_virtual_fields_entity_view_display_edit_form_submit(array &$form, FormStateInterface $form_state): void {
-  $form_object = $form_state->getFormObject();
-  if (!$form_object || !method_exists($form_object, 'getEntity')) {
+function nomads_listing_virtual_fields_entity_view_display_builder(string $entity_type_id, EntityInterface $entity, array &$form, FormStateInterface $form_state): void {
+  if (!$entity instanceof EntityViewDisplayInterface) {
     return;
   }
 
-  $display = $form_object->getEntity();
-  if (!$display instanceof EntityViewDisplayInterface) {
-    return;
-  }
-
-  if ($display->getTargetEntityTypeId() !== 'node' || $display->getTargetBundle() !== 'listing') {
+  if ($entity->getTargetEntityTypeId() !== 'node' || $entity->getTargetBundle() !== 'listing') {
     return;
   }
 
   $settings = (array) $form_state->getValue('location_virtual_field_settings', []);
   $link_terms = !empty($settings['link_terms']);
   $max_bundles = max(1, (int) ($settings['max_bundles'] ?? 6));
+  $output_mode = (string) ($settings['output_mode'] ?? 'detailed');
+  if (!in_array($output_mode, ['detailed', 'combined', 'switch'], TRUE)) {
+    $output_mode = 'detailed';
+  }
 
-  $display->setThirdPartySetting('nomads_listing_virtual_fields', 'link_terms', $link_terms);
-  $display->setThirdPartySetting('nomads_listing_virtual_fields', 'max_bundles', $max_bundles);
+  $entity->setThirdPartySetting('nomads_listing_virtual_fields', 'link_terms', $link_terms);
+  $entity->setThirdPartySetting('nomads_listing_virtual_fields', 'output_mode', $output_mode);
+  $entity->setThirdPartySetting('nomads_listing_virtual_fields', 'max_bundles', $max_bundles);
 }

@@ -3,7 +3,7 @@
     position: sticky;
     top: calc(var(--drupal-displace-offset-top, 0px) + 16px);
     align-self: flex-start;
-    max-height: calc(100vh - var(--drupal-displace-offset-top, 0px) - 32px);
+    /* max-height: calc(100vh - var(--drupal-displace-offset-top, 0px) - 32px); */
     overflow-y: auto;
     z-index: 2;
   }
@@ -24,4 +24,9 @@
   [data-paragraph-relevance-form] .form-actions.is-pr-save-fixed .button {
     width: 100%;
   }
+}
+
+
+form .relevance-paragraph h2 {
+  font-size: 20pt;
 }

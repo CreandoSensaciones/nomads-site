@@ -5,3 +5,12 @@ services:
       - '@entity_type.manager'
       - '@config.storage'
       - '@path_alias.manager'
+  nomads_navigation.listing_domain_matcher:
+    class: Drupal\nomads_navigation\ListingDomainMatcher
+    arguments:
+      - '@config.storage'
+      - '@entity_field.manager'
+      - '@entity_type.manager'
+      - '@database'
+      - '@views.cast_sql'
+      - '@language_manager'

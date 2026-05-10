@@ -70,7 +70,10 @@
     return fieldName === 'title' ||
       fieldName === 'field_title' ||
       fieldName === 'field_description' ||
-      fieldName === 'field_images';
+      fieldName === 'field_images' ||
+      fieldName.indexOf('description') !== -1 ||
+      fieldName.indexOf('image') !== -1 ||
+      fieldName.indexOf('media') !== -1;
   }
 
   function isSpecialCategorySelectValueControl(control) {
@@ -193,7 +196,9 @@
       return null;
     }
     return findFieldContainerByName(subform, 'field_description') ||
+      subform.querySelector('.field[class*="field--name-"][class*="-description"]') ||
       subform.querySelector('[data-drupal-selector*="-field-description-"]') ||
+      subform.querySelector('[data-drupal-selector*="-description-"]') ||
       subform.querySelector('.field--name-field-description');
   }
 
@@ -211,7 +216,7 @@
       });
 
       if (!texts.length) {
-        container.querySelectorAll('textarea[name*="[field_description]"]').forEach(function (ta) {
+        container.querySelectorAll('textarea[name*="description"]').forEach(function (ta) {
           var txt = stripHtml(ta.value);
           if (txt) {
             texts.push(txt);
@@ -220,7 +225,7 @@
       }
 
       if (!texts.length) {
-        container.querySelectorAll('input[type="hidden"][name*="[field_description]"][name$="[value]"]').forEach(function (input) {
+        container.querySelectorAll('input[type="hidden"][name*="description"][name$="[value]"]').forEach(function (input) {
           var txt = stripHtml(input.value);
           if (txt) {
             texts.push(txt);
@@ -237,7 +242,13 @@
       return null;
     }
     return findFieldContainerByName(subform, 'field_images') ||
+      subform.querySelector('.field[class*="field--name-"][class*="-images"]') ||
+      subform.querySelector('.field[class*="field--name-"][class*="-image"]') ||
+      subform.querySelector('.field[class*="field--name-"][class*="-media"]') ||
       subform.querySelector('[data-drupal-selector*="-field-images-"]') ||
+      subform.querySelector('[data-drupal-selector*="-images-"]') ||
+      subform.querySelector('[data-drupal-selector*="-image-"]') ||
+      subform.querySelector('[data-drupal-selector*="-media-"]') ||
       subform.querySelector('.field--name-field-images');
   }
 
@@ -479,19 +490,14 @@
     var filledFieldNames = getFilledFieldNames(subform);
     var filledDataCount = filledFieldNames.length;
 
-    var allGroups = collectDataFieldGroups(subform);
-    var totalDataFields = Object.keys(allGroups).length;
-    var oneThirdThreshold = Math.ceil(totalDataFields / 3);
-    var oneThirdRule = filledDataCount >= oneThirdThreshold;
-
     var computed = 0;
-    if (titleFilled && descriptionLength >= 500 && imageCount >= 5 && filledDataCount >= 2 && oneThirdRule) {
+    if (titleFilled && filledDataCount >= 2 && descriptionLength >= 500 && imageCount >= 5) {
       computed = 3;
     }
-    else if (titleFilled && descriptionFilled && filledDataCount >= 2 && oneThirdRule) {
+    else if (titleFilled && filledDataCount >= 2 && descriptionFilled) {
       computed = 2;
     }
-    else if (titleFilled && filledDataCount >= 3) {
+    else if (titleFilled && filledDataCount >= 2) {
       computed = 1;
     }
 
@@ -503,11 +509,8 @@
       descriptionFilled: descriptionFilled,
       descriptionLength: descriptionLength,
       imageCount: imageCount,
-      totalDataFields: totalDataFields,
       filledDataCount: filledDataCount,
       filledFieldNames: filledFieldNames,
-      oneThirdRule: oneThirdRule,
-      oneThirdThreshold: oneThirdThreshold,
       subform: subform
     };
   }

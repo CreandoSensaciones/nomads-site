@@ -1,0 +1,90 @@
+
+
+
+/* Local tasks temporary deactivation */
+
+option[value="/node/4/edit/images"],
+option[value="/node/4/edit/offers"]
+ {
+  display: none;
+}
+.mobile-announcement-overlay {
+  display: none;
+}
+@media (max-width: 980px) {
+.node--type-listing.node--view-mode-full .field--name-field-organization-ref {
+    display: none;
+  }
+}
+.special-category-select__tree-label[data-tooltip]::after,
+.special-category-select__tree-label[data-tooltip]::before {
+  display: none;
+}
+.website-feedback-dialog .field--name-uid,
+.website-feedback-dialog .field--name-created,
+.website-feedback-dialog .field--type-image .description {
+  display: none;
+}
+.nomads-title-local-tasks__select option:first-of-type {
+  display: none;
+}
+.nomads-navbar__dropdown ul ul {
+  display: none;
+}
+
+@media (max-width: 980px) {
+  .nomads-navbar__search {
+  display: none;
+}
+}
+/* hide drupal contextual in teaser layout */
+.horizontal-teaser-list .contextual {
+  display: none;
+}
+.nomads-paragraph-modal-link-wrapper .ajax-progress-throbber .message {
+  display: none;
+}
+.path-map section.region-bottom,
+.path-map section.region-footer {
+  display: none;
+}
+body.path-map .region-title {
+  display: none;
+}
+
+.hero-ui__overlay form.user-register-form .form-item-pass .description {
+  display: none;
+}
+
+@media (max-width: 780px) {
+  .page-node-type-hero .nomads-navbar__group--views {
+    display: none;
+  }
+}
+
+.page-node-type-hero #toolbar-administration {
+    display: none;
+}
+
+.view-listing-admin-ui .nomads-taxonomy-icons__label {
+  display: none;
+}
+
+.page-node-type-listing:has(.node-form) section.region-footer {
+  display: none;
+}
+
+@media (max-width: 1199px) {
+  .pc-only {
+    display: none;
+  };
+}
+@media (min-width: 1200px) {
+  .mobile-only {
+    display: none;
+  };
+}
+
+.field--name-field-location-date #field-location-date-values > thead {
+  display: none;
+}

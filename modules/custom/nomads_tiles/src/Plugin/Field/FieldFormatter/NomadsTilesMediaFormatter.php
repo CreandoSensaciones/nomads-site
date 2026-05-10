@@ -201,6 +201,7 @@ class NomadsTilesMediaFormatter extends FormatterBase implements ContainerFactor
         'library' => [
           'nomads_tiles/tiles',
           'nomads_tiles/glightbox',
+          'nomads_tiles/mobile_swiper',
         ],
       ],
     ];
@@ -208,11 +209,64 @@ class NomadsTilesMediaFormatter extends FormatterBase implements ContainerFactor
     foreach ($output_tiles as $delta => $tile_build) {
       $wrapper['tile_' . $delta] = $tile_build;
     }
+    $wrapper['mobile_swiper'] = $this->buildMobileSwiper($output_tiles);
     $wrapper['gallery_items'] = $this->buildHiddenGalleryLinks($items, $output_tiles, $cacheability);
 
     $cacheability->applyTo($wrapper);
 
     return [$wrapper];
+  }
+
+  /**
+   * Builds a mobile-only Swiper from the visible tile sequence.
+   */
+  protected function buildMobileSwiper(array $output_tiles): array {
+    $swiper = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['nomads-tiles__mobile-swiper', 'swiper'],
+        'aria-label' => $this->t('More images'),
+      ],
+      'wrapper' => [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['swiper-wrapper'],
+        ],
+      ],
+    ];
+
+    $slide_delta = 0;
+    foreach ($output_tiles as $tile_build) {
+      $mobile_tile = $tile_build;
+      if ($this->isImageTile($mobile_tile)) {
+        $mobile_tile['#type'] = 'html_tag';
+        $mobile_tile['#tag'] = 'div';
+        $mobile_tile['#value'] = '';
+        unset($mobile_tile['#url'], $mobile_tile['#title']);
+        $mobile_tile['#attributes']['class'] = array_values(array_diff($mobile_tile['#attributes']['class'], ['nomads-tiles-glightbox']));
+        unset($mobile_tile['#attributes']['data-gallery']);
+      }
+      $mobile_tile['#attributes']['class'][] = 'nomads-tiles__mobile-tile';
+
+      $swiper['wrapper']['slide_' . $slide_delta] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['swiper-slide', 'nomads-tiles__mobile-slide'],
+        ],
+        'tile' => $mobile_tile,
+      ];
+      $slide_delta++;
+    }
+
+    return $swiper;
+  }
+
+  /**
+   * Determines if a tile render array is an image tile.
+   */
+  protected function isImageTile(array $tile_build): bool {
+    $classes = $tile_build['#attributes']['class'] ?? [];
+    return in_array('image-tile', $classes, TRUE);
   }
 
   /**

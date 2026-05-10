@@ -1,0 +1,25 @@
+{#
+/**
+ * @file
+ * Shared dashboard grid template.
+ *
+ * Available variables:
+ * - dashboard_type: The dashboard context machine name.
+ * - entity: The source user or node entity.
+ * - tiles: Render-ready dashboard tile render arrays.
+ * - attributes: Dashboard wrapper attributes.
+ */
+#}
+{% set wrapper_attributes = create_attribute(attributes|default({})) %}
+{% set wrapper_classes = [
+  'nomads-dashboard',
+  dashboard_type ? 'nomads-dashboard--' ~ dashboard_type,
+] %}
+
+<section{{ wrapper_attributes.addClass(wrapper_classes) }}>
+  <div class="nomads-dashboard__grid" data-nomads-dashboard-grid>
+    {% for tile in tiles %}
+      {{ tile }}
+    {% endfor %}
+  </div>
+</section>

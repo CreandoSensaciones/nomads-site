@@ -1,7 +1,7 @@
 
-.page-node-type-hero #toolbar-administration {
-    display: none;
-}
+
+
+
 
 /* RESET ANY BREAKOUT DAMAGE */
 .hero-ui {
@@ -66,7 +66,7 @@ text-shadow:
 }
 
 .hero-ui__overlay .field--name-field-subtitle h2 {
-font-size: 36px;
+font-size: 22px;
 margin-bottom: 30px;
 color: #fff;
 text-shadow: 
@@ -74,7 +74,7 @@ text-shadow:
   0 6px 20px rgba(0,0,0,0.4);
 }
 .hero-ui__overlay  .teaser-line {
-font-size: 20px;
+font-size: 12pt;
 }
 
 /* ========= Node 99 - Login ======== */
@@ -86,16 +86,31 @@ font-size: 20px;
   background: rgba(255,255,255,0.75);
   border: 1px solid #fff;
   border-radius: 12px;
-  padding: 12px 34px;
+  padding: 12px 2vw;
   box-sizing: border-box;
   width: 300px;
   margin: 0 auto;
 }
-form.user-register-form,
-form.user-pass {
-    width: 400px;
+.hero-ui__overlay form.user-register-form,
+.hero-ui__overlay form.user-pass {
+    width: 500px;
+    max-width: 95vw;
 }
-form.user-register-form div.description {
+.hero-ui__overlay form.user-register-form .form-item-pass { 
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 20px;
+}
+.hero-ui__overlay form.user-register-form .form-item-pass .password-suggestions {
+  grid-column: 1 / -1;
+  font-size: 10pt;
+}
+
+.hero-ui__overlay form.user-register-form  .description {
+  font-size: 9pt;
+  color: #000;
+}
+.hero-ui__overlay form.user-register-form  .password-strength {
   font-size: 10pt;
   color: #000;
 }
@@ -111,7 +126,7 @@ form.user-register-form input {
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.4);
   padding: 20px;
-  width: 450px;
+  width: 500px;
   text-align: center;
 }
 .hero-ui__body,
@@ -123,6 +138,7 @@ form.user-register-form input {
   display: flex;
   flex-direction: column;
   gap: 30px; /* Abstand zwischen den beiden divs */
+
 }
 
 .hero-ui__inner input {
@@ -130,30 +146,17 @@ form.user-register-form input {
   border: none;
   padding: 14px;
 }
-
-a.button {
-    background: #0b6fa4;
-    border-radius: 8px;
-    border-color: #0b6fa4;
-    color: #fff;
-    transform: translateY(-1px);
-    text-decoration: none;
-    margin: 20px;
-    margin-top: 50px !important;
-    padding: 5px 12px;
-}
-a.button-primery {
-    font-size: 22pt;
-    padding: 12px 50px;
-  
-    border-radius: 16px;
+.hero-ui__overlay h1.hero-ui__title {
+  font-size: 26pt;
 }
 
 .hero-ui__overlay .field--name-body {
   width: 550px;
+  max-width: 98vw;
 }
 .create-listing .hero-ui__overlay .field--name-body {
   width: 500px;
+  max-width: 98vw;
 }
 
 
@@ -162,4 +165,7 @@ a.button-primery {
 }
 article.create-listing .hero-ui__inner {
   width: 550px !important;
+}
+
+
 }

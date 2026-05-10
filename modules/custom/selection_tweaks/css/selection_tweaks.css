@@ -1,0 +1,12 @@
+.pretty-element.is-disabled label {
+  background-color: #eeeeee;
+  border-color: #d6d6d6;
+  color: #8a8a8a;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.pretty-element.is-disabled label:hover {
+  background-color: #eeeeee;
+  color: #8a8a8a;
+}

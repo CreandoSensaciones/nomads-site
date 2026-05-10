@@ -1,7 +1,183 @@
 
 /* ========== Dashboard ========== */
 
-/* ===== Table base ===== */
+
+.nomads-dashboard-tile .view-empty {
+  margin: 30px auto;
+  text-align: center;
+}
+.nomads-dashboard-tile .empty-field-notice {
+    color: #b2e5fe;
+    font-size: 11px;
+    padding: 2px 20px;
+}
+.view-dashboard-content .views-field .field-content,
+.view-dashboard-content .views-field .field-content .nomads-pills {
+  display: inline;
+}
+
+.nomads-dashboard-tile .views-field {
+  display: block;
+  font-size: 14px;
+  /* margin-left: 20px; */
+  padding: 3px 0;
+  
+}
+.nomads-dashboard-tile .views-label {
+  margin-right: 5px;
+  /* margin-left: -20px; */
+}
+.view-dashboard-content .nomads-pill {
+  padding: 1px 3px;
+}
+.view-dashboard-content .nomads-pills > * + * {
+  opacity: 0.7;
+}
+.nomads-dashboard-tile .nomads-pill:hover,
+.nomads-dashboard-tile:hover .view-dashboard-taxonomy .nomads-pill {
+  opacity: 0.9 !important;
+}
+
+.nomads-dashboard-tile {
+  background: linear-gradient(180deg, #0575b1 0%, #024d75 58%, #012f47 100%);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  color:#b2e5fe;
+  padding-top: 0;
+  border-radius: 30px;
+}
+.nomads-dashboard-tile h2 {
+  font-size: 18pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  color:#9adaf8;
+}
+.nomads-dashboard-tile a {
+  color: #fff !important;
+}
+.nomads-dashboard-tile .nomads-pill {
+  background: #fff;
+  color:#012f47;
+}
+.nomads-dashboard-tile .views-field-field-defaults-tags .nomads-pill {
+  font-size: 8pt;
+  padding: 1px 3px;
+  opacity: 0.7;
+  color:#000;
+}
+.nomads-dashboard-tile .views-field-field-defaults-tags .nomads-pill:hover {
+  opacity: 1;
+}
+.nomads-dashboard-tile .views-label {
+  display: inline-block;
+  min-width: 120px;
+}
+.nomads-dashboard-tile .views-label {
+  display: inline-block;
+  min-width: 140px;
+}
+
+.view-dashboard-taxonomy.view-display-id-tags .view-content {
+
+ box-sizing: border-box;
+ padding-left: 20px;
+}
+.view-dashboard-taxonomy.view-display-id-tags h3{
+  display: inline-block;
+  margin: 0;
+  font-size: 8pt;
+  text-align: left;
+  margin-left: -20px;
+}
+.view-dashboard-taxonomy.view-display-id-tags .views-row {
+  display: inline;
+}
+.view-dashboard-taxonomy.view-display-id-tags .nomads-pill {
+  font-size: 8pt;
+  padding: 1px 3px;
+  opacity: 0.7;
+  color:#000;
+}
+.view-dashboard-taxonomy.view-display-id-tags .pill-after {
+  display: none;
+}
+.view-dashboard-taxonomy.view-display-id-tags .views-row:has(+ h3) .pill-after {
+  display: block;
+}
+
+
+
+
+
+
+/* ========== Moderation UI ========== */
+.view-dashboard-paragraphs .view-content {
+  display: flex;
+  
+  flex-direction: column;
+  gap: 10px;
+}
+
+.paragraph-relevance-marker {
+  white-space: nowrap;
+}
+.paragraph-relevance-marker .paragraph-rel-pill {
+  padding: 0;
+  max-width: 200px;
+  white-space: nowrap;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.paragraph-relevance-marker .paragraph-rel-pill2 {
+  margin: 0;
+  width: 60%;
+  border: 1px solid #999;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.paragraph-relevance-marker a {
+  text-decoration: none;
+}
+.paragraph-relevance-marker .paragraph-rel-pill2 span {
+  padding: 0 0px;
+}
+.paragraph-relevance-marker .paragraph-rel-pill span {
+  padding-right: 8px;
+}
+.view-listing-admin-ui .nomads-pill,
+.view-listing-admin-ui .nomads-pill span {
+  font-size: 8pt;
+  line-height: 0.8;
+}
+/*
+.paragraph-relevance-marker .rel-0 {
+  background-color: #f4f4f4;
+  color: #666;
+}
+.paragraph-relevance-marker .rel-1 {
+  background-color: #999;
+}
+.paragraph-relevance-marker .rel-2 {
+  background-color:#f5a623;
+}
+.paragraph-relevance-marker .rel-3 {
+  background-color:saddlebrown;
+}
+*/
+.view-listing-admin-ui .nomads-taxonomy-icons__icon {
+  display: inline-block;
+}
+.view-listing-admin-ui .nomads-taxonomy-icons__icon img {
+  width: 22px;
+  height: 22px;
+}
+
+
+
+
+
+/* ===== Table base =====
 
 .views-table.views-view-table {
   width: 100%;
@@ -24,29 +200,29 @@
 .views-table.views-view-table tbody tr + tr td {
   border-top: 1px solid rgba(0, 0, 0, 0.08);
 }
-
+ */
 /* ===== Column widths ===== */
-/* first column is the title/image tile */
+/* first column is the title/image tile 
 .views-table.views-view-table .views-field-title {
   width: 190px;
 }
-
-/* categories */
+ */
+/* categories
 .views-table.views-view-table .views-field-field-type {
   width: 26%;
 }
-
-/* created */
+ */
+/* created
 .views-table.views-view-table .views-field-created {
   width: 18%;
 }
-
-/* view */
+ */
+/* view
 .views-table.views-view-table .views-field-view {
   width: auto;
 }
-
-/* ===== Thumbnail tile ===== */
+*/
+/* ===== Thumbnail tile ===== 
 
 .views-table.views-view-table td.views-field-title {
   padding: 14px 18px;
@@ -74,8 +250,8 @@
   height: 150px;
   object-fit: cover;
 }
-
-/* dark bottom shadow/gradient */
+*/
+/* dark bottom shadow/gradient
 .views-table.views-view-table .listing-thumb::after {
   content: "";
   position: absolute;
@@ -92,8 +268,8 @@
   pointer-events: none;
   z-index: 1;
 }
-
-/* title over image */
+ */
+/* title over image 
 .views-table.views-view-table .listing-thumb > a:last-child {
   position: absolute;
   left: 10px;
@@ -118,8 +294,8 @@
   color: #fff;
   text-decoration: none;
 }
-
-/* ===== Categories ===== */
+*/
+/* ===== Categories ===== 
 
 .views-table.views-view-table .views-field-field-type .item-list ul {
   margin: 0;
@@ -131,8 +307,8 @@
   margin: 0 0 6px 0;
   line-height: 1.25;
 }
-
-/* ===== Created ===== */
+*/
+/* ===== Created ===== 
 
 .views-table.views-view-table .views-field-created {
   font-size: 0.92rem;
@@ -146,8 +322,8 @@
 .views-table.views-view-table .views-field-created span {
   font-weight: 600;
 }
-
-/* ===== Nested paragraph view ===== */
+ */
+/* ===== Nested paragraph view =====
 
 .views-table.views-view-table .views-field-view .view-content {
   display: flex;
@@ -158,8 +334,8 @@
 .views-table.views-view-table .views-field-view .views-row {
   line-height: 1.3;
 }
-
-/* ===== Optional tighter mobile handling ===== */
+*/
+/* ===== Optional tighter mobile handling ===== 
 
 @media (max-width: 900px) {
   .views-table.views-view-table {
@@ -203,8 +379,8 @@
     height: 180px;
   }
 }
-
-/* ===== ORGANIZER HEADER BAR ===== */
+*/
+/* ===== ORGANIZER HEADER BAR =====
 
 .views-table.views-view-table caption {
   caption-side: top;
@@ -225,8 +401,8 @@
   color: #fff;
   overflow: hidden;
 }
-
-/* left text block */
+ */
+/* left text block 
 .organizer-header > div:first-child {
   position: relative;
   z-index: 2;
@@ -259,8 +435,8 @@
   color: #fff;
   text-decoration: none;
 }
-
-/* center logo wrapper */
+*/
+/* center logo wrapper
 .organizer-header > article,
 .organizer-header > .media {
   position: absolute;
@@ -277,8 +453,8 @@
   margin: 0;
   pointer-events: none;
 }
-
-/* remove extra spacing from media internals */
+ */
+/* remove extra spacing from media internals 
 .organizer-header .field,
 .organizer-header .field__item,
 .organizer-header .field--name-field-media-image {
@@ -294,23 +470,23 @@
   height: auto;
   object-fit: contain;
 }
-
-/* hide contextual controls in the bar */
+*/
+/* hide contextual controls in the bar 
 .organizer-header .contextual {
   display: none;
 }
-
-/* no logo case, keep text nicely centered vertically */
+*/
+/* no logo case, keep text nicely centered vertically
 .organizer-header:not(:has(article)) {
   justify-content: flex-start;
 }
-
-/* optional: give table a cleaner connection to the bar */
+ */
+/* optional: give table a cleaner connection to the bar 
 .views-table.views-view-table {
   width: 100%;
 }
-
-/* responsive */
+*/
+/* responsive 
 @media (max-width: 900px) {
   .organizer-header {
     min-height: 100px;
@@ -339,8 +515,8 @@
     max-height: 70px;
   }
 }
-
-/* merge the thead visually with organizer header */
+*/
+/* merge the thead visually with organizer header 
 .views-table.views-view-table caption {
   margin-bottom: 0;
 }
@@ -354,23 +530,23 @@
   font-weight: 600;
   border: 0;
 }
-
-/* remove gap between caption and thead */
+*/
+/* remove gap between caption and thead 
 .views-table.views-view-table caption + thead th {
   border-top: 0;
 }
-
-/* make header row slimmer */
+*/
+/* make header row slimmer 
 .views-table.views-view-table thead tr {
   height: 34px;
 }
-
-/* slightly softer than organizer title */
+*/
+/* slightly softer than organizer title 
 .views-table.views-view-table thead .views-field {
   vertical-align: middle;
 }
-
-/* optional, first and last cell align with bar edges a bit better */
+*/
+/* optional, first and last cell align with bar edges a bit better 
 .views-table.views-view-table thead th:first-child {
   padding-left: 24px;
 }
@@ -378,16 +554,16 @@
 .views-table.views-view-table thead th:last-child {
   padding-right: 24px;
 }
-
-/* ===== table: no global spacing ===== */
+*/
+/* ===== table: no global spacing ===== 
 
 .views-table.views-view-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
 }
-
-/* ===== organizer header + thead stay merged ===== */
+*/
+/* ===== organizer header + thead stay merged ===== 
 
 .views-table.views-view-table caption {
   margin: 0;
@@ -411,8 +587,8 @@
 .views-table.views-view-table thead th:last-child {
   padding-right: 24px;
 }
-
-/* ===== teaser row look without border-spacing ===== */
+*/
+/* ===== teaser row look without border-spacing =====
 
 .views-table.views-view-table tbody tr {
   filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.12));
@@ -422,14 +598,14 @@
   background: #fff;
   padding: 18px;
   vertical-align: top;
-
-  /* fake vertical row gap */
+ */
+  /* fake vertical row gap
   border-top: 10px solid transparent;
   border-bottom: 10px solid transparent;
   background-clip: padding-box;
 }
-
-/* first and last row spacing */
+ */
+/* first and last row spacing 
 .views-table.views-view-table tbody tr:first-child td {
   border-top-width: 18px;
 }
@@ -437,8 +613,8 @@
 .views-table.views-view-table tbody tr:last-child td {
   border-bottom-width: 18px;
 }
-
-/* rounded outer corners */
+*/
+/* rounded outer corners 
 .views-table.views-view-table tbody tr td:first-child {
   border-top-left-radius: 20px;
   border-bottom-left-radius: 20px;
@@ -485,3 +661,4 @@
   position: relative;
   top: -1px;
 }
+*/

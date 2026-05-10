@@ -30,6 +30,11 @@ class LocationExtraFieldBuilder {
   protected int $maxBundles = 6;
 
   /**
+   * Output mode for location aggregation.
+   */
+  protected string $outputMode = 'detailed';
+
+  /**
    * Constructs a LocationExtraFieldBuilder instance.
    */
   public function __construct(
@@ -49,6 +54,10 @@ class LocationExtraFieldBuilder {
 
     $this->linkTerms = (bool) $display->getThirdPartySetting('location_virtual_field', 'link_terms', TRUE);
     $this->maxBundles = max(1, (int) $display->getThirdPartySetting('location_virtual_field', 'max_bundles', 6));
+    $this->outputMode = (string) $display->getThirdPartySetting('location_virtual_field', 'output_mode', 'detailed');
+    if (!in_array($this->outputMode, ['detailed', 'combined', 'switch'], TRUE)) {
+      $this->outputMode = 'detailed';
+    }
 
     $paragraphs = $this->collectLocationParagraphs($listing, $langcode, $cacheability);
     if ($paragraphs === []) {
@@ -60,7 +69,13 @@ class LocationExtraFieldBuilder {
       return NULL;
     }
 
-    $content = $this->buildAggregatedContent($bundles);
+    $effective_output_mode = $this->outputMode === 'switch'
+      ? (count($bundles) > $this->maxBundles ? 'combined' : 'detailed')
+      : $this->outputMode;
+
+    $content = $effective_output_mode === 'combined'
+      ? $this->buildCombinedAggregatedContent($bundles)
+      : $this->buildAggregatedContent($bundles);
     if ($content === NULL) {
       return NULL;
     }
@@ -117,10 +132,26 @@ class LocationExtraFieldBuilder {
 
       $range = $this->extractDateRange($paragraph);
       $country_context = $this->buildCountryContext($country_terms);
+      foreach ((array) ($country_context['country_lineage'] ?? []) as $lineage_term) {
+        if ($lineage_term instanceof TermInterface) {
+          $cacheability->addCacheableDependency($lineage_term);
+        }
+      }
+      foreach ((array) ($country_context['country_terms'] ?? []) as $context_country_term) {
+        if (!$context_country_term instanceof TermInterface) {
+          continue;
+        }
+        foreach ($this->getTermLineage($context_country_term) as $lineage_term) {
+          $cacheability->addCacheableDependency($lineage_term);
+        }
+      }
 
       $bundles[] = [
         'country' => (string) ($country_context['country'] ?? ''),
         'country_markup' => (string) ($country_context['country_markup'] ?? ''),
+        'country_term' => $country_context['country_term'] ?? NULL,
+        'country_terms' => (array) ($country_context['country_terms'] ?? []),
+        'country_lineage' => (array) ($country_context['country_lineage'] ?? []),
         'breadcrumb' => (string) ($country_context['breadcrumb'] ?? ''),
         'breadcrumb_markup' => (string) ($country_context['breadcrumb_markup'] ?? ''),
         'tail' => (string) ($country_context['tail'] ?? ''),
@@ -135,6 +166,133 @@ class LocationExtraFieldBuilder {
     }
 
     return $bundles;
+  }
+
+  /**
+   * Build the combined location/date output.
+   */
+  protected function buildCombinedAggregatedContent(array $bundles): ?array {
+    $bundle_count = count($bundles);
+    $dated_bundles = array_values(array_filter($bundles, static function (array $bundle): bool {
+      return !empty($bundle['has_date']);
+    }));
+
+    if ($dated_bundles === []) {
+      $location = $bundle_count > 1
+        ? $this->buildBestFittingGeoRegionMarkup($bundles)
+        : (string) ($bundles[0]['country_markup'] ?? Html::escape((string) ($bundles[0]['country'] ?? '')));
+
+      if (trim(strip_tags($location)) === '') {
+        return NULL;
+      }
+
+      return [
+        'classes' => $this->buildWrapperClasses($bundles, $bundles, 'combined-location', $bundle_count),
+        'content' => [
+          '#type' => 'inline_template',
+          '#template' => '<span>{{ location|raw }}</span>',
+          '#context' => [
+            'location' => $location,
+          ],
+        ],
+      ];
+    }
+
+    if ($bundle_count === 1) {
+      $first = $bundles[0];
+      $location = (string) ($first['country_markup'] ?? Html::escape((string) ($first['country'] ?? '')));
+      $date = $this->formatDateRange($first['date_from'], $first['date_to'], FALSE);
+      if (trim(strip_tags($location)) === '' || $date === '') {
+        return NULL;
+      }
+
+      return [
+        'classes' => $this->buildWrapperClasses($bundles, $bundles, 'combined-single-range', 1),
+        'content' => $this->buildCombinedLineContent($location, $date, $bundle_count),
+      ];
+    }
+
+    $location = $this->buildBestFittingGeoRegionMarkup($bundles);
+    $date = $this->formatEntireDateRange($dated_bundles, FALSE);
+    if (trim(strip_tags($location)) === '' || $date === '') {
+      return NULL;
+    }
+
+    return [
+      'classes' => $this->buildWrapperClasses($bundles, $bundles, 'combined-multi-range', 1),
+      'content' => $this->buildCombinedLineContent($location, $date, $bundle_count),
+    ];
+  }
+
+  /**
+   * Build location/date line content for combined mode.
+   */
+  protected function buildCombinedLineContent(string $location, string $date, int $bundle_count): array {
+    $content = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['location-date__combined']],
+      'location' => [
+        '#type' => 'inline_template',
+        '#template' => '<span class="location">{{ location|raw }}</span>',
+        '#context' => [
+          'location' => $location,
+        ],
+      ],
+      'sep' => [
+        '#type' => 'html_tag',
+        '#tag' => 'span',
+        '#attributes' => ['class' => ['sep']],
+        '#plain_text' => ' / ',
+      ],
+      'date' => [
+        '#type' => 'html_tag',
+        '#tag' => 'span',
+        '#attributes' => ['class' => ['date']],
+        '#plain_text' => $date,
+      ],
+    ];
+
+    if ($bundle_count > 1) {
+      $content = array_slice($content, 0, 2, TRUE) + [
+        'count' => [
+          '#type' => 'html_tag',
+          '#tag' => 'span',
+          '#attributes' => ['class' => ['count']],
+          '#plain_text' => (string) $this->formatPlural($bundle_count, '1 location', '@count locations'),
+        ],
+      ] + array_slice($content, 2, NULL, TRUE);
+    }
+
+    return $content;
+  }
+
+  /**
+   * Build wrapper classes shared by detailed and combined output.
+   */
+  protected function buildWrapperClasses(array $bundles, array $rendered_bundles, string $variant, int $render_count, bool $filtered = FALSE): array {
+    $classes = [
+      'location-date',
+      'taxonomy-breadcrumb',
+      count($bundles) === 1 ? 'location-date--single' : 'location-date--multi',
+      'location-date--' . $variant,
+      'location-date--count-' . $render_count,
+    ];
+
+    if ($filtered) {
+      $classes[] = 'location-date--filtered';
+    }
+
+    if ($this->hasAnyValue($rendered_bundles, 'breadcrumb')) {
+      $classes[] = 'location-date--has-breadcrumb';
+    }
+    if ($this->hasAnyNonEmptyArray($rendered_bundles, 'places')) {
+      $classes[] = 'location-date--has-places';
+    }
+    if ($this->hasAnyValue($rendered_bundles, 'freetagging')) {
+      $classes[] = 'location-date--has-freetagging';
+    }
+
+    return $classes;
   }
 
   /**
@@ -263,30 +421,8 @@ class LocationExtraFieldBuilder {
         return NULL;
     }
 
-    $classes = [
-      'location-date',
-      'taxonomy-breadcrumb',
-      $bundle_count === 1 ? 'location-date--single' : 'location-date--multi',
-      'location-date--' . $variant,
-      'location-date--count-' . $render_count,
-    ];
-
-    if ($filtered) {
-      $classes[] = 'location-date--filtered';
-    }
-
-    if ($this->hasAnyValue($rendered_bundles, 'breadcrumb')) {
-      $classes[] = 'location-date--has-breadcrumb';
-    }
-    if ($this->hasAnyNonEmptyArray($rendered_bundles, 'places')) {
-      $classes[] = 'location-date--has-places';
-    }
-    if ($this->hasAnyValue($rendered_bundles, 'freetagging')) {
-      $classes[] = 'location-date--has-freetagging';
-    }
-
     return [
-      'classes' => $classes,
+      'classes' => $this->buildWrapperClasses($bundles, $rendered_bundles, $variant, $render_count, $filtered),
       'content' => $content,
     ];
   }
@@ -337,6 +473,9 @@ class LocationExtraFieldBuilder {
       return [
         'country' => '',
         'country_markup' => '',
+        'country_term' => NULL,
+        'country_terms' => [],
+        'country_lineage' => [],
         'breadcrumb' => '',
         'breadcrumb_markup' => '',
         'tail' => '',
@@ -428,10 +567,14 @@ class LocationExtraFieldBuilder {
 
       $country_labels = array_map(static fn(array $item): string => $item['term']->label(), $country_items);
       $country_markup_parts = array_map(fn(array $item): string => $this->buildTermMarkup($item['term']), $country_items);
+      $country_terms = array_map(static fn(array $item): TermInterface => $item['term'], $country_items);
 
       return [
         'country' => $region_term->label(),
         'country_markup' => $this->buildTermMarkup($region_term),
+        'country_term' => $region_term,
+        'country_terms' => $country_terms !== [] ? $country_terms : [$region_term],
+        'country_lineage' => $this->getTermLineage($region_term),
         'breadcrumb' => $region_term->label(),
         'breadcrumb_markup' => $this->buildTermMarkup($region_term),
         'tail' => implode(', ', $country_labels),
@@ -499,6 +642,9 @@ class LocationExtraFieldBuilder {
     return [
       'country' => $country_label,
       'country_markup' => $country_markup,
+      'country_term' => $country_term,
+      'country_terms' => $country_term instanceof TermInterface ? [$country_term] : [],
+      'country_lineage' => $country_term instanceof TermInterface ? $this->getTermLineage($country_term) : [],
       'breadcrumb' => implode(' > ', array_map(static fn(TermInterface $term): string => $term->label(), $breadcrumb_terms)),
       'breadcrumb_markup' => implode(' &gt; ', array_map(fn(TermInterface $term): string => $this->buildTermMarkup($term), $breadcrumb_terms)),
       'tail' => implode(', ', $tail_parts),
@@ -756,6 +902,80 @@ class LocationExtraFieldBuilder {
     }
 
     return trim((string) ($paragraph->get('field_title')->value ?? ''));
+  }
+
+  /**
+   * Build markup for the deepest common geo term across bundle countries.
+   */
+  protected function buildBestFittingGeoRegionMarkup(array $bundles): string {
+    $country_terms = [];
+    foreach ($bundles as $bundle) {
+      foreach ((array) ($bundle['country_terms'] ?? []) as $term) {
+        if ($term instanceof TermInterface) {
+          $country_terms[(int) $term->id()] = $term;
+        }
+      }
+    }
+
+    if ($country_terms === []) {
+      $countries = [];
+      foreach ($bundles as $bundle) {
+        $country = trim((string) ($bundle['country'] ?? ''));
+        if ($country !== '') {
+          $countries[$country] = (string) ($bundle['country_markup'] ?? Html::escape($country));
+        }
+      }
+
+      return implode(', ', array_values($countries));
+    }
+
+    $lineages = array_map(fn(TermInterface $term): array => $this->getTermLineage($term), array_values($country_terms));
+    $common = $this->getCommonLineagePrefix($lineages);
+    $best = end($common);
+    if ($best instanceof TermInterface) {
+      return $this->buildTermMarkup($best);
+    }
+
+    return implode(', ', array_map(fn(TermInterface $term): string => $this->buildTermMarkup($term), array_values($country_terms)));
+  }
+
+  /**
+   * Format the full earliest-to-latest month span for combined multi output.
+   */
+  protected function formatEntireDateRange(array $bundles, bool $full): string {
+    $from = NULL;
+    $to = NULL;
+    foreach ($bundles as $bundle) {
+      if (!$bundle['date_from'] instanceof \DateTimeImmutable || !$bundle['date_to'] instanceof \DateTimeImmutable) {
+        continue;
+      }
+      if (!$from instanceof \DateTimeImmutable || $bundle['date_from'] < $from) {
+        $from = $bundle['date_from'];
+      }
+      if (!$to instanceof \DateTimeImmutable || $bundle['date_to'] > $to) {
+        $to = $bundle['date_to'];
+      }
+    }
+
+    if (!$from instanceof \DateTimeImmutable || !$to instanceof \DateTimeImmutable) {
+      return '';
+    }
+
+    $first = $from->modify('first day of this month');
+    $second = $to->modify('first day of this month');
+    if ($first->format('Y-m') === $second->format('Y-m')) {
+      return $this->formatMonthLabel($first, $full);
+    }
+
+    $first_include_year = $this->shouldIncludeYearForMonth($first);
+    $second_include_year = $this->shouldIncludeYearForMonth($second);
+    $same_year = $first->format('Y') === $second->format('Y');
+
+    if ($first_include_year && $second_include_year && $same_year) {
+      return $this->formatMonthLabel($first, $full, FALSE) . ' - ' . $this->formatMonthLabel($second, $full, FALSE) . ' ' . $this->formatYearLabel($second, $full);
+    }
+
+    return $this->formatMonthLabel($first, $full) . ' - ' . $this->formatMonthLabel($second, $full);
   }
 
   /**

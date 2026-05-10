@@ -9,13 +9,50 @@ use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FormatterInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Url;
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function nomads_display_tweaks_entity_extra_field_info(): array {
+  $title_vfield = [
+    'label' => t('Title vfield'),
+    'description' => t('Renders the node title in an H1 inside a title wrapper.'),
+    'weight' => 0,
+    'visible' => FALSE,
+  ];
+
+  return [
+    'node' => [
+      'listing' => [
+        'display' => [
+          'title_vfield' => $title_vfield,
+        ],
+      ],
+      'landing_page' => [
+        'display' => [
+          'title_vfield' => $title_vfield,
+        ],
+      ],
+    ],
+  ];
+}
 
 /**
  * Implements hook_entity_view().
  */
 function nomads_display_tweaks_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, string $view_mode): void {
+  if ($entity->getEntityTypeId() === 'node') {
+    nomads_display_tweaks_add_cache_context_recursive($build, 'user.node_grants:view');
+  }
+
+  nomads_display_tweaks_build_title_vfield($build, $entity, $display);
+
   $entity_css_classes = nomads_display_tweaks_get_entity_css_classes($entity);
   if ($entity_css_classes !== []) {
     if (!isset($build['#attributes']['class']) || !is_array($build['#attributes']['class'])) {
@@ -28,6 +65,31 @@ function nomads_display_tweaks_entity_view(array &$build, EntityInterface $entit
     )));
   }
 
+  nomads_display_tweaks_apply_swiper_formatter_classes($build, $entity, $display);
+}
+
+/**
+ * Implements hook_entity_display_build_alter().
+ */
+function nomads_display_tweaks_entity_display_build_alter(array &$build, array $context): void {
+  $entity = $context['entity'] ?? NULL;
+  $display = $context['display'] ?? NULL;
+
+  if (!$entity instanceof EntityInterface || !$display instanceof EntityViewDisplayInterface) {
+    return;
+  }
+
+  if ($entity->getEntityTypeId() === 'node') {
+    nomads_display_tweaks_add_cache_context_recursive($build, 'user.node_grants:view');
+  }
+
+  nomads_display_tweaks_apply_swiper_formatter_classes($build, $entity, $display);
+}
+
+/**
+ * Applies configured formatter classes to Swiper formatter builds.
+ */
+function nomads_display_tweaks_apply_swiper_formatter_classes(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display): void {
   foreach ($display->getComponents() as $field_name => $component) {
     if (
       empty($build[$field_name])
@@ -59,14 +121,118 @@ function nomads_display_tweaks_entity_view(array &$build, EntityInterface $entit
 }
 
 /**
+ * Renders the title virtual field for configured node displays.
+ */
+function nomads_display_tweaks_build_title_vfield(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display): void {
+  if ($entity->getEntityTypeId() !== 'node' || !in_array($entity->bundle(), ['listing', 'landing_page'], TRUE)) {
+    return;
+  }
+
+  $field_name = 'title_vfield';
+  $component = $display->getComponent($field_name);
+
+  if (empty($component)) {
+    $field_name = 'title';
+    $component = $display->getComponent($field_name);
+  }
+
+  if (empty($component) || ($component['region'] ?? 'hidden') === 'hidden') {
+    return;
+  }
+
+  $build[$field_name] = [
+    '#markup' => Markup::create('<div class="title title-vfield"><h1>' . Html::escape($entity->label()) . '</h1></div>'),
+    '#weight' => $component['weight'] ?? 0,
+    '#region' => $component['region'] ?? 'content',
+    '#cache' => [
+      'tags' => $entity->getCacheTags(),
+      'contexts' => $entity->getCacheContexts(),
+      'max-age' => $entity->getCacheMaxAge(),
+    ],
+  ];
+}
+
+/**
+ * Adds a cache context to a render array and all render-cacheable children.
+ */
+function nomads_display_tweaks_add_cache_context_recursive(array &$element, string $context): void {
+  $element['#cache']['contexts'][] = $context;
+  $element['#cache']['contexts'] = array_values(array_unique($element['#cache']['contexts']));
+
+  foreach ($element as $key => &$child) {
+    if (is_string($key) && str_starts_with($key, '#')) {
+      continue;
+    }
+
+    if (is_array($child)) {
+      nomads_display_tweaks_add_cache_context_recursive($child, $context);
+    }
+  }
+}
+
+/**
  * Implements hook_entity_view_alter().
  */
 function nomads_display_tweaks_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display): void {
+  if ($entity->getEntityTypeId() === 'node') {
+    nomads_display_tweaks_add_cache_context_recursive($build, 'user.node_grants:view');
+  }
+
   nomads_display_tweaks_wrap_prefix_suffix_values($build);
+  nomads_display_tweaks_apply_parent_entity_image_links($build, $entity, $display);
 
   if (isset($build['field_subdomain']) && is_array($build['field_subdomain'])) {
     nomads_display_tweaks_transform_subdomain_element($build['field_subdomain']);
   }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function nomads_display_tweaks_form_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
+  if ($form_id !== 'entity_view_display_edit_form') {
+    return;
+  }
+
+  nomads_display_tweaks_add_parent_entity_image_link_option($form);
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary_alter().
+ */
+function nomads_display_tweaks_field_formatter_settings_summary_alter(array &$summary, array $context): void {
+  $formatter = $context['formatter'] ?? NULL;
+  if (!is_object($formatter) || !method_exists($formatter, 'getSetting')) {
+    return;
+  }
+
+  if (
+    $formatter->getSetting('image_link') === 'parent_entity'
+    || (
+      method_exists($formatter, 'getThirdPartySetting')
+      && $formatter->getThirdPartySetting('nomads_display_tweaks', 'parent_entity_link')
+    )
+  ) {
+    $summary[] = t('Linked to parent entity');
+  }
+}
+
+/**
+ * Implements hook_field_formatter_third_party_settings_form().
+ */
+function nomads_display_tweaks_field_formatter_third_party_settings_form(FormatterInterface $plugin, FieldDefinitionInterface $field_definition, $view_mode, array $form, FormStateInterface $form_state): array {
+  if (!nomads_display_tweaks_formatter_supports_image_link($plugin)) {
+    return [];
+  }
+
+  return [
+    'parent_entity_link' => [
+      '#type' => 'checkbox',
+      '#title' => t('Link image to parent entity'),
+      '#default_value' => (bool) $plugin->getThirdPartySetting('nomads_display_tweaks', 'parent_entity_link', FALSE),
+      '#description' => t('Overrides "Link image to" and links to the content entity that references this media item. If more than one entity references it, the current route entity is preferred.'),
+    ],
+  ];
 }
 
 /**
@@ -151,6 +317,12 @@ function nomads_display_tweaks_preprocess_node(array &$variables): void {
   if (!$node instanceof \Drupal\node\NodeInterface) {
     return;
   }
+
+  $variables['display_submitted'] = FALSE;
+  $variables['author_picture'] = [];
+  $variables['author_name'] = '';
+  $variables['date'] = '';
+  $variables['metadata'] = '';
 
   $class_names = nomads_display_tweaks_get_entity_css_classes($node);
   if ($class_names === []) {
@@ -363,6 +535,244 @@ function nomads_display_tweaks_is_swiper_formatter_build(array $build): bool {
   }
 
   return is_array($theme) && in_array('swiper_formatter', $theme, TRUE);
+}
+
+/**
+ * Adds the Parent entity option to image formatter settings forms.
+ */
+function nomads_display_tweaks_add_parent_entity_image_link_option(array &$element): void {
+  foreach ($element as $key => &$child) {
+    if (
+      $key === 'image_link'
+      && is_array($child)
+      && ($child['#type'] ?? NULL) === 'select'
+      && isset($child['#options']['content'], $child['#options']['file'])
+    ) {
+      $child['#options']['parent_entity'] = t('Parent entity');
+      $child['#description'] = t('Links to the content entity that references this media item. If more than one entity references it, the current route entity is preferred.');
+      continue;
+    }
+
+    if (is_array($child)) {
+      nomads_display_tweaks_add_parent_entity_image_link_option($child);
+    }
+  }
+}
+
+/**
+ * Determines whether a formatter exposes Drupal's image link setting.
+ */
+function nomads_display_tweaks_formatter_supports_image_link(FormatterInterface $plugin): bool {
+  if (!method_exists($plugin, 'getPluginId')) {
+    return FALSE;
+  }
+
+  return in_array($plugin->getPluginId(), [
+    'image',
+    'responsive_image',
+    'media_thumbnail',
+  ], TRUE);
+}
+
+/**
+ * Applies Parent entity links to rendered media image formatter output.
+ */
+function nomads_display_tweaks_apply_parent_entity_image_links(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display): void {
+  if ($entity->getEntityTypeId() !== 'media') {
+    return;
+  }
+
+  $parent = NULL;
+  foreach ($display->getComponents() as $field_name => $component) {
+    if (
+      ($component['settings']['image_link'] ?? NULL) !== 'parent_entity'
+      && empty($component['third_party_settings']['nomads_display_tweaks']['parent_entity_link'])
+    ) {
+      continue;
+    }
+
+    if (empty($build[$field_name]) || !is_array($build[$field_name])) {
+      continue;
+    }
+
+    $parent ??= nomads_display_tweaks_resolve_media_parent_entity($entity);
+    if (!$parent instanceof EntityInterface) {
+      continue;
+    }
+
+    $url = nomads_display_tweaks_entity_url($parent);
+    if (!$url instanceof Url) {
+      continue;
+    }
+
+    nomads_display_tweaks_set_image_formatter_url($build[$field_name], $url);
+    nomads_display_tweaks_add_cache_context_recursive($build[$field_name], 'route');
+    $build[$field_name]['#cache']['tags'] = array_values(array_unique(array_merge(
+      $build[$field_name]['#cache']['tags'] ?? [],
+      $parent->getCacheTags()
+    )));
+  }
+}
+
+/**
+ * Sets a URL on image and responsive-image formatter render arrays.
+ */
+function nomads_display_tweaks_set_image_formatter_url(array &$element, Url $url): void {
+  $theme = $element['#theme'] ?? NULL;
+  $themes = is_array($theme) ? $theme : [$theme];
+  if (array_intersect($themes, ['image_formatter', 'responsive_image_formatter'])) {
+    $element['#url'] = $url;
+  }
+
+  foreach ($element as $key => &$child) {
+    if ((is_string($key) && str_starts_with($key, '#')) || !is_array($child)) {
+      continue;
+    }
+    nomads_display_tweaks_set_image_formatter_url($child, $url);
+  }
+}
+
+/**
+ * Finds the best content entity to link to for a media item.
+ */
+function nomads_display_tweaks_resolve_media_parent_entity(EntityInterface $media): ?EntityInterface {
+  $parents = nomads_display_tweaks_find_media_parent_entities($media);
+  if ($parents === []) {
+    return NULL;
+  }
+
+  $route_entity = nomads_display_tweaks_get_route_entity();
+  if ($route_entity instanceof EntityInterface) {
+    foreach ($parents as $parent) {
+      if (
+        $parent->getEntityTypeId() === $route_entity->getEntityTypeId()
+        && $parent->id() === $route_entity->id()
+      ) {
+        return $parent;
+      }
+    }
+  }
+
+  return reset($parents) ?: NULL;
+}
+
+/**
+ * Finds content entities that reference a media item, climbing paragraphs.
+ *
+ * @return \Drupal\Core\Entity\EntityInterface[]
+ *   Parent entities keyed by entity type and ID.
+ */
+function nomads_display_tweaks_find_media_parent_entities(EntityInterface $media): array {
+  if ($media->id() === NULL) {
+    return [];
+  }
+
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $field_manager = \Drupal::service('entity_field.manager');
+  $parents = [];
+
+  foreach ($field_manager->getFieldMapByFieldType('entity_reference') as $entity_type_id => $fields) {
+    $storage_definitions = $field_manager->getFieldStorageDefinitions($entity_type_id);
+    if (empty($storage_definitions)) {
+      continue;
+    }
+
+    $storage = $entity_type_manager->getStorage($entity_type_id);
+    foreach (array_keys($fields) as $field_name) {
+      $storage_definition = $storage_definitions[$field_name] ?? NULL;
+      if (
+        !$storage_definition
+        || $storage_definition->getSetting('target_type') !== 'media'
+      ) {
+        continue;
+      }
+
+      try {
+        $ids = $storage->getQuery()
+          ->accessCheck(FALSE)
+          ->condition($field_name . '.target_id', $media->id())
+          ->range(0, 50)
+          ->execute();
+      }
+      catch (\Throwable) {
+        continue;
+      }
+
+      if (!$ids) {
+        continue;
+      }
+
+      foreach ($storage->loadMultiple($ids) as $referencing_entity) {
+        if (!$referencing_entity instanceof EntityInterface) {
+          continue;
+        }
+
+        $parent = nomads_display_tweaks_normalize_media_parent_entity($referencing_entity);
+        if ($parent instanceof EntityInterface && nomads_display_tweaks_entity_url($parent) instanceof Url) {
+          $parents[$parent->getEntityTypeId() . ':' . $parent->id()] = $parent;
+        }
+      }
+    }
+  }
+
+  return $parents;
+}
+
+/**
+ * Converts intermediate entities, especially paragraphs, to linkable parents.
+ */
+function nomads_display_tweaks_normalize_media_parent_entity(EntityInterface $entity): ?EntityInterface {
+  $seen = [];
+  while ($entity->getEntityTypeId() === 'paragraph' && method_exists($entity, 'getParentEntity')) {
+    $key = $entity->getEntityTypeId() . ':' . $entity->id();
+    if (isset($seen[$key])) {
+      return NULL;
+    }
+    $seen[$key] = TRUE;
+
+    $parent = $entity->getParentEntity();
+    if (!$parent instanceof EntityInterface) {
+      return NULL;
+    }
+    $entity = $parent;
+  }
+
+  if (in_array($entity->getEntityTypeId(), ['file', 'media', 'paragraph'], TRUE)) {
+    return NULL;
+  }
+
+  return $entity;
+}
+
+/**
+ * Gets the primary entity from the current route.
+ */
+function nomads_display_tweaks_get_route_entity(): ?EntityInterface {
+  foreach (\Drupal::routeMatch()->getParameters() as $parameter) {
+    if (
+      $parameter instanceof EntityInterface
+      && !in_array($parameter->getEntityTypeId(), ['file', 'media', 'paragraph'], TRUE)
+    ) {
+      return $parameter;
+    }
+  }
+
+  return NULL;
+}
+
+/**
+ * Safely builds an entity URL.
+ */
+function nomads_display_tweaks_entity_url(EntityInterface $entity): ?Url {
+  try {
+    if (method_exists($entity, 'hasLinkTemplate') && !$entity->hasLinkTemplate('canonical')) {
+      return NULL;
+    }
+    return $entity->toUrl();
+  }
+  catch (\Throwable) {
+    return NULL;
+  }
 }
 
 /**

@@ -1,6 +1,6 @@
 /**
  * @file
- * Initializes GLightbox galleries for Nomads hero galleries.
+ * Initializes desktop GLightbox galleries for Nomads hero galleries.
  */
 
 (function (Drupal, once) {
@@ -9,12 +9,11 @@
   const mobileQuery = window.matchMedia('(max-width: 767.98px)');
 
   function syncActiveLinks(gallery) {
-    const activeContainerSelector = mobileQuery.matches
-      ? '.nomads-hero-gallery__mobile'
-      : '.nomads-hero-gallery__desktop';
+    const isMobile = mobileQuery.matches;
 
     gallery.querySelectorAll('a.nomads-hero-gallery__lightbox-link').forEach((link) => {
-      const isActive = Boolean(link.closest(activeContainerSelector));
+      const isMobileOnlySlide = Boolean(link.closest('.nomads-hero-gallery__slide--mobile-only'));
+      const isActive = !isMobile && !isMobileOnlySlide;
       link.classList.toggle('nomads-hero-gallery-glightbox', isActive);
 
       if (isActive) {
@@ -28,9 +27,20 @@
     });
 
     gallery.querySelectorAll('a.nomads-hero-gallery__lightbox-hidden').forEach((link) => {
-      link.classList.add('nomads-hero-gallery-glightbox');
+      link.classList.toggle('nomads-hero-gallery-glightbox', !isMobile);
       link.setAttribute('tabindex', '-1');
       link.setAttribute('aria-hidden', 'true');
+    });
+  }
+
+  function preventMobileLightboxClicks(gallery) {
+    gallery.addEventListener('click', (event) => {
+      const link = event.target.closest('a.nomads-hero-gallery__lightbox-link');
+      if (!link || !mobileQuery.matches) {
+        return;
+      }
+
+      event.preventDefault();
     });
   }
 
@@ -42,7 +52,10 @@
   }
 
   function initLightbox(gallery) {
-    if (typeof GLightbox === 'undefined') {
+    syncActiveLinks(gallery);
+    destroyLightbox(gallery);
+
+    if (mobileQuery.matches || typeof GLightbox === 'undefined') {
       return;
     }
 
@@ -50,9 +63,6 @@
     if (!galleryId) {
       return;
     }
-
-    syncActiveLinks(gallery);
-    destroyLightbox(gallery);
 
     gallery.nomadsHeroGalleryLightbox = GLightbox({
       selector: `.nomads-hero-gallery[data-gallery-id="${galleryId}"] a.nomads-hero-gallery-glightbox[data-gallery="${galleryId}"]`,
@@ -64,6 +74,7 @@
   Drupal.behaviors.nomadsHeroGalleryGlightbox = {
     attach(context) {
       once('nomads-hero-gallery-glightbox', '.nomads-hero-gallery[data-gallery-id]', context).forEach((gallery) => {
+        preventMobileLightboxClicks(gallery);
         initLightbox(gallery);
 
         if (typeof mobileQuery.addEventListener === 'function') {

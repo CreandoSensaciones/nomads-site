@@ -1,0 +1,79 @@
+
+
+/* =======================
+  Listing Teaser Default
+========================== */
+
+.node--type-listing.node--view-mode-teaser {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.node--type-listing.node--view-mode-teaser .teaser-inner-wrapper {
+  height: 266px;
+  overflow: hidden;
+}
+.node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper > .node__content {
+  display: grid;
+  grid-template-columns: 400px 40% 26%;
+  gap: 5px;              /* adjust */
+  align-items: start;     /* top align */
+  overflow: hidden;
+}
+@media (max-width: 980px) {
+.node--type-listing.node--view-mode-teaser {
+  max-width: 600px;
+}
+.node--type-listing.node--view-mode-teaser .teaser-inner-wrapper {
+  height: auto;
+  overflow: hidden;
+}
+.node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper > .node__content {
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 266px 1px;
+  gap: 5px;
+  align-items: start;
+  overflow: hidden;
+}
+}
+
+
+/* =======================
+  Listing Teaser Map
+========================== */
+
+.nomads-map .node--type-listing.node--view-mode-teaser {
+  max-width: 400px;
+}
+.nomads-map .node--type-listing.node--view-mode-teaser .teaser-inner-wrapper {
+  height: auto;
+  overflow: hidden;
+}
+.nomads-map .node--type-listing.node--view-mode-teaser > .teaser-inner-wrapper > .node__content {
+  grid-template-columns: 1fr;
+  grid-template-rows: 266px 266px 180px;
+  gap: 5px;
+  align-items: start;
+  overflow: hidden;
+}
+
+
+/* =======================
+  Listing Mini Teaser
+========================== */
+
+
+
+
+/* =========================
+  Teaser List - Views
+============================ */
+
+.teaser-list {
+  margin-bottom: 50px;
+}
+.teaser-list .view-content {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+}
+

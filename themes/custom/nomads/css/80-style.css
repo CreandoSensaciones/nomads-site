@@ -1,35 +1,167 @@
-img {
-    border-radius: 8px;
+
+
+body {
+  background: #f5f5f5;
 }
+
+.paragraph--viewmode-vm-3 h2 {
+  font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 16pt;
+}
+.paragraph--viewmode-vm-3,
+.paragraph--viewmode-vm-2 {
+  font-size: 15px;
+  color: #666;
+}
+.paragraph--viewmode-vm-3 .data-tile {
+  color: #000;
+}
+.paragraph--viewmode-vm-3 .paragraph-left-column {
+  position: relative;
+  /* height: 100%; */
+}
+.paragraph--viewmode-vm-3 .promoted-link {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  bottom: 0;
+}
+
+/* ========== Tutorial menu box ========== */
+
+.page-node-type-tutorial .region.region-content > #block-nomads-tutorial {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+}
+
+
+
+
+
+.node--type-page.node--view-mode-full .field--name-body,
+.node--type-page.node--view-mode-full .field--type-text-with-summary,
+.node--type-page.node--view-mode-full .field--type-text-long {
+  font-size: 1rem;
+  line-height: 1.68;
+}
+
+/* ========== landing page ========== */
+
+.node--type-landing-page .paragraph--bundle-text {
+    font-size: 1.2em;
+}
+.node--type-landing-page.node--view-mode-full  .paragraph--bundle-view h2 {
+    font-size: 16pt;
+    color: #015180;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+.node--type-landing-page.node--view-mode-full .viewsreference--view-title {
+    font-size: 14pt;
+    color: #666;
+}
+
+
+/* ========= Tutorial ========= */
+
+.page-node-type-tutorial {
+  font-size: 1.2rem;
+}
+.page-node-type-tutorial .node--view-mode-teaser .field--name-title h2 {
+  margin: 0;
+  font-size: clamp(1.5rem, 2vw, 2.6rem);
+  line-height: 1.08;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.page-node-type-tutorial .node--view-mode-teaser .field--name-title h2 a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+  text-decoration-thickness: 1px;
+}
+.page-node-type-tutorial .node--view-mode-teaser .field--name-field-subtitle {
+  font-size: 1.35rem;
+  line-height: 1.35;
+  font-weight: 500;
+  opacity: 0.88;
+}
+.page-node-type-tutorial .node__links a {
+  text-decoration: none;
+  font-weight: 500;
+  padding-bottom: 2px;
+  border-bottom: 1px solid currentColor;
+}
+.page-node-type-tutorial .node__links ul.links li {
+  list-style: none;
+}
+.page-node-type-tutorial .node__links a:hover {
+  opacity: 0.8;
+}
+
+/* ========= Presentation ========== */
+
+.presentation p {
+  font-size: 1.2em;
+}
+.presentation .paragraph .paragraph p {
+  font-size: 1em;
+}
+.presentation h2 {
+  font-size: 30pt;
+}
+@media (max-width: 780px) {
+.presentation p {
+  font-size: 1em;
+}
+.presentation .paragraph .paragraph p {
+  font-size: 0.8em;
+}
+.presentation h2 {
+  font-size: 18pt;
+}
+}
+
+/* ========= Timeline ========== */
+
+.timeline .paragraph--type--story .field--name-field-background-title {
+  font-size: 30pt;
+  line-height: 1.25;
+  font-weight: 1000;
+  opacity: 0.10;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  color: #0575b1;
+}
+
+.timeline .paragraph--type--story .field--name-field-body {
+  font-size: 1.08rem;
+  line-height: 1.68;
+  opacity: 0.94;
+}
+@media (max-width: 900px) {
+  .timeline.node--view-mode-full .field--name-title h1,
+  .timeline.node--view-mode-full .field--name-title h2 {
+    font-size: 2.3rem;
+  }
+}
+
+
+
+/* ========= Images ========= */
+
+.page-node-type-tutorial .node--view-mode-teaser .field--name-field-images img {
+  border-radius: 18px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.10);
+}
+
 .field--name-field-icon img,
 .search-icon img {
     border-radius: 0;
 }
 
+/* ========= Links ========= */
 
-.paragraph--viewmode-vm-2.relevance-paragraph,
-.grid-box {
-    background: #fff;
-    /* border-radius: 20px;
-    border: 3px solid #0DAFC5 */
-    padding: 10px;
-    border-radius: 12px;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.10);
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    transition: box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease;
+a {
+  color:#0575b1;
 }
-.paragraph--viewmode-vm-2.relevance-paragraph .nomads-paragraph-icon-wrapper {
-    position: relative;
-    60px;
-}
-
-.paragraph--viewmode-vm-2.relevance-paragraph .nomads-paragraph-icon {
-    position: absolute;
-    top: -20px;
-    left: -10px;
-    background: #fff;
-}
-
-
-
-

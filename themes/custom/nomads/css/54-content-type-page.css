@@ -1,29 +1,11 @@
-.node--type-page.node--view-mode-full {
-  margin: 0 auto;
-}
-.node--type-page.node--view-mode-full > .node__content {
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
-}
+
+
 /* paragraph stack */
-.node--type-page.node--view-mode-full .field--name-field-paragraphs {
-  display: flex;
-  flex-direction: column;
-  gap: 64px;
-}
 
 
 
-.node--type-page.node--view-mode-full .field--name-field-paragraphs > .field__item {
-  margin: 0;
-}
-.node--type-page.node--view-mode-full .field--name-body,
-.node--type-page.node--view-mode-full .field--type-text-with-summary,
-.node--type-page.node--view-mode-full .field--type-text-long {
-  font-size: 1.08rem;
-  line-height: 1.68;
-}
+
+
 .node--type-page.node--view-mode-full .field--name-body p,
 .node--type-page.node--view-mode-full .field--type-text-with-summary p,
 .node--type-page.node--view-mode-full .field--type-text-long p {
@@ -35,7 +17,4 @@
   margin-bottom: 0;
 }
 
-/* keep contextual UI above images/sliders */
-.node--type-page.node--view-mode-full .contextual {
-  z-index: 4;
-}
+

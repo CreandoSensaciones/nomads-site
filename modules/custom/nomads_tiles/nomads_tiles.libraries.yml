@@ -1,5 +1,8 @@
 tiles:
   version: VERSION
+  css:
+    theme:
+      css/nomads-tiles.css: {}
   dependencies:
     - core/drupal
 
@@ -15,3 +18,12 @@ glightbox:
   dependencies:
     - core/drupal
     - core/once
+
+mobile_swiper:
+  version: VERSION
+  js:
+    js/nomads-tiles.swiper.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - swiper_formatter/remote

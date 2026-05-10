@@ -1,0 +1,57 @@
+{#
+/**
+ * @file
+ * Shared dashboard tile template.
+ *
+ * Available variables:
+ * - tile: Normalized dashboard tile data.
+ */
+#}
+{% set tile_attributes = create_attribute(tile.attributes|default({})) %}
+{% set tile_classes = [
+  'nomads-dashboard-tile',
+  tile.variant ? 'nomads-dashboard-tile--' ~ tile.variant,
+  tile.id ? 'nomads-dashboard-tile--' ~ tile.id|clean_class,
+] %}
+
+<article{{ tile_attributes.addClass(tile_classes) }} data-dashboard-tile-id="{{ tile.id }}">
+  <div class="nomads-dashboard-tile__body">
+    {% if tile.title %}
+      <h2 class="nomads-dashboard-tile__title">{{ tile.title }}</h2>
+    {% endif %}
+
+    {% if tile.text %}
+      <div class="nomads-dashboard-tile__text">{{ tile.text }}</div>
+    {% endif %}
+
+    {% if tile.view %}
+      <div class="nomads-dashboard-tile__view">
+        {{ tile.view }}
+      </div>
+    {% endif %}
+
+    {% if tile.views %}
+      <div class="nomads-dashboard-tile__views">
+        {% for view in tile.views %}
+          <div class="nomads-dashboard-tile__view">
+            {{ view }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  {% if tile.actions %}
+    <div class="nomads-dashboard-tile__actions">
+      {% for action in tile.actions %}
+        {{ link(action.title, action.url, {'class': ['nomads-dashboard-tile__action']}) }}
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if tile.help %}
+    <div class="nomads-dashboard-tile__help" hidden>
+      {{ tile.help }}
+    </div>
+  {% endif %}
+</article>

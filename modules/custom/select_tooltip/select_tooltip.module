@@ -29,7 +29,7 @@ function select_tooltip_form_has_tooltips(array $element): bool {
   }
 
   foreach ($element as $key => $child) {
-    if (is_string($key) && $key[0] === '#') {
+    if (is_string($key) && $key !== '' && $key[0] === '#') {
       continue;
     }
     if (is_array($child) && select_tooltip_form_has_tooltips($child)) {
@@ -49,7 +49,7 @@ function select_tooltip_form_has_pretty_elements(array $element): bool {
   }
 
   foreach ($element as $key => $child) {
-    if (is_string($key) && $key[0] === '#') {
+    if (is_string($key) && $key !== '' && $key[0] === '#') {
       continue;
     }
     if (is_array($child) && select_tooltip_form_has_pretty_elements($child)) {

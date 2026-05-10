@@ -1,0 +1,678 @@
+<?php
+
+/**
+ * @file
+ * Display tweaks for field and formatter output.
+ */
+
+use Drupal\Component\Render\MarkupInterface;
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Render\Markup;
+use Drupal\Core\Render\RendererInterface;
+
+/**
+ * Implements hook_entity_view().
+ */
+function nomads_display_tweaks_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, string $view_mode): void {
+  $entity_css_classes = nomads_display_tweaks_get_entity_css_classes($entity);
+  if ($entity_css_classes !== []) {
+    if (!isset($build['#attributes']['class']) || !is_array($build['#attributes']['class'])) {
+      $build['#attributes']['class'] = [];
+    }
+
+    $build['#attributes']['class'] = array_values(array_unique(array_merge(
+      $build['#attributes']['class'],
+      $entity_css_classes
+    )));
+  }
+
+  foreach ($display->getComponents() as $field_name => $component) {
+    if (
+      empty($build[$field_name])
+      || !is_array($build[$field_name])
+      || !nomads_display_tweaks_is_swiper_formatter_build($build[$field_name])
+    ) {
+      continue;
+    }
+
+    $class_string = $component['third_party_settings']['field_formatter_class']['class'] ?? NULL;
+    if (!is_string($class_string) || $class_string === '') {
+      continue;
+    }
+
+    $class_names = nomads_display_tweaks_resolve_formatter_classes($class_string, $entity);
+    if ($class_names === []) {
+      continue;
+    }
+
+    if (!isset($build[$field_name]['#attributes']['class']) || !is_array($build[$field_name]['#attributes']['class'])) {
+      $build[$field_name]['#attributes']['class'] = [];
+    }
+
+    $build[$field_name]['#attributes']['class'] = array_values(array_unique(array_merge(
+      $build[$field_name]['#attributes']['class'],
+      $class_names
+    )));
+  }
+}
+
+/**
+ * Implements hook_entity_view_alter().
+ */
+function nomads_display_tweaks_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display): void {
+  nomads_display_tweaks_wrap_prefix_suffix_values($build);
+
+  if (isset($build['field_subdomain']) && is_array($build['field_subdomain'])) {
+    nomads_display_tweaks_transform_subdomain_element($build['field_subdomain']);
+  }
+}
+
+/**
+ * Implements hook_preprocess_field().
+ */
+function nomads_display_tweaks_preprocess_field(array &$variables): void {
+  nomads_display_tweaks_apply_formatter_classes($variables);
+
+  if (empty($variables['items']) || !is_array($variables['items'])) {
+    return;
+  }
+
+  $field_name = (string) ($variables['field_name'] ?? '');
+  $field_type = (string) ($variables['field_type'] ?? '');
+  $is_physical_field = in_array($field_type, ['physical_measurement', 'physical_dimensions'], TRUE);
+
+  $element = $variables['element'] ?? [];
+  [$prefixes, $suffixes] = nomads_display_tweaks_get_field_affix_candidates($element);
+  if (!$prefixes && !$suffixes && !$is_physical_field && $field_name !== 'field_subdomain') {
+    return;
+  }
+
+  foreach ($variables['items'] as &$item) {
+    if ($field_name === 'field_subdomain' && isset($item['content'])) {
+      if (is_array($item['content'])) {
+        nomads_display_tweaks_transform_subdomain_element($item['content']);
+        $item['content'] = Markup::create(
+          nomads_display_tweaks_format_subdomain_markup(
+            nomads_display_tweaks_render_in_isolation($item['content'])
+          )
+        );
+        continue;
+      }
+      elseif (
+        is_scalar($item['content'])
+        || $item['content'] instanceof MarkupInterface
+        || (is_object($item['content']) && method_exists($item['content'], '__toString'))
+      ) {
+        $item['content'] = Markup::create(
+          nomads_display_tweaks_format_subdomain_markup((string) $item['content'])
+        );
+        continue;
+      }
+    }
+
+    if (!isset($item['content']) || !is_array($item['content']) || !isset($item['content']['#markup'])) {
+      continue;
+    }
+
+    $markup = (string) $item['content']['#markup'];
+    $updated = $markup;
+
+    $prefix = nomads_display_tweaks_match_affix($updated, $prefixes, TRUE);
+    if ($prefix !== NULL && !str_contains($updated, 'class="prefix"')) {
+      $updated = '<span class="prefix">' . $prefix . '</span>' . substr($updated, strlen($prefix));
+    }
+
+    $suffix = nomads_display_tweaks_match_affix($updated, $suffixes, FALSE);
+    if ($suffix !== NULL && !str_contains($updated, 'class="suffix"')) {
+      $updated = substr($updated, 0, -strlen($suffix)) . '<span class="suffix">' . $suffix . '</span>';
+    }
+
+    if ($is_physical_field && !str_contains($updated, 'class="suffix"')) {
+      $updated = nomads_display_tweaks_wrap_physical_unit_suffix($updated);
+    }
+
+    if ($field_name === 'field_subdomain') {
+      $updated = nomads_display_tweaks_format_subdomain_markup($updated);
+    }
+
+    if ($updated !== $markup) {
+      $item['content']['#markup'] = Markup::create($updated);
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function nomads_display_tweaks_preprocess_node(array &$variables): void {
+  $node = $variables['node'] ?? NULL;
+  if (!$node instanceof \Drupal\node\NodeInterface) {
+    return;
+  }
+
+  $class_names = nomads_display_tweaks_get_entity_css_classes($node);
+  if ($class_names === []) {
+    return;
+  }
+
+  if (($variables['attributes'] ?? NULL) instanceof \Drupal\Core\Template\Attribute) {
+    $variables['attributes']->addClass(...$class_names);
+    return;
+  }
+
+  $variables['attributes'] = new \Drupal\Core\Template\Attribute($variables['attributes'] ?? []);
+  $variables['attributes']->addClass(...$class_names);
+}
+
+/**
+ * Implements hook_preprocess_paragraph().
+ */
+function nomads_display_tweaks_preprocess_paragraph(array &$variables): void {
+  $variables['nomads_extra_classes'] = [];
+
+  $paragraph = $variables['paragraph'] ?? NULL;
+  if (!$paragraph instanceof EntityInterface) {
+    return;
+  }
+
+  $variables['nomads_extra_classes'] = nomads_display_tweaks_get_entity_css_classes($paragraph);
+}
+
+/**
+ * Implements hook_field_widget_complete_form_alter().
+ */
+function nomads_display_tweaks_field_widget_complete_form_alter(array &$field_widget_complete_form, \Drupal\Core\Form\FormStateInterface $form_state, $context): void {
+  $third_party_settings = $context['widget']->getThirdPartySettings('field_formatter_class');
+  if (empty($third_party_settings['class']) || !is_string($third_party_settings['class'])) {
+    return;
+  }
+
+  $entity = !empty($context['items']) ? $context['items']->getEntity() : NULL;
+  $class_names = nomads_display_tweaks_resolve_formatter_classes($third_party_settings['class'], $entity);
+  if (!$class_names) {
+    return;
+  }
+
+  if (!isset($field_widget_complete_form['#attributes']['class']) || !is_array($field_widget_complete_form['#attributes']['class'])) {
+    $field_widget_complete_form['#attributes']['class'] = [];
+  }
+  $field_widget_complete_form['#attributes']['class'] = array_values(array_unique(array_merge(
+    $field_widget_complete_form['#attributes']['class'],
+    $class_names
+  )));
+}
+
+/**
+ * Implements hook_nomads_block_visibility_rules_alter().
+ */
+function nomads_display_tweaks_nomads_block_visibility_rules_alter(array &$definitions): void {
+  $definitions['not_hero_interface'] = [
+    'label' => t('Not Hero Interface'),
+    'description' => t('Shows the block everywhere except on full hero node pages.'),
+    'callback' => 'nomads_display_tweaks_block_visibility_not_hero_interface',
+    'cache_contexts' => ['route'],
+  ];
+
+  $definitions['not_in_tutorial'] = [
+    'label' => t('Not in Tutorial'),
+    'description' => t('Shows the block everywhere except on full tutorial node pages.'),
+    'callback' => 'nomads_display_tweaks_block_visibility_not_in_tutorial',
+    'cache_contexts' => ['route'],
+  ];
+}
+
+/**
+ * Built-in Nomads tweak rule for excluding full hero node pages.
+ */
+function nomads_display_tweaks_block_visibility_not_hero_interface(string $rule_id, array $definition, ?object $condition = NULL): bool {
+  return !nomads_block_visibility_is_canonical_node_bundle('hero');
+}
+
+/**
+ * Built-in Nomads tweak rule for excluding full tutorial node pages.
+ */
+function nomads_display_tweaks_block_visibility_not_in_tutorial(string $rule_id, array $definition, ?object $condition = NULL): bool {
+  return !nomads_block_visibility_is_canonical_node_bundle('tutorial');
+}
+
+/**
+ * Applies configured field formatter classes to the field wrapper.
+ */
+function nomads_display_tweaks_apply_formatter_classes(array &$variables): void {
+  $classes = [];
+
+  $third_party_settings = $variables['element']['#third_party_settings']['field_formatter_class'] ?? NULL;
+  if (is_array($third_party_settings) && !empty($third_party_settings['class']) && is_string($third_party_settings['class'])) {
+    $classes[] = $third_party_settings['class'];
+  }
+  else {
+    $entity = $variables['element']['#object'] ?? NULL;
+    $view_mode = $variables['element']['#view_mode'] ?? NULL;
+    $field_name = $variables['field_name'] ?? NULL;
+
+    if (
+      $entity instanceof EntityInterface
+      && is_string($view_mode) && $view_mode !== ''
+      && is_string($field_name) && $field_name !== ''
+    ) {
+      $display_id = $entity->getEntityTypeId() . '.' . $entity->bundle() . '.' . $view_mode;
+      $display = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load($display_id);
+      if ($display instanceof EntityViewDisplayInterface) {
+        $component = $display->getComponent($field_name);
+        if (
+          is_array($component)
+          && !empty($component['third_party_settings']['field_formatter_class']['class'])
+          && is_string($component['third_party_settings']['field_formatter_class']['class'])
+        ) {
+          $classes[] = $component['third_party_settings']['field_formatter_class']['class'];
+        }
+      }
+    }
+  }
+
+  if (!$classes) {
+    return;
+  }
+
+  $entity = $variables['element']['#object'] ?? NULL;
+  if (!$entity instanceof EntityInterface) {
+    return;
+  }
+
+  $class_names = [];
+  foreach ($classes as $class_string) {
+    $class_names = array_merge($class_names, nomads_display_tweaks_resolve_formatter_classes($class_string, $entity));
+  }
+
+  if (!$class_names) {
+    return;
+  }
+
+  $class_names = array_values(array_unique($class_names));
+  if (($variables['attributes'] ?? NULL) instanceof \Drupal\Core\Template\Attribute) {
+    $variables['attributes']->addClass(...$class_names);
+  }
+  elseif (is_array($variables['attributes'] ?? NULL)) {
+    $variables['attributes']['class'] = array_values(array_unique(array_merge(
+      $variables['attributes']['class'] ?? [],
+      $class_names
+    )));
+  }
+}
+
+/**
+ * Resolves a formatter class string into escaped class names.
+ */
+function nomads_display_tweaks_resolve_formatter_classes(string $class_string, ?EntityInterface $entity = NULL): array {
+  if ($class_string === '') {
+    return [];
+  }
+
+  if ($entity instanceof EntityInterface) {
+    $class_string = \Drupal::service('token')->replace($class_string, [
+      $entity->getEntityTypeId() => $entity,
+    ], ['clear' => TRUE]);
+  }
+
+  $class_names = [];
+  foreach (preg_split('/\s+/', trim($class_string)) ?: [] as $class_name) {
+    if ($class_name !== '') {
+      $class_names[] = Html::escape($class_name);
+    }
+  }
+
+  return array_values(array_unique($class_names));
+}
+
+/**
+ * Extracts sanitized CSS classes from an entity field_css field.
+ */
+function nomads_display_tweaks_get_entity_css_classes(EntityInterface $entity): array {
+  if (!$entity->hasField('field_css') || $entity->get('field_css')->isEmpty()) {
+    return [];
+  }
+
+  $class_names = [];
+  foreach ($entity->get('field_css') as $item) {
+    $value = trim((string) ($item->value ?? ''));
+    if ($value === '') {
+      continue;
+    }
+
+    foreach (preg_split('/\s+/', $value, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $class_name) {
+      $class_name = Html::cleanCssIdentifier($class_name);
+      if ($class_name !== '') {
+        $class_names[$class_name] = TRUE;
+      }
+    }
+  }
+
+  return array_keys($class_names);
+}
+
+/**
+ * Determines whether a render array is using the Swiper formatter theme.
+ */
+function nomads_display_tweaks_is_swiper_formatter_build(array $build): bool {
+  $theme = $build['#theme'] ?? NULL;
+
+  if (is_string($theme)) {
+    return $theme === 'swiper_formatter';
+  }
+
+  return is_array($theme) && in_array('swiper_formatter', $theme, TRUE);
+}
+
+/**
+ * Implements hook_preprocess_range_formatter_range_combined().
+ */
+function nomads_display_tweaks_preprocess_range_formatter_range_combined(array &$variables): void {
+  foreach (['field_prefix', 'value_prefix'] as $key) {
+    if (array_key_exists($key, $variables)) {
+      $variables[$key] = nomads_display_tweaks_wrap_markup_value($variables[$key], 'prefix');
+    }
+  }
+
+  foreach (['value_suffix', 'field_suffix'] as $key) {
+    if (array_key_exists($key, $variables)) {
+      $variables[$key] = nomads_display_tweaks_wrap_markup_value($variables[$key], 'suffix');
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_range_formatter_range_separate().
+ */
+function nomads_display_tweaks_preprocess_range_formatter_range_separate(array &$variables): void {
+  foreach (['field_prefix', 'from_prefix', 'to_prefix'] as $key) {
+    if (array_key_exists($key, $variables)) {
+      $variables[$key] = nomads_display_tweaks_wrap_markup_value($variables[$key], 'prefix');
+    }
+  }
+
+  foreach (['from_suffix', 'to_suffix', 'field_suffix'] as $key) {
+    if (array_key_exists($key, $variables)) {
+      $variables[$key] = nomads_display_tweaks_wrap_markup_value($variables[$key], 'suffix');
+    }
+  }
+}
+
+/**
+ * Recursively wraps known prefix and suffix render values for field output.
+ */
+function nomads_display_tweaks_wrap_prefix_suffix_values(array &$element, ?string $field_type = NULL): void {
+  if (!empty($element['#field_type']) && is_string($element['#field_type'])) {
+    $field_type = $element['#field_type'];
+  }
+
+  $prefix_keys = [
+    '#prefix',
+    '#field_prefix',
+    '#from_prefix',
+    '#to_prefix',
+    '#value_prefix',
+  ];
+  $suffix_keys = [
+    '#suffix',
+    '#field_suffix',
+    '#from_suffix',
+    '#to_suffix',
+    '#value_suffix',
+  ];
+
+  foreach ($prefix_keys as $key) {
+    if (array_key_exists($key, $element)) {
+      $element[$key] = nomads_display_tweaks_wrap_markup_value($element[$key], 'prefix');
+    }
+  }
+
+  foreach ($suffix_keys as $key) {
+    if (array_key_exists($key, $element)) {
+      $element[$key] = nomads_display_tweaks_wrap_markup_value($element[$key], 'suffix');
+    }
+  }
+
+  if (
+    in_array($field_type, ['physical_measurement', 'physical_dimensions'], TRUE)
+    && isset($element['#markup'])
+  ) {
+    $markup = (string) $element['#markup'];
+    if (!str_contains($markup, 'class="suffix"')) {
+      $updated = nomads_display_tweaks_wrap_physical_unit_suffix($markup);
+      if ($updated !== $markup) {
+        $element['#markup'] = Markup::create($updated);
+      }
+    }
+  }
+
+  if (
+    in_array($field_type, ['integer', 'decimal', 'float', 'range_integer', 'range_decimal', 'range_float', 'physical_measurement', 'physical_dimensions'], TRUE)
+    && isset($element['#markup'])
+  ) {
+    $markup = (string) $element['#markup'];
+    if (!str_contains($markup, 'class="suffix"')) {
+      $updated = nomads_display_tweaks_wrap_trailing_text_suffix($markup);
+      if ($updated !== $markup) {
+        $element['#markup'] = Markup::create($updated);
+      }
+    }
+  }
+
+  foreach ($element as $key => &$child) {
+    if ((is_string($key) && str_starts_with($key, '#')) || !is_array($child)) {
+      continue;
+    }
+    nomads_display_tweaks_wrap_prefix_suffix_values($child, $field_type);
+  }
+}
+
+/**
+ * Wraps a string-like value in a span with the requested class.
+ */
+function nomads_display_tweaks_wrap_markup_value($value, string $class) {
+  if ($value === NULL || $value === '' || is_array($value)) {
+    return $value;
+  }
+
+  if (
+    !is_scalar($value)
+    && !$value instanceof MarkupInterface
+    && !(is_object($value) && method_exists($value, '__toString'))
+  ) {
+    return $value;
+  }
+
+  $string = (string) $value;
+  if (trim($string) === '') {
+    return $value;
+  }
+
+  // Prevent duplicate wrapping when another layer already applied it.
+  if (preg_match('/class=(["\']).*?\b' . preg_quote($class, '/') . '\b.*?\1/', $string)) {
+    return $value;
+  }
+
+  return Markup::create('<span class="' . $class . '">' . $string . '</span>');
+}
+
+/**
+ * Gets possible prefix/suffix candidates from field storage settings.
+ */
+function nomads_display_tweaks_get_field_affix_candidates(array $element): array {
+  $items = $element['#items'] ?? NULL;
+  if (!$items || !method_exists($items, 'getFieldDefinition')) {
+    return [[], []];
+  }
+
+  $settings = $items->getFieldDefinition()->getSettings();
+  if (!is_array($settings)) {
+    return [[], []];
+  }
+
+  $prefixes = isset($settings['prefix']) ? explode('|', (string) $settings['prefix']) : [];
+  $suffixes = isset($settings['suffix']) ? explode('|', (string) $settings['suffix']) : [];
+
+  $prefixes = array_values(array_filter(array_unique($prefixes), static fn ($value) => $value !== ''));
+  $suffixes = array_values(array_filter(array_unique($suffixes), static fn ($value) => $value !== ''));
+
+  // Match the most specific value first.
+  usort($prefixes, static fn ($a, $b) => strlen($b) <=> strlen($a));
+  usort($suffixes, static fn ($a, $b) => strlen($b) <=> strlen($a));
+
+  return [$prefixes, $suffixes];
+}
+
+/**
+ * Finds an affix that matches the beginning or end of the string.
+ */
+function nomads_display_tweaks_match_affix(string $value, array $candidates, bool $is_prefix): ?string {
+  foreach ($candidates as $candidate) {
+    if ($candidate === '') {
+      continue;
+    }
+    if ($is_prefix && str_starts_with($value, $candidate)) {
+      return $candidate;
+    }
+    if (!$is_prefix && str_ends_with($value, $candidate)) {
+      return $candidate;
+    }
+  }
+
+  return NULL;
+}
+
+/**
+ * Wraps the trailing unit label on physical field output.
+ */
+function nomads_display_tweaks_wrap_physical_unit_suffix(string $markup): string {
+  if (preg_match('/^(.*\S)(\s+[^\s<]+)$/u', $markup, $matches)) {
+    return $matches[1] . '<span class="suffix">' . $matches[2] . '</span>';
+  }
+
+  return $markup;
+}
+
+/**
+ * Renders a render array to a string without affecting the main render stack.
+ */
+function nomads_display_tweaks_render_in_isolation(array $build): string {
+  $renderer = \Drupal::service('renderer');
+  if ($renderer instanceof RendererInterface) {
+    return (string) $renderer->renderInIsolation($build);
+  }
+
+  return '';
+}
+
+/**
+ * Wraps text suffixes that trail a numeric value (for numeric field output).
+ */
+function nomads_display_tweaks_wrap_trailing_text_suffix(string $markup): string {
+  if (preg_match('/^(.*\d)(\s+[^\d<][^<]*)$/u', $markup, $matches)) {
+    return $matches[1] . '<span class="suffix">' . $matches[2] . '</span>';
+  }
+
+  return $markup;
+}
+
+/**
+ * Rewrites subdomain text into structured spans while preserving wrappers.
+ */
+function nomads_display_tweaks_format_subdomain_markup(string $markup): string {
+  if (
+    $markup === ''
+    || str_contains($markup, 'class="domain-first"')
+    || str_contains($markup, "class='domain-first'")
+  ) {
+    return $markup;
+  }
+
+  $updated = preg_replace_callback(
+    '/(<a\b[^>]*>)(.*?)(<\/a>)/isu',
+    static function (array $matches): string {
+      $replacement = nomads_display_tweaks_build_subdomain_markup($matches[2]);
+      return $replacement === '' ? $matches[0] : $matches[1] . $replacement . $matches[3];
+    },
+    $markup,
+    1,
+    $count
+  );
+
+  if ($count > 0 && is_string($updated)) {
+    return $updated;
+  }
+
+  $updated = preg_replace_callback(
+    '/(^|>)([^<>]*\S[^<>]*)(?=<|$)/u',
+    static function (array $matches): string {
+      $replacement = nomads_display_tweaks_build_subdomain_markup($matches[2]);
+      return $replacement === '' ? $matches[0] : $matches[1] . $replacement;
+    },
+    $markup,
+    1,
+    $count
+  );
+
+  return ($count > 0 && is_string($updated)) ? $updated : $markup;
+}
+
+/**
+ * Builds the split subdomain markup from plain text.
+ */
+function nomads_display_tweaks_build_subdomain_markup(string $text): string {
+  $text = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+  $text = trim(preg_replace('/\s+/u', ' ', $text) ?? '');
+  if ($text === '') {
+    return '';
+  }
+
+  $parts = preg_split('/\s+/u', $text, 2, PREG_SPLIT_NO_EMPTY);
+  if (!$parts) {
+    return '';
+  }
+
+  $markup = '<span class="domain-first">' . Html::escape($parts[0]) . '</span>';
+  if (!empty($parts[1])) {
+    $markup .= ' <span class="domain-rest">' . Html::escape($parts[1]) . '</span>';
+  }
+
+  return $markup;
+}
+
+/**
+ * Recursively updates field_subdomain render arrays.
+ */
+function nomads_display_tweaks_transform_subdomain_element(array &$element): void {
+  if (isset($element['#markup']) && is_scalar($element['#markup'])) {
+    $element['#markup'] = Markup::create(
+      nomads_display_tweaks_format_subdomain_markup((string) $element['#markup'])
+    );
+  }
+
+  if (
+    array_key_exists('#title', $element)
+    && (
+      is_scalar($element['#title'])
+      || $element['#title'] instanceof MarkupInterface
+      || (is_object($element['#title']) && method_exists($element['#title'], '__toString'))
+    )
+  ) {
+    $replacement = nomads_display_tweaks_build_subdomain_markup((string) $element['#title']);
+    if ($replacement !== '') {
+      $element['#title'] = Markup::create($replacement);
+      if (!isset($element['#options']) || !is_array($element['#options'])) {
+        $element['#options'] = [];
+      }
+      $element['#options']['html'] = TRUE;
+    }
+  }
+
+  foreach ($element as $key => &$child) {
+    if ((is_string($key) && str_starts_with($key, '#')) || !is_array($child)) {
+      continue;
+    }
+    nomads_display_tweaks_transform_subdomain_element($child);
+  }
+}

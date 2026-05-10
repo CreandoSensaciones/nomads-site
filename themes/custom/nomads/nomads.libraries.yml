@@ -3,12 +3,16 @@ global:
   css:
     theme:
       css/00-base.css: {}
+      css/01-tweaks.css: {}
       css/10-layout.css: {}
       css/11-layout-listing.css: {}
       css/12-layout-paragraphs.css: {}
       css/13-layout-teaser.css: {}
+      css/14-layout-teaser-listing.css: {}
       css/15-layout-grids.css: {}
+      css/16-layout-tutorial.css: {}
       css/20-components.css: {}
+      css/21-component-swiper.css: {}
       css/22-component-paragraphs.css: {}
       css/24-component-tax-icons.css: {}
       css/25-component-tiles.css: {}
@@ -20,13 +24,14 @@ global:
       css/33-feature-listing-teaser.css: {}
       css/34-feature-herocard-teaser.css: {}
       css/34-feature-landingpage-teaser.css: {}
+      css/34-feature-resource-teaser.css: {}
       css/35-feature-relevance-paragraphs.css: {}
       css/36-feature-main-navigation.css: {}
       css/38-feature-maps.css: {}
-      css/39-feature-maps.css: {}
+      css/39-feature-dashboard.css: {}
       css/40-feature-editor-content.css: {}
       css/50-content.css: {}
-      css/51-region-button.css: {}
+      css/51-region-bottom.css: {}
       css/52-region-footer.css: {}
       css/54-content-type-page.css: {}
       css/55-content-type-tutorial.css: {}
@@ -44,6 +49,7 @@ global:
       css/90-img-handling.css: {}
   js:
     js/nomads.js: {}
+    js/swiper.js: {}
     js/nomads-navbar.js: {}
   dependencies:
     - core/drupal

@@ -1,0 +1,235 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @file
+ * Theme hooks for Nomads Dashboards.
+ */
+
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Template\Attribute;
+use Drupal\Core\Url;
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_theme().
+ */
+function nomads_dashboards_theme(): array {
+  return [
+    'nomads_dashboard_grid' => [
+      'variables' => [
+        'dashboard_type' => NULL,
+        'entity' => NULL,
+        'tiles' => [],
+        'attributes' => [],
+      ],
+    ],
+    'nomads_dashboard_tile' => [
+      'variables' => [
+        'tile' => [],
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for html.html.twig.
+ */
+function nomads_dashboards_preprocess_html(array &$variables): void {
+  if (!in_array(\Drupal::routeMatch()->getRouteName(), ['nomads_dashboards.user', 'nomads_dashboards.team', 'nomads_dashboards.node'], TRUE)) {
+    return;
+  }
+
+  $variables['attributes']['class'][] = 'dashboard';
+}
+
+/**
+ * Implements hook_preprocess_menu().
+ */
+function nomads_dashboards_preprocess_menu(array &$variables): void {
+  if (($variables['menu_name'] ?? NULL) !== 'account') {
+    return;
+  }
+
+  $dashboard_items = nomads_dashboards_current_user_dashboard_menu_items();
+  if ($dashboard_items === []) {
+    return;
+  }
+
+  $items = $variables['items'] ?? [];
+  $variables['items'] = nomads_dashboards_insert_menu_items_before_logout($items, $dashboard_items);
+
+  $cacheability = (new CacheableMetadata())
+    ->setCacheContexts(['user'])
+    ->setCacheTags(['node_list:listing', 'node_list:organizer']);
+  $cacheability->applyTo($variables);
+}
+
+/**
+ * Builds dashboard menu items for the current user.
+ *
+ * @return array<string, array<string, mixed>>
+ *   Menu items keyed by stable dashboard item IDs.
+ */
+function nomads_dashboards_current_user_dashboard_menu_items(): array {
+  $account = \Drupal::currentUser();
+  if ($account->isAnonymous()) {
+    return [];
+  }
+
+  $items = [];
+
+  $items['nomads_dashboards.user'] = [
+    'title' => 'My Dashboard',
+    'url' => Url::fromRoute('nomads_dashboards.user', ['user' => $account->id()]),
+    'localized_options' => [],
+    'attributes' => new Attribute([
+      'class' => [
+        'menu-item',
+        'menu-item--nomads-dashboard',
+        'menu-item--nomads-dashboard-user',
+      ],
+    ]),
+    'below' => [],
+    'is_expanded' => FALSE,
+    'is_collapsed' => FALSE,
+    'in_active_trail' => FALSE,
+  ];
+
+  if ($account->hasRole('team')) {
+    $items['nomads_dashboards.team'] = [
+      'title' => 'Team Dashboard',
+      'url' => Url::fromRoute('nomads_dashboards.team', ['user' => $account->id()]),
+      'localized_options' => [],
+      'attributes' => new Attribute([
+        'class' => [
+          'menu-item',
+          'menu-item--nomads-dashboard',
+          'menu-item--nomads-dashboard-team',
+        ],
+      ]),
+      'below' => [],
+      'is_expanded' => FALSE,
+      'is_collapsed' => FALSE,
+      'in_active_trail' => FALSE,
+    ];
+  }
+
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  $nids = $storage->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('type', ['listing', 'organizer'], 'IN')
+    ->condition('uid', $account->id())
+    ->sort('type')
+    ->sort('title')
+    ->execute();
+
+  if ($nids === []) {
+    return $items;
+  }
+
+  $nodes = array_values($storage->loadMultiple($nids));
+  $organizer_count = count(array_filter(
+    $nodes,
+    static fn ($node): bool => $node instanceof NodeInterface && $node->bundle() === 'organizer',
+  ));
+  $organizer_index = 0;
+
+  foreach ($nodes as $node) {
+    if (!$node instanceof NodeInterface) {
+      continue;
+    }
+
+    $title = nomads_dashboards_node_dashboard_menu_title($node, $organizer_count, $organizer_index);
+    $items['nomads_dashboards.' . $node->id()] = [
+      'title' => $title,
+      'url' => Url::fromRoute('nomads_dashboards.node', ['node' => $node->id()]),
+      'localized_options' => [],
+      'attributes' => new Attribute([
+        'class' => [
+          'menu-item',
+          'menu-item--nomads-dashboard',
+          'menu-item--nomads-dashboard-' . $node->bundle(),
+        ],
+      ]),
+      'below' => [],
+      'is_expanded' => FALSE,
+      'is_collapsed' => FALSE,
+      'in_active_trail' => FALSE,
+    ];
+  }
+
+  return $items;
+}
+
+/**
+ * Inserts dashboard menu items before the logout link when present.
+ *
+ * @param array<string, array<string, mixed>> $items
+ *   Existing menu items.
+ * @param array<string, array<string, mixed>> $dashboard_items
+ *   Dashboard menu items.
+ *
+ * @return array<string, array<string, mixed>>
+ *   Menu items with dashboard links placed above logout.
+ */
+function nomads_dashboards_insert_menu_items_before_logout(array $items, array $dashboard_items): array {
+  $result = [];
+  $inserted = FALSE;
+
+  foreach ($items as $key => $item) {
+    if (!$inserted && nomads_dashboards_menu_item_is_logout($item)) {
+      foreach ($dashboard_items as $dashboard_key => $dashboard_item) {
+        $result[$dashboard_key] = $dashboard_item;
+      }
+      $inserted = TRUE;
+    }
+
+    $result[$key] = $item;
+  }
+
+  if (!$inserted) {
+    foreach ($dashboard_items as $dashboard_key => $dashboard_item) {
+      $result[$dashboard_key] = $dashboard_item;
+    }
+  }
+
+  return $result;
+}
+
+/**
+ * Determines whether a menu item points to the user logout route.
+ */
+function nomads_dashboards_menu_item_is_logout(array $item): bool {
+  $url = $item['url'] ?? NULL;
+  return $url instanceof Url && $url->isRouted() && $url->getRouteName() === 'user.logout';
+}
+
+/**
+ * Builds the account menu label for a node dashboard link.
+ */
+function nomads_dashboards_node_dashboard_menu_title(NodeInterface $node, int $organizer_count, int &$organizer_index): string {
+  if ($node->bundle() === 'organizer') {
+    if ($organizer_count <= 1) {
+      return 'Organizer Dashboard';
+    }
+
+    ++$organizer_index;
+    return 'Organizer ' . $organizer_index . ' Dashboard';
+  }
+
+  return nomads_dashboards_truncate_menu_title($node->label()) . ' Dashboard';
+}
+
+/**
+ * Truncates node titles for account menu dashboard links.
+ */
+function nomads_dashboards_truncate_menu_title(string $title): string {
+  $title = trim($title);
+  if (mb_strlen($title) <= 16) {
+    return $title;
+  }
+
+  return rtrim(mb_substr($title, 0, 12)) . '...';
+}

@@ -1,0 +1,10 @@
+name: Nomads Dashboards
+type: module
+description: 'Provides virtual dashboard pages for users, listings, and organizers.'
+package: 'Nomads'
+core_version_requirement: ^11
+dependencies:
+  - drupal:link
+  - drupal:node
+  - drupal:user
+  - drupal:views
