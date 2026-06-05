@@ -6,6 +6,42 @@
  */
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function select_tooltip_help($route_name, RouteMatchInterface $route_match): ?string {
+  if ($route_name !== 'help.page.select_tooltip') {
+    return NULL;
+  }
+
+  return '<h2>' . t('Select Tooltip') . '</h2>'
+    . '<p>' . t('Select Tooltip enhances select, radio, and checkbox option labels by converting inline tooltip markers into browser tooltip attributes. It also adds custom toggle behavior for Pretty-styled radio options.') . '</p>'
+    . '<h3>' . t('Functionality') . '</h3>'
+    . '<ul>'
+    . '<li>' . t('Parses option labels written as “Label -- Tooltip text”. The visible label is shortened to the text before the marker and the text after the marker is stored as tooltip content.') . '</li>'
+    . '<li>' . t('For select options, adds title and data-tooltip attributes to options and updates the select element title to match the currently selected option.') . '</li>'
+    . '<li>' . t('For checkbox and radio labels, moves the tooltip text into title and data-tooltip attributes and adds a small indicator class.') . '</li>'
+    . '<li>' . t('For Pretty Checkboxes/Radios radio widgets, removes rendered “_none” options and allows an already-selected radio option to be unchecked by clicking it again.') . '</li>'
+    . '<li>' . t('Attaches its library only when the rendered form contains tooltip markers or Pretty widget markers.') . '</li>'
+    . '</ul>'
+    . '<h3>' . t('Architecture') . '</h3>'
+    . '<p>' . t('The module uses a form alter hook to recursively inspect form options for labels containing “--” and form elements marked with the Pretty widget flag. When either condition is found, it attaches one library containing the tooltip parser, Pretty-radio behavior, and indicator CSS. The JavaScript behavior uses Drupal once() to process select elements, checkbox labels, radio labels, and Pretty radio inputs without reprocessing the same element during AJAX rebuilds.') . '</p>'
+    . '<h3>' . t('Configuration') . '</h3>'
+    . '<p>' . t('There is no configuration form. Editors or builders add tooltip text directly to option labels by using the “Label -- Tooltip text” convention. The Pretty-radio uncheck behavior applies automatically when the attached form contains Pretty-styled radio markup.') . '</p>'
+    . '<h3>' . t('Stability considerations') . '</h3>'
+    . '<ul>'
+    . '<li>' . t('Tooltip parsing is text-based. Any legitimate option label containing “--” will be split unless the label is changed or the module behavior is narrowed.') . '</li>'
+    . '<li>' . t('The behavior runs on all select elements and checkbox/radio labels in an attached form, so unrelated labels with the marker can be affected.') . '</li>'
+    . '<li>' . t('Pretty-radio handling depends on the .pretty-element markup and on “_none” being the empty radio option value.') . '</li>'
+    . '<li>' . t('Allowing radio options to be unchecked changes native radio-button semantics and may conflict with required fields or business rules that expect one option to remain selected.') . '</li>'
+    . '<li>' . t('Tooltip display relies mostly on title attributes, which are inconsistent on touch devices and may not provide a complete accessible help experience.') . '</li>'
+    . '<li>' . t('There are no automated tests for marker parsing, optgroup edge cases, AJAX rebuilds, keyboard interaction, or radio uncheck behavior.') . '</li>'
+    . '</ul>'
+    . '<h3>' . t('Security considerations') . '</h3>'
+    . '<p>' . t('This module changes client-side presentation only. Tooltip text comes from configured option labels and is assigned through DOM attribute APIs rather than injected as HTML. It does not change field access, submitted values, or server-side validation. Required-value rules and any constraints around empty radio selections must still be enforced server-side.') . '</p>';
+}
 
 /**
  * Implements hook_form_alter().
@@ -29,7 +65,7 @@ function select_tooltip_form_has_tooltips(array $element): bool {
   }
 
   foreach ($element as $key => $child) {
-    if (is_string($key) && $key[0] === '#') {
+    if (is_string($key) && $key !== '' && $key[0] === '#') {
       continue;
     }
     if (is_array($child) && select_tooltip_form_has_tooltips($child)) {
@@ -49,7 +85,7 @@ function select_tooltip_form_has_pretty_elements(array $element): bool {
   }
 
   foreach ($element as $key => $child) {
-    if (is_string($key) && $key[0] === '#') {
+    if (is_string($key) && $key !== '' && $key[0] === '#') {
       continue;
     }
     if (is_array($child) && select_tooltip_form_has_pretty_elements($child)) {

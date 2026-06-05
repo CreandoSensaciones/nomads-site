@@ -5,4 +5,4 @@ nomads_hero_ui.auth_switch:
   requirements:
     _access: 'TRUE'
     node: '\d+'
-    form_type: 'login|register|recover'
+    form_type: 'login|register|recover|magic'

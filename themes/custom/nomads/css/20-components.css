@@ -24,37 +24,209 @@
   max-width: 960px;
   margin: 10px auto;
 }
+*/
 
 
+/* Booking bar */
+.booking-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 28px;
+  width: 100%;
+  max-width: 1570px;
+  grid-column: 1 / -1;
+  margin: 30px auto;
+}
+.booking-bar:has(> :nth-child(2)) {
+  justify-content: space-between;
+  max-width: 800px;
+}
+.booking-bar:has(> :nth-child(4)) {
+  justify-content: space-between;
+  max-width: 1570px;
+}
 
-/* ========== Buttons ========== */
-/* ============================= */
+.booking-bar > .field {
+  flex: 0 0 auto;
+}
 
-/* Nomads.site blue pill button */
+/* Price */
+.booking-bar .field--name-field-price-incentive {
+  white-space: nowrap;
+  font-size: 22px;
+  font-weight: 500;
+  color: #444;
+  line-height: 1.15;
+}
 
-.nomad-button {
+.booking-bar .field--name-field-price-incentive::before {
+  content: "Pricing";
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #0d79b7;
+  margin-bottom: 2px;
+}
+
+/* Website + Booking buttons */
+.booking-bar .field--name-field-website a,
+.booking-bar .field--name-field-booking-link a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background:#0570A1;
+  min-width: 160px;
+  height: 44px;
+  padding: 0;
+  font-size: 0 !important;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.booking-bar .field--name-field-website a::after,
+.booking-bar .field--name-field-booking-link a::after {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+}
+
+.booking-bar .field--name-field-website a::after {
+  content: "Website";
+}
+
+.booking-bar .field--name-field-booking-link a::after {
+  content: "Booking";
+}
+
+/* WhatsApp + email icons */
+.booking-bar .field--name-field-whatsapp a,
+.booking-bar .field--name-field-email a {
+  display: block;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  font-size: 0 !important;
+  line-height: 0;
+  color: transparent;
+  text-indent: -9999px;
+  white-space: nowrap;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+.booking-bar .field--name-field-whatsapp a {
+  background-image: url("/themes/custom/nomads/assets/ui/Whatsapp.svg");
+}
+
+.booking-bar .field--name-field-email a {
+  background-image: url("/themes/custom/nomads/assets/ui/email.svg");
+}
+
+/* Perk */
+.booking-bar .field--name-field-perk-percentage {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(13, 121, 183, .08);
+  font-size: 42px;
+  line-height: 1;
+  color: #222;
+}
+
+.booking-bar .field--name-field-perk-percentage::before {
+  content: "Member perk";
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #0d79b7;
+}
+
+.booking-bar .field--name-field-perk-percentage::after {
+  content: "for members";
+  font-size: 18px;
+  font-weight: 400;
+  color: #222;
+}
+
+/* Mobile fallback */
+@media (max-width: 900px) {
+  .booking-bar {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+
+
+.view-empty {
+  text-align: center;
+  margin: 60px 10px;
+  color: #666;
+}
+
+body.page-node-type-organizer h1.page-title::before {
+  content: "Organizer";
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.65;
+  margin-bottom: 4px;
+}
+
+/* =============================
+  Z index
+================================= */
+
+/* keep contextual UI above images/sliders */
+.contextual {
+  z-index: 4;
+}
+
+
+/* ===============================
+  Buttons
+================================== */
+
+/* Nomads.site blue pill button */
+
+.nomad-button,
+a.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1382BC 0%, #0B5F8D 100%);
   color: #fff;
   border: 0;
   border-radius: 999px;
-  padding: 12px 26px;
-  min-height: 44px;
-  font-size: 16px;
-  font-weight: 700;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 600;
   line-height: 1.1;
   text-align: center;
   white-space: nowrap;
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(30, 136, 229, 0.25);
   transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  margin: 2px 5px;
+}
+.nomad-button a {
+  color: #fff;
+  text-decoration: none;
 }
 
 /* hover */
 .nomad-button:hover {
-  background:#0570A1;
+  background: linear-gradient(135deg, #2394CF 0%, #0D6B9E 100%);
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(30, 136, 229, 0.28);
 }
@@ -68,23 +240,37 @@
 .nomad-button:focus {
   outline: none;
 }
+div .button-primary {
+    font-size: 22pt;
+    padding: 10px 50px;
+    margin: 5px;
+}
+div div .button-teal {
+  background: linear-gradient(135deg, #66C3D0 0%, #33A7B8 100%) !important;
+}
+
+div div .button-teal:hover {
+  background: linear-gradient(135deg, #7AD2DE 0%, #42B8C8 100%) !important;
+}
 
 
-/* ========= Button ======== */
+/* ===============================
+  Action Buttons
+================================== */
 
 #edit-actions {
   margin-top: 24px;
 }
 
 #edit-actions .button,
-#edit-actions .button--primary {
+#edit-actions .button--primary,
+#magic-link-container .button {
   appearance: none;
-  background: #3b82c4;
-  border: 1px solid #3b82c4;
+  background: linear-gradient(135deg, #005F8A 0%, #003B5C 100%);
+  border: 1px solid  #005F8A;
   color: #fff;
   border-radius: 8px;
   padding: 10px 18px;
-  min-height: 42px;
   font-size: 1.1rem;
   font-weight: 600;
   line-height: 1.2;
@@ -94,13 +280,18 @@
   margin: 0 auto;
   width: auto;
 }
+#edit-actions .button#edit-delete {
+  background: #fff;
+  color: #710101;
+  border: 1px solid  #710101;
+}
 
 #edit-actions .button:hover,
 #edit-actions .button--primary:hover,
 #edit-actions .button:focus,
 #edit-actions .button--primary:focus {
-  background: #2f74b3;
-  border-color: #2f74b3;
+  background: linear-gradient(135deg, #0072A3 0%, #00486E 100%);
+  border-color: #0072A3;
   color: #fff;
   text-decoration: none;
 }
@@ -125,25 +316,31 @@
 
 
 .nomads-title-local-tasks__select {
-  background-color:#3b9dc4;
+  background-color:#33A7B8;
 }
 
 
 
 
 
+/* =======================================
+==========================================
+  Field Display
+==========================================
+========================================== */
 
 
 
-
-/* ========== Icon formatter ========== */
+/* =======================================
+  Icon formatter
+========================================== */
 
 /* Shared icon formatter typography */
 .nomads-icon-formatter__label {
   margin: 0;
   font-size: 7pt;
   text-transform: uppercase;
-  color: #0575b1;
+  color: #005f8a;
   font-weight: 700;
   text-decoration: none;
   display: block;
@@ -178,7 +375,9 @@
 
 
 
-/* ========== Pills ========== */
+/* =================================
+  Pills
+===================================== */
 
 div .nomads-pill,
 div .nomads-pill__label,
@@ -187,7 +386,6 @@ div .nomads-pill__label,
   display: inline-block;
   border-radius: 999px;
   padding: 4px 8px;
-  margin: 2px;
   font-size: 10pt;
   line-height: 1.2;
   vertical-align: middle;
@@ -195,31 +393,18 @@ div .nomads-pill__label,
   font-weight: 500;
   background-color: #0570A1;
   color: #fff;
-  text-decoration: none;
+  margin: 2px;
 }
 div .nomads-pill a {
   text-decoration: none;
   color: #fff;
 }
 .paragraph-relevance-key-aspects__group--minor_relevance .nomads-pill {
-  background-color:#3b9dc4;
+  background: linear-gradient(135deg, #005F8A 0%, #003B5C 100%);
 }
 .listing-menu-virtual-field a.listing-menu-virtual-field__link {
   font-size: 1.1em;
 }
-
-/* Shared pills base styles 
-.nomads-pills:not(.nomads-pills--fitted-pills) {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 8px 12px;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-*/
 
 .nomads-pill__link {
   color: inherit;
@@ -237,10 +422,11 @@ div .nomads-pill a {
   line-height: 1.25;
   border: 0;
   font-weight: 600;
-  background-color: #0570A1;
+  background: linear-gradient(135deg, #005F8A 0%, #003B5C 100%);
   color: #fff;
 }
 */
+
 
 
 
@@ -269,7 +455,9 @@ div .nomads-pill a {
 
 
 
-/* ========== Data icons inline ========== */
+/* =====================================
+  Data icons inline
+======================================== */
 
 .data-icons-inline .field {
   display: inline-block;
@@ -291,7 +479,13 @@ div .nomads-pill a {
 
 
 
-/* ========== Tooltips ========== */
+/* =================================
+  Tooltips
+  ================================== */
+
+/* =================================
+  Tooltips
+  ================================== */
 
 /* Tooltip anchor */
 [data-tooltip]{
@@ -300,7 +494,7 @@ div .nomads-pill a {
 
 
 /* Tooltip box */
-[data-tooltip]::after{
+[data-tooltip]::before{
   content: attr(data-tooltip);
   position: absolute;
   left: 50%;
@@ -310,7 +504,7 @@ div .nomads-pill a {
   padding: 6px 10px;
   border-radius: 8px;
   border: 0;
-  background:#0570A1;
+  background:#005f8A;
   color: #fff;
   font-size: 13px;
   line-height: 1.25;
@@ -324,28 +518,8 @@ div .nomads-pill a {
   transition: opacity .12s ease;
 }
 
-/* Tooltip arrow */
-[data-tooltip]::before{
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 0;
-  transform: translate(-50%, -14px);
-  z-index: 9999;
-
-  border: 6px solid transparent;
-  border-bottom-color: #0570A1;
-
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .12s ease;
-}
-
 /* Show on hover/focus */
-[data-tooltip]:hover::after,
-[data-tooltip]:hover::before,
-[data-tooltip]:focus::after,
-[data-tooltip]:focus::before{
+[data-tooltip]:hover::before {
   opacity: 1;
 }
 /* .special-category-select__tree-link[data-tooltip]::after {
@@ -354,30 +528,45 @@ div .nomads-pill a {
 .special-category-select__tree-link[data-tooltip]::before {
   transform: translate(-50%, -30px);
 } */
-.special-category-select__tree-label[data-tooltip]::after,
-.special-category-select__tree-label[data-tooltip]::before {
-  display: none;
+
+.region-navigation {
+  position: relative;
+}
+.region-navigation [data-tooltip] {
+  position: static;
+}
+.region-navigation [data-tooltip]::before {
+  top: -30px;
+  max-width: 400px;
+  white-space: normal;
+  box-shadow:
+    0 0 12px rgba(245, 245, 245, 1),
+    0 0 28px rgba(245, 245, 245, 0.95),
+    0 0 55px rgba(245, 245, 245, 0.85);
 }
 
 
 
+/* ==========================================
+  Taxonomy Breadcrumb
+  ============================================ */
 
-
-
-/* ========== Taxonomy Breadcrumb ========== */
-
-.taxonomy-breadcrumb span,
-.taxonomy-breadcrumb span a {
+.taxonomy-breadcrumb span {
   text-align: center;
-  text-transform: uppercase;
-  text-decoration: none;
-  color: #777;
   font-size: 12pt;
   font-weight: 600;
 }
+.taxonomy-breadcrumb span a {
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #777;
+}
 
 
 
+/* ========================================
+  Links
+=========================================== */
 
 .promoted-link {
   display: block;
@@ -393,7 +582,7 @@ div .nomads-pill a {
   vertical-align: middle;
   border: 0;
   font-weight: 500;
-  background-color: #0570A1;
+  background-color: #005f8A;
   color: #fff;
 }
 
@@ -401,53 +590,3 @@ div .nomads-pill a {
 
 
 
-/* =========== Subdomain slideshow arrows ============ */
-
-/* Swiper arrows as bold white circles */
-.swiper-container {
-  position: relative;
-}
-
-.swiper-button-prev,
-.swiper-button-next {
-  width: 32px;
-  height: 32px;
-  margin-top: -16px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.28);
-  border: 3px solid rgba(255,255,255,0.95);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
-}
-
-.swiper-button-prev:hover,
-.swiper-button-next:hover {
-  transform: scale(1.08);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.35);
-}
-
-.swiper-button-prev::after,
-.swiper-button-next::after {
-  font-size: 16px;
-  font-weight: 900;
-  color: #000;
-}
-
-.swiper-button-prev {
-  left: 10px;
-}
-
-.swiper-button-next {
-  right: 10px;
-}
-
-.swiper-button-disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-/* optional: vertically center better if autoheight jumps */
-.swiper-button-prev,
-.swiper-button-next {
-  top: 50%;
-}

@@ -472,10 +472,10 @@ class SpecialCategorySelectWidget extends WidgetBase {
 
       $markup .= '<li class="' . implode(' ', $classes) . '">';
       if ($has_children) {
-        $markup .= '<span class="term-reference-tree-button term-reference-tree-collapsed special-category-select__tree-toggle" role="button" tabindex="0" aria-expanded="false" aria-label="' . $this->t('Toggle children')->render() . '"></span>';
+        $markup .= '<span class="special-category-select__tree-toggle term-reference-tree-collapsed" role="button" tabindex="0" aria-expanded="false" aria-label="' . $this->t('Toggle children')->render() . '"></span>';
       }
       elseif (!$leaves_only) {
-        $markup .= '<span class="no-term-reference-tree-button"></span>';
+        $markup .= '<span class="special-category-select__tree-spacer"></span>';
       }
       if ($selectable) {
         $tooltip_attr = $tooltip !== '' ? ' data-tooltip="' . Html::escape($tooltip) . '"' : '';

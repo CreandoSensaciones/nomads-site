@@ -8,6 +8,55 @@
  * <a class="use-ajax" data-dialog-type="modal" data-dialog-options='{"width": 1100}' href="/listing/wizard">Add listing</a>
  */
 
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_listing_wizard_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_listing_wizard':
+      $output = '';
+      $output .= '<h2>' . t('Nomads Listing Wizard') . '</h2>';
+      $output .= '<p>' . t('Nomads Listing Wizard provides the <code>/listing/wizard</code> onboarding entry point for creating listing nodes in a multi-step, modal-friendly form. It adapts the normal node form to an <code>onboarding</code> operation, keeps intermediate steps inside an AJAX wrapper, and redirects only after the final successful submit.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Adds the <code>/listing/wizard</code> route for users with create access to <code>listing</code> nodes.') . '</li>';
+      $output .= '<li>' . t('Registers a node form operation named <code>onboarding</code> that uses Drupal core’s node form class.') . '</li>';
+      $output .= '<li>' . t('Creates a new unsaved listing node and renders it through the onboarding operation.') . '</li>';
+      $output .= '<li>' . t('Returns either a normal page render or an AJAX modal response when requested with Drupal AJAX wrapper format.') . '</li>';
+      $output .= '<li>' . t('Converts submit buttons to AJAX refreshes inside <code>#nomads-listing-wizard-wrapper</code> during wizard steps.') . '</li>';
+      $output .= '<li>' . t('Disables redirects on intermediate steps and closes the modal with a redirect to the listing page after the final valid submit.') . '</li>';
+      $output .= '<li>' . t('Tracks selected taxonomy terms in Drupal settings so client-side widgets can react to prior selections.') . '</li>';
+      $output .= '<li>' . t('Provides JavaScript that hides or disables the Next button until visible required step inputs are complete.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The route is handled by <code>ListingWizardController</code>, which builds a new <code>listing</code> node form for the <code>onboarding</code> operation and optionally wraps it in an AJAX modal. The module file uses entity type, field-definition, form, and Entity Form Steps hooks to normalize entity reference handlers, attach AJAX callbacks, detect wizard step state, and render step titles inside the modal. A service override replaces <code>plugin.manager.entity_reference_selection</code> with <code>SafeSelectionPluginManager</code>, which falls back safely when entity reference selection handler groups are malformed or unavailable.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('There is no settings form. Configure the wizard by maintaining Entity Form Steps and form display configuration for the <code>listing</code> node bundle and the <code>onboarding</code> operation. The front-end Next-button gate contains step-specific assumptions for groups such as <code>group-title</code>, <code>group-category</code>, <code>group-location-date</code>, and <code>group-official</code>, plus integration expectations for Nomads Easy Tagging widgets. Links that open the wizard as a modal should use Drupal AJAX modal attributes and point to <code>/listing/wizard</code>.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Wizard step detection depends on Entity Form Steps form-state structures, hidden values, button names, and fallback heuristics; changes in that module can break navigation or final-step detection.') . '</li>';
+      $output .= '<li>' . t('The <code>onboarding</code> form operation is registered globally on the node entity type, so another module using the same operation name could conflict.') . '</li>';
+      $output .= '<li>' . t('The service override for <code>plugin.manager.entity_reference_selection</code> is global and can affect entity reference behavior outside the wizard.') . '</li>';
+      $output .= '<li>' . t('The Next-button gate is tightly coupled to field names, group IDs, Easy Tagging markup, visible-field heuristics, and Drupal modal button markup.') . '</li>';
+      $output .= '<li>' . t('Taxonomy reference handler normalization mutates field definitions defensively, which helps avoid fatal errors but can mask invalid field configuration that should be fixed at the source.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for route access, modal rendering, step transitions, final redirects, entity reference fallback behavior, or client-side Next-button gating.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('The wizard route requires normal create access for <code>listing</code> nodes and the submitted form remains Drupal’s node form, so server-side entity validation, field validation, and node access still apply. The JavaScript Next-button gate is only a usability control and must not be treated as security or validation. Because the wizard creates content through a public route for authorized users, field access, moderation, spam protections, and file/media upload permissions should be configured with the same care as the standard listing node add form.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
+
 /**
  * Implements hook_entity_type_alter().
  */

@@ -1,18 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <!-- Creator: CorelDRAW 2019 (64-Bit) -->
-<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="1000px" height="1000px" version="1.1" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd"
-viewBox="0 0 1000 1000"
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="64px" height="64px" version="1.1" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd"
+viewBox="0 0 640 640"
  xmlns:xlink="http://www.w3.org/1999/xlink"
  xmlns:xodm="http://www.corel.com/coreldraw/odm/2003">
  <g id="Ebene_x0020_1">
   <metadata id="CorelCorpID_0Corel-Layer"/>
-  <g id="_1544126725568">
-   <rect fill="#66C3D0" stroke="#2B2A29" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="22.9256" x="200" y="19" width="600" height="261"/>
-   <rect fill="#66C3D0" stroke="#2B2A29" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="22.9256" x="200" y="369" width="600" height="261"/>
-   <rect fill="#66C3D0" stroke="#2B2A29" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="22.9256" x="200" y="719" width="600" height="261"/>
-  </g>
-  <rect fill="#49A8B4" stroke="#2B2A29" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="22.9256" x="20" y="20" width="100" height="960"/>
-  <rect fill="#49A8B4" stroke="#2B2A29" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="22.9256" x="880" y="20" width="100" height="960"/>
+  <rect fill="#66C3D0" stroke="#2B2A29" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="22.9256" x="13" y="13" width="614" height="167"/>
+  <rect fill="#66C3D0" stroke="#2B2A29" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="22.9256" x="13" y="237" width="614" height="167"/>
+  <rect fill="#66C3D0" stroke="#2B2A29" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="22.9256" x="13" y="461" width="614" height="167"/>
  </g>
 </svg>

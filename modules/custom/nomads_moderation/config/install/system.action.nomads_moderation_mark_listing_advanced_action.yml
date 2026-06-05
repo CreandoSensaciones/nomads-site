@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - nomads_moderation
+id: nomads_moderation_mark_listing_advanced_action
+label: 'Mark selected listings as advanced'
+type: node
+plugin: nomads_moderation_mark_listing_advanced
+configuration: {  }

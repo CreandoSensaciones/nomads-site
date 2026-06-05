@@ -5,6 +5,257 @@
  * Nomad Admin Helpers module hooks.
  */
 
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\node\NodeInterface;
+use Drupal\nomad_admin_helpers\Plugin\HelpSection\NonCustomModuleOverviewsSection;
+
+/**
+ * Implements hook_help().
+ */
+function nomad_admin_helpers_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomad_admin_helpers':
+      $output = '';
+      $output .= '<h2>' . t('Nomad Admin Helpers') . '</h2>';
+      $output .= '<p>' . t('Nomad Admin Helpers contains small administration interface improvements for the Nomads site. It currently adjusts the Extend page and reorganizes the Help page so custom module documentation is easier to find.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Detects the <code>system.modules_list</code> route, which is Drupal’s Extend page at <code>/admin/modules</code>.') . '</li>';
+      $output .= '<li>' . t('Attaches the <code>nomad_admin_helpers/admin_modules</code> library only on that route.') . '</li>';
+      $output .= '<li>' . t('Runs a Drupal behavior that finds module group <code>details</code> elements under <code>#system-modules</code> and closes them on attach.') . '</li>';
+      $output .= '<li>' . t('Adds a <em>Custom modules</em> section to <code>/admin/help</code> for modules located under <code>modules/custom</code>.') . '</li>';
+      $output .= '<li>' . t('Filters those custom modules out of the default <em>Module overviews</em> Help page section so each module overview appears in only one section.') . '</li>';
+      $output .= '<li>' . t('Regroups Listing edit-form administration controls into one <em>Admin</em> tab with smaller accordion sections.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The module uses <code>hook_page_attachments()</code> to keep the helper library scoped to the modules administration route. The JavaScript behavior uses Drupal <code>once</code> so each matching <code>details</code> element is processed once per rendered instance. For Help page organization, the module provides a HelpSection plugin for custom modules and alters the core <em>Module overviews</em> HelpSection plugin class to exclude modules in <code>modules/custom</code>. Listing form adjustments use a form after-build callback so Drupal core’s status, revision, authoring, URL alias, redirect, domain, and display controls end up in the same Admin tab. There are no routes, permissions, or stored configuration in this module.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('There are no configuration options. Enabling the module enables the Extend page collapse behavior, the custom-module Help page section, and Listing form Admin tab regrouping. Any future admin helpers should remain page-scoped through separate libraries or narrowly scoped form alterations so behavior stays predictable.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('The JavaScript selector depends on Drupal core’s current Extend page markup: <code>#system-modules details</code>. Core markup changes may silently stop the behavior.') . '</li>';
+      $output .= '<li>' . t('The behavior collapses groups every time matching markup is attached, so it does not preserve an administrator’s previous open or closed state.') . '</li>';
+      $output .= '<li>' . t('The Help page split depends on module paths containing <code>modules/custom</code>. Custom modules installed in a different directory will remain in the default module overview section unless the path rule is updated.') . '</li>';
+      $output .= '<li>' . t('The Listing form regrouping depends on current form element machine names such as <code>meta</code>, <code>revision_information</code>, <code>author</code>, <code>path</code>, and <code>url_redirects</code>. Core or contrib changes to those elements may require updating the grouping map.') . '</li>';
+      $output .= '<li>' . t('The module currently uses the global route match service from a procedural hook, which is simple but not as testable as a service-based subscriber.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for route-based library attachment, the browser behavior, or HelpSection filtering.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('This module only changes presentation for users who can already access the Extend or Help pages. It does not add permissions, expose data, submit forms, or change module installation state. The main risk is administrative usability: hiding open module groups can make current page state less visible if Drupal core later adds meaningful persisted state to those details elements, and Help page filtering can hide a module overview from the expected section if its filesystem path is unusual.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function nomad_admin_helpers_form_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
+  $form_object = $form_state->getFormObject();
+  if (!is_object($form_object) || !method_exists($form_object, 'getEntity')) {
+    return;
+  }
+
+  $entity = $form_object->getEntity();
+  if (!$entity instanceof NodeInterface || $entity->bundle() !== 'listing') {
+    return;
+  }
+
+  $form = nomad_admin_helpers_listing_admin_tab_after_build($form, $form_state);
+}
+
+/**
+ * Groups Listing administration controls into one Admin tab.
+ */
+function nomad_admin_helpers_listing_admin_tab_after_build(array $form, FormStateInterface $form_state): array {
+  $admin_group = nomad_admin_helpers_listing_admin_tab_id($form);
+
+  $form = nomad_admin_helpers_ensure_listing_admin_group($form, $admin_group);
+  $form = nomad_admin_helpers_ensure_listing_admin_section($form, 'group_admin_state', $admin_group, t('Publishing and display'), 1);
+  $form = nomad_admin_helpers_ensure_listing_admin_section($form, 'group_admin_domains', $admin_group, t('Domains'), 2);
+  $form = nomad_admin_helpers_ensure_listing_admin_section($form, 'group_admin_url_owner', $admin_group, t('URL, author and date'), 3);
+  $form = nomad_admin_helpers_ensure_listing_admin_section($form, 'group_admin_revision', $admin_group, t('Revision'), 4);
+  $form = nomad_admin_helpers_ensure_listing_admin_section($form, 'group_admin_redirects', $admin_group, t('Redirects'), 5);
+
+  $groups = [
+    'group_admin_state' => ['status', 'promote', 'sticky', 'advanced_listing', 'meta'],
+    'group_admin_domains' => ['field_domain_access', 'field_domain_all_affiliates', 'domain'],
+    'group_admin_url_owner' => ['path', 'uid', 'created', 'author'],
+    'group_admin_revision' => ['revision_information', 'revision_log'],
+    'group_admin_redirects' => ['url_redirects'],
+  ];
+
+  foreach ($groups as $group_name => $element_names) {
+    foreach ($element_names as $element_name) {
+      if (isset($form[$element_name]) && is_array($form[$element_name])) {
+        $form[$element_name]['#group'] = $group_name;
+      }
+    }
+  }
+
+  foreach ($groups as $group_name => $element_names) {
+    if (isset($form[$group_name]) && is_array($form[$group_name])) {
+      $form[$group_name]['#access'] = nomad_admin_helpers_any_element_visible($form, $element_names);
+    }
+  }
+
+  if (isset($form['options']) && is_array($form['options'])) {
+    $form['options']['#access'] = nomad_admin_helpers_has_visible_children($form['options']);
+    $form['options']['#group'] = 'group_admin_state';
+  }
+
+  if (isset($form['revision_information'])) {
+    $form['revision_information']['#access'] = nomad_admin_helpers_has_visible_children($form['revision_information']);
+  }
+  if (isset($form['revision']) && is_array($form['revision'])) {
+    unset($form['revision']['#group']);
+    $form['revision']['#weight'] = 990;
+    $form['revision']['#wrapper_attributes']['class'][] = 'admin-pane__revision-checkbox';
+    $form['revision']['#wrapper_attributes']['class'][] = 'admin-pane__revision-checkbox--bottom';
+  }
+
+  if (isset($form['advanced']) && is_array($form['advanced']) && !nomad_admin_helpers_form_has_group($form, 'advanced')) {
+    $form['advanced']['#access'] = FALSE;
+  }
+
+  return $form;
+}
+
+/**
+ * Determines whether any named top-level form element is visible.
+ */
+function nomad_admin_helpers_any_element_visible(array $form, array $element_names): bool {
+  foreach ($element_names as $element_name) {
+    if (
+      isset($form[$element_name]) &&
+      is_array($form[$element_name]) &&
+      ($form[$element_name]['#access'] ?? TRUE) !== FALSE &&
+      nomad_admin_helpers_has_renderable_content($form[$element_name])
+    ) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Determines whether an element has content worth showing in a details group.
+ */
+function nomad_admin_helpers_has_renderable_content(array $element): bool {
+  if (($element['#type'] ?? NULL) !== NULL || ($element['#markup'] ?? NULL) !== NULL || ($element['#theme'] ?? NULL) !== NULL) {
+    return TRUE;
+  }
+
+  return nomad_admin_helpers_has_visible_children($element);
+}
+
+/**
+ * Returns the available Admin tab element ID.
+ */
+function nomad_admin_helpers_listing_admin_tab_id(array $form): string {
+  if (isset($form['group_admin'])) {
+    return 'group_admin';
+  }
+  if (isset($form['group_features'])) {
+    return 'group_features';
+  }
+
+  return 'group_admin';
+}
+
+/**
+ * Ensures the Listing Admin tab exists and has the expected presentation.
+ */
+function nomad_admin_helpers_ensure_listing_admin_group(array $form, string $admin_group): array {
+  if (!isset($form[$admin_group]) || !is_array($form[$admin_group])) {
+    $form[$admin_group] = [
+      '#type' => 'details',
+      '#title' => t('Admin'),
+      '#weight' => 19,
+      '#group' => isset($form['group_tabs']) ? 'group_tabs' : NULL,
+      '#open' => FALSE,
+    ];
+  }
+
+  $form[$admin_group]['#title'] = t('Admin');
+  $form[$admin_group]['#attributes']['class'][] = 'admin-pane';
+
+  return $form;
+}
+
+/**
+ * Ensures a Listing Admin accordion section exists.
+ */
+function nomad_admin_helpers_ensure_listing_admin_section(array $form, string $section, string $admin_group, $title, int $weight): array {
+  if (!isset($form[$section]) || !is_array($form[$section])) {
+    $form[$section] = [
+      '#type' => 'details',
+      '#open' => FALSE,
+    ];
+  }
+
+  $form[$section]['#title'] = $title;
+  $form[$section]['#group'] = $admin_group;
+  $form[$section]['#weight'] = $weight;
+  $form[$section]['#attributes']['class'][] = 'admin-pane__section';
+
+  return $form;
+}
+
+/**
+ * Determines whether a form element still has visible child elements.
+ */
+function nomad_admin_helpers_has_visible_children(array $element): bool {
+  foreach ($element as $key => $child) {
+    if (!is_string($key) || $key === '' || $key[0] === '#' || !is_array($child)) {
+      continue;
+    }
+    if (($child['#access'] ?? TRUE) !== FALSE) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Determines whether any top-level form element still belongs to a group.
+ */
+function nomad_admin_helpers_form_has_group(array $form, string $group): bool {
+  foreach ($form as $key => $element) {
+    if (!is_string($key) || $key === '' || $key[0] === '#' || !is_array($element)) {
+      continue;
+    }
+    if (($element['#access'] ?? TRUE) !== FALSE && ($element['#group'] ?? NULL) === $group) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Implements hook_help_section_info_alter().
+ */
+function nomad_admin_helpers_help_section_info_alter(array &$info): void {
+  if (!isset($info['hook_help'])) {
+    return;
+  }
+
+  $info['hook_help']['class'] = NonCustomModuleOverviewsSection::class;
+  $info['hook_help']['description'] = t('Core and contributed module overviews provided by installed modules:');
+  $info['hook_help']['weight'] = 0;
+}
+
 /**
  * Implements hook_page_attachments().
  */

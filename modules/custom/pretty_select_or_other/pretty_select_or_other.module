@@ -6,6 +6,39 @@
  */
 
 use Drupal\pretty_select_or_other\Element\PrettySelectOrOtherButtons;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function pretty_select_or_other_help($route_name, RouteMatchInterface $route_match): ?string {
+  if ($route_name !== 'help.page.pretty_select_or_other') {
+    return NULL;
+  }
+
+  return '<h2>' . t('Pretty Select or Other') . '</h2>'
+    . '<p>' . t('Pretty Select or Other provides styled variants of the Select or Other field widgets for list and entity reference fields. It keeps the Select or Other behavior while rendering the button options through Pretty Checkboxes/Radios styling.') . '</p>'
+    . '<h3>' . t('Functionality') . '</h3>'
+    . '<ul>'
+    . '<li>' . t('Adds “Pretty select or other” widgets for integer, float, and text list fields, and for entity reference fields.') . '</li>'
+    . '<li>' . t('Uses the Select or Other buttons element as the default element type, so editors can choose an existing option or enter an “Other” value.') . '</li>'
+    . '<li>' . t('Marks only this module’s widget elements for enhancement, so unrelated Select or Other widgets are left unchanged.') . '</li>'
+    . '<li>' . t('Applies Pretty Checkboxes/Radios option theming to the expanded button options and adds a small stylesheet for the “Other” input layout.') . '</li>'
+    . '</ul>'
+    . '<h3>' . t('Architecture') . '</h3>'
+    . '<p>' . t('The module defines two field widget plugins that extend the Select or Other list and reference widgets. Each plugin sets the select element type to buttons and adds a marker flag to the form element. An element-info alter hook adds a process callback to the Select or Other buttons element; the callback checks the marker flag, adjusts wrappers and classes, attaches the widget library, and applies an after-build callback that swaps option rendering to the Pretty Checkboxes/Radios theme hook. A theme-suggestion alter removes an incompatible pretty element wrapper suggestion for these button elements.') . '</p>'
+    . '<h3>' . t('Configuration') . '</h3>'
+    . '<p>' . t('Configure the widget on a field’s Manage form display page by selecting “Pretty select or other”. The widget inherits the Select or Other configuration model, but defaults the element type to buttons. The module has no standalone configuration page. It requires the Select or Other and Pretty Checkboxes/Radios modules to be installed.') . '</p>'
+    . '<h3>' . t('Stability considerations') . '</h3>'
+    . '<ul>'
+    . '<li>' . t('The implementation depends on the internal structure of the Select or Other buttons element, including its select and other child elements and expanded option rendering.') . '</li>'
+    . '<li>' . t('It also depends on Pretty Checkboxes/Radios theme hook and library names. Changes in either dependency may require updates here.') . '</li>'
+    . '<li>' . t('The theme-suggestion alteration is intentionally narrow, but custom themes that rely on the removed suggestion should be checked after enabling the widget.') . '</li>'
+    . '<li>' . t('There are no automated tests for this integration, so updates to Select or Other, Pretty Checkboxes/Radios, or Drupal form rendering should be verified manually.') . '</li>'
+    . '</ul>'
+    . '<h3>' . t('Security considerations') . '</h3>'
+    . '<p>' . t('This is a presentation-layer widget integration. It does not change field access, entity access, or submitted-value validation; those remain the responsibility of Drupal field APIs and the Select or Other widget. Values entered in the “Other” input are user input and must still be validated and rendered safely wherever the field is displayed.') . '</p>';
+}
 
 /**
  * Implements hook_element_info_alter().

@@ -1,0 +1,170 @@
+<?php
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\node\NodeInterface;
+use Drupal\nomads_moderation\ListingState;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_moderation_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_moderation':
+      $output = '';
+      $output .= '<h2>' . t('Nomads Moderation') . '</h2>';
+      $output .= '<p>' . t('Nomads Moderation provides listing moderation states, custom taxonomy-reference widget behavior, and JavaScript enhancements for moderating listing tag fields. It groups tag terms by taxonomy branch and gives editors visual controls for default, automatic, forced, and blocked tag states.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Provides the <code>nomads_moderation</code> field widget, shown as <em>Nomads moderation buttons</em>, for entity reference fields.') . '</li>';
+      $output .= '<li>' . t('Adds an <em>Advanced listing</em> binary node state alongside core listing states such as published and promoted to front page.') . '</li>';
+      $output .= '<li>' . t('Provides Views bulk actions to mark selected listing nodes as advanced or not advanced.') . '</li>';
+      $output .= '<li>' . t('Builds moderation groups from top-level taxonomy branches and leaf terms in the configured target vocabularies.') . '</li>';
+      $output .= '<li>' . t('Adds an <code>enabled_branches</code> widget setting so individual top-level taxonomy branches can be hidden from the moderation UI.') . '</li>';
+      $output .= '<li>' . t('Enhances the listing moderation fields <code>field_tags</code>, <code>field_auto_tags</code>, <code>field_defaults_tags</code>, <code>field_force_tags</code>, and <code>field_block_tags</code>.') . '</li>';
+      $output .= '<li>' . t('Dynamically injects missing moderation fields into forms when the entity has the field but the active form display omits it.') . '</li>';
+      $output .= '<li>' . t('Replaces raw checkbox or radio UI with grouped moderation buttons while keeping the original form inputs as the submitted data source.') . '</li>';
+      $output .= '<li>' . t('Synchronizes tag output in the browser so blocked tags are removed, forced tags are added, auto tags can drive final tags, and defaults fill in when no auto selection exists.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The widget extends Drupal core’s <code>OptionsButtonsWidget</code> and passes taxonomy branch tree metadata to <code>drupalSettings</code>. The module-level form alter marks known moderation fields with data attributes, creates widget instances for missing fields when needed, and attaches the moderation asset library. The JavaScript behavior scans each form, builds a value map across the five related fields, creates grouped button controls, and updates the underlying checkboxes or radios whenever an editor toggles default, force, or block states.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Configure the widget from Manage form display on taxonomy term reference fields used for listing moderation. The target vocabularies must be set in the field handler settings so the widget can build branch groups. Use the <em>Visible tag branches</em> widget setting to limit which top-level branches appear. The JavaScript synchronization expects the related fields to use the machine names <code>field_tags</code>, <code>field_auto_tags</code>, <code>field_defaults_tags</code>, <code>field_force_tags</code>, and <code>field_block_tags</code>. The <em>Advanced listing</em> state is stored as the <code>advanced_listing</code> node base field and exposed to Views bulk forms through configured action entities.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('The form alter and JavaScript are tightly coupled to five specific field machine names.') . '</li>';
+      $output .= '<li>' . t('Branch grouping assumes a taxonomy structure where top-level terms are branch labels and selectable tags are leaf terms.') . '</li>';
+      $output .= '<li>' . t('Dynamic field injection can make forms behave differently from their form display configuration, especially if a field was intentionally hidden.') . '</li>';
+      $output .= '<li>' . t('The JavaScript may reuse tree settings from another moderation field as a fallback, which can produce incorrect grouping on mixed or unusual forms.') . '</li>';
+      $output .= '<li>' . t('The original inputs are hidden with CSS when the enhancement is active, so usability depends on the custom button UI continuing to initialize correctly.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for branch filtering, injected-field behavior, tag synchronization rules, keyboard accessibility, or fallback rendering without JavaScript.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('The custom buttons are a user interface over normal Drupal form inputs; they do not replace server-side validation or field access. Users must still have edit access to the underlying fields for injected widgets to be editable. The force/block/default synchronization is performed in the browser, so any business rule that must be enforced should also be validated server-side or during save processing. Taxonomy term access and field permissions should be configured normally for moderation users.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
+
+/**
+ * Implements hook_rebuild().
+ */
+function nomads_moderation_rebuild(): void {
+  ListingState::ensureActionConfig();
+  ListingState::removeLegacyActionConfig();
+}
+
+/**
+ * Implements hook_entity_base_field_info().
+ */
+function nomads_moderation_entity_base_field_info(EntityTypeInterface $entity_type): array {
+  if ($entity_type->id() !== 'node') {
+    return [];
+  }
+
+  return [
+    ListingState::ADVANCED_FIELD => ListingState::advancedListingBaseFieldDefinition(),
+  ];
+}
+
+/**
+ * Implements hook_entity_view_mode_alter().
+ */
+function nomads_moderation_entity_view_mode_alter(&$view_mode, EntityInterface $entity, $context = NULL): void {
+  if (!$entity instanceof NodeInterface || $entity->bundle() !== 'listing' || $view_mode !== 'full') {
+    return;
+  }
+
+  /* $view_mode = ListingState::isAdvanced($entity) ? 'full' : 'simple'; */
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function nomads_moderation_form_alter(array &$form, FormStateInterface $form_state, $form_id): void {
+  $required_fields = [
+    'field_tags',
+    'field_auto_tags',
+    'field_defaults_tags',
+    'field_force_tags',
+    'field_block_tags',
+  ];
+
+  $entity = NULL;
+  $form_display = NULL;
+  $form_object = $form_state->getFormObject();
+  if (is_object($form_object) && method_exists($form_object, 'getEntity')) {
+    $entity = $form_object->getEntity();
+  }
+  if ($entity && method_exists($form_object, 'getFormMode')) {
+    $form_display = \Drupal::service('entity_display.repository')->getFormDisplay(
+      $entity->getEntityTypeId(),
+      $entity->bundle(),
+      $form_object->getFormMode()
+    );
+  }
+
+  if ($entity instanceof NodeInterface && $entity->bundle() !== 'listing' && isset($form[ListingState::ADVANCED_FIELD])) {
+    $form[ListingState::ADVANCED_FIELD]['#access'] = FALSE;
+  }
+
+  $has_any = FALSE;
+  foreach ($required_fields as $field_name) {
+    if (!isset($form[$field_name]) && $entity && $entity instanceof \Drupal\Core\Entity\FieldableEntityInterface && $entity->hasField($field_name)) {
+      $widget = NULL;
+      $configuration = $form_display ? $form_display->getComponent($field_name) : NULL;
+      if (empty($configuration)) {
+        $configuration = [
+          'type' => 'nomads_moderation',
+          'settings' => [],
+          'third_party_settings' => [],
+        ];
+      }
+
+      $definition = $entity->getFieldDefinition($field_name);
+      $widget = \Drupal::service('plugin.manager.field.widget')->getInstance([
+        'field_definition' => $definition,
+        'form_mode' => $form_display ? $form_display->getMode() : 'default',
+        'prepare' => FALSE,
+        'configuration' => $configuration,
+      ]);
+
+      if ($widget) {
+        $items = $entity->get($field_name);
+        $items->filterEmptyItems();
+        $form[$field_name] = $widget->form($items, $form, $form_state);
+        $form[$field_name]['#access'] = $items->access('edit');
+        $form[$field_name]['#attributes']['class'][] = 'nomads-tags-moderation--hidden';
+      }
+    }
+
+    if (!isset($form[$field_name])) {
+      continue;
+    }
+    $has_any = TRUE;
+    $form[$field_name]['#attributes']['class'][] = 'nomads-listings-moderation-field';
+    $form[$field_name]['#attributes']['data-nomads-moderation-field'] = $field_name;
+    $form[$field_name]['#wrapper_attributes']['class'][] = 'nomads-listings-moderation-field';
+    $form[$field_name]['#wrapper_attributes']['data-nomads-moderation-field'] = $field_name;
+  }
+
+  if ($has_any) {
+    $form['#attached']['library'][] = 'nomads_moderation/listings_moderation_widget';
+  }
+}
+
+/**
+ * Implements hook_page_attachments().
+ */
+function nomads_moderation_page_attachments(array &$attachments): void {
+  $attachments['#attached']['library'][] = 'nomads_moderation/term_tree_display';
+}

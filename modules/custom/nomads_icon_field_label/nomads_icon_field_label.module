@@ -10,7 +10,53 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Component\Utility\Html;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_icon_field_label_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_icon_field_label':
+      $output = '';
+      $output .= '<h2>' . t('Nomads Icon Field Label') . '</h2>';
+      $output .= '<p>' . t('Nomads Icon Field Label adds an <em>Icon</em> field label display mode. Fields using this label mode hide the normal text label and prepend a per-field SVG icon to the rendered field output.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Adds <em>Icon</em> as a label-display option on entity Manage display forms.') . '</li>';
+      $output .= '<li>' . t('Detects rendered fields with <code>label_display</code> set to <code>icon</code>.') . '</li>';
+      $output .= '<li>' . t('Loads SVG icons from <code>public://data-icons/{entity_type}-{bundle}-{field_name}.svg</code>, with underscores converted to hyphens.') . '</li>';
+      $output .= '<li>' . t('Falls back to a built-in grey circle placeholder when no matching SVG file exists or the file cannot be read.') . '</li>';
+      $output .= '<li>' . t('Wraps the first rendered field item with an icon-and-content container and attaches the <code>nomads_icon_field_label/icon-label</code> CSS library.') . '</li>';
+      $output .= '<li>' . t('Preserves the original field label as an icon <code>title</code> attribute when a label is available.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The module alters the entity view display edit form to add the label option, adds its field preprocess function to the theme registry, and recursively scans entity render arrays during <code>hook_entity_view()</code>. Matching field elements receive a trusted pre-render callback from <code>TrustedCallbacks</code>. Both the preprocess and pre-render paths use the same icon lookup helper, which reads SVG files from public files and returns render-safe markup objects.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Configure a field from an entity Manage display page by setting its label display to <em>Icon</em>. Add SVG files under <code>public://data-icons</code> using the naming convention <code>{entity-type}-{bundle}-{field-name}.svg</code>; for example, underscores in machine names are converted to hyphens before lookup. There is no separate settings form, cache management screen, or icon upload UI in this module.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Icon lookup depends on an exact filesystem naming convention; missing or renamed files silently render the placeholder icon.') . '</li>';
+      $output .= '<li>' . t('Only the first field item is wrapped with the icon, so multi-value fields can have uneven markup compared with single-value fields.') . '</li>';
+      $output .= '<li>' . t('The module has both preprocess and pre-render pathways, which can make render behavior harder to reason about across themes and view modes.') . '</li>';
+      $output .= '<li>' . t('SVG file contents are cached only in a static per-request cache; there is no persistent cache metadata tied to icon file changes.') . '</li>';
+      $output .= '<li>' . t('Recursive render-array scanning during entity view can add overhead on large or deeply nested renders.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for the Manage display integration, icon lookup, placeholder fallback, multi-value fields, or cache behavior.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('SVG file contents from <code>public://data-icons</code> are injected into markup without sanitizing the SVG body. Treat that directory as trusted code-like input: only trusted users or deployment processes should be able to create or change those SVG files. Untrusted SVG can contain scriptable or unsafe markup and may create XSS risk. Field labels used in title attributes are escaped, and the placeholder SVG is hardcoded, but custom icon files themselves must be curated and kept safe.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
 
 /**
  * Implements hook_form_FORM_ID_alter().
@@ -46,7 +92,28 @@ function nomads_icon_field_label_theme_registry_alter(array &$registry): void {
  * Implements hook_entity_view().
  */
 function nomads_icon_field_label_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode): void {
+  if (\Drupal::service('router.admin_context')->isAdminRoute()) {
+    return;
+  }
+
+  if (!nomads_icon_field_label_display_has_icon_labels($display)) {
+    return;
+  }
+
   nomads_icon_field_label_apply_icon_label($build);
+}
+
+/**
+ * Determines whether an entity view display contains icon-label components.
+ */
+function nomads_icon_field_label_display_has_icon_labels(EntityViewDisplayInterface $display): bool {
+  foreach ($display->getComponents() as $component) {
+    if (($component['label'] ?? NULL) === 'icon') {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
 }
 
 /**

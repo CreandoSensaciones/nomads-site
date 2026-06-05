@@ -43,11 +43,29 @@
   cursor: pointer;
 }
 
-.special-category-select .term-reference-tree-button,
-.special-category-select .no-term-reference-tree-button {
+.special-category-select__tree-toggle,
+.special-category-select__tree-spacer {
   border: 0;
   background-color: transparent;
   padding: 0;
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+.special-category-select__tree-toggle {
+  cursor: pointer;
+  background-image: url('/modules/contrib/term_reference_tree/images/bullet_toggle_minus.png');
+}
+
+.special-category-select__tree-toggle.term-reference-tree-collapsed {
+  background-image: url('/modules/contrib/term_reference_tree/images/bullet_toggle_plus.png');
+}
+
+.special-category-select__tree-spacer {
+  background-color: #ddd;
 }
 
 .special-category-select__tree-item.is-selected > .special-category-select__tree-link {

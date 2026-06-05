@@ -1,0 +1,131 @@
+<?php
+
+/**
+ * @file
+ * Install and update hooks for Nomads Moderation.
+ */
+
+use Drupal\Core\Entity\Entity\EntityViewMode;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\nomads_moderation\ListingState;
+
+/**
+ * Implements hook_install().
+ */
+function nomads_moderation_install(): void {
+  nomads_moderation_install_advanced_listing_storage();
+  nomads_moderation_normalize_advanced_listing_values();
+  nomads_moderation_ensure_simple_node_view_mode();
+  ListingState::ensureActionConfig();
+  ListingState::removeLegacyActionConfig();
+}
+
+/**
+ * Adds Advanced listing as a node state and exposes its bulk actions.
+ */
+function nomads_moderation_update_11001(): void {
+  nomads_moderation_install_advanced_listing_storage();
+  nomads_moderation_migrate_legacy_advanced_listing_values();
+  nomads_moderation_delete_legacy_advanced_listing_field();
+  nomads_moderation_ensure_simple_node_view_mode();
+  ListingState::ensureActionConfig();
+  ListingState::removeLegacyActionConfig();
+}
+
+/**
+ * Normalizes empty Advanced listing values to false.
+ */
+function nomads_moderation_update_11002(): void {
+  nomads_moderation_normalize_advanced_listing_values();
+}
+
+/**
+ * Installs the Advanced listing base-field storage when needed.
+ */
+function nomads_moderation_install_advanced_listing_storage(): void {
+  $schema = \Drupal::database()->schema();
+  if ($schema->fieldExists('node_field_data', ListingState::ADVANCED_FIELD)) {
+    return;
+  }
+
+  \Drupal::entityDefinitionUpdateManager()->installFieldStorageDefinition(
+    ListingState::ADVANCED_FIELD,
+    'node',
+    'nomads_moderation',
+    ListingState::advancedListingBaseFieldDefinition()
+  );
+}
+
+/**
+ * Carries old configurable-field values into the new base field if present.
+ */
+function nomads_moderation_migrate_legacy_advanced_listing_values(): void {
+  $connection = \Drupal::database();
+  $schema = $connection->schema();
+  if (
+    !$schema->tableExists('node__field_advanced_listing') ||
+    !$schema->fieldExists('node_field_data', ListingState::ADVANCED_FIELD)
+  ) {
+    return;
+  }
+
+  $records = $connection->select('node__field_advanced_listing', 'f')
+    ->fields('f', ['entity_id', 'langcode', 'field_advanced_listing_value'])
+    ->execute();
+
+  foreach ($records as $record) {
+    $connection->update('node_field_data')
+      ->fields([ListingState::ADVANCED_FIELD => (int) $record->field_advanced_listing_value])
+      ->condition('nid', (int) $record->entity_id)
+      ->condition('langcode', $record->langcode)
+      ->execute();
+  }
+}
+
+/**
+ * Stores false instead of NULL for existing nodes.
+ */
+function nomads_moderation_normalize_advanced_listing_values(): void {
+  $connection = \Drupal::database();
+  $schema = $connection->schema();
+
+  foreach (['node_field_data', 'node_field_revision'] as $table) {
+    if (!$schema->tableExists($table) || !$schema->fieldExists($table, ListingState::ADVANCED_FIELD)) {
+      continue;
+    }
+
+    $connection->update($table)
+      ->fields([ListingState::ADVANCED_FIELD => 0])
+      ->isNull(ListingState::ADVANCED_FIELD)
+      ->execute();
+  }
+}
+
+/**
+ * Removes the legacy configurable field after migration.
+ */
+function nomads_moderation_delete_legacy_advanced_listing_field(): void {
+  if ($field = FieldConfig::loadByName('node', 'listing', 'field_advanced_listing')) {
+    $field->delete();
+  }
+  if ($storage = FieldStorageConfig::loadByName('node', 'field_advanced_listing')) {
+    $storage->delete();
+  }
+}
+
+/**
+ * Ensures the simple node view mode used for non-advanced listings exists.
+ */
+function nomads_moderation_ensure_simple_node_view_mode(): void {
+  if (EntityViewMode::load('node.simple')) {
+    return;
+  }
+
+  EntityViewMode::create([
+    'id' => 'node.simple',
+    'label' => 'Simple',
+    'targetEntityType' => 'node',
+    'cache' => TRUE,
+  ])->save();
+}

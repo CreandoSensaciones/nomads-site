@@ -7,8 +7,55 @@ declare(strict_types=1);
  * Theme hooks and render helpers for the Nomads Parent Teaser module.
  */
 
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Template\Attribute;
 use Drupal\views\ViewExecutable;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_parent_teaser_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_parent_teaser':
+      $output = '';
+      $output .= '<h2>' . t('Nomads Parent Teaser') . '</h2>';
+      $output .= '<p>' . t('Nomads Parent Teaser provides Views plugins for paragraph-based map/listing views that need to display or load data from the paragraph’s parent listing node. It can render parent node teasers directly, expose parent metadata, and load parent teasers into a map detail panel by AJAX.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Adds Views fields for parent node teaser, parent title, parent type, marker metadata, and an AJAX teaser trigger.') . '</li>';
+      $output .= '<li>' . t('Adds a direct paragraph-to-parent-node relationship and a parent-line relationship that walks through nested paragraph parents.') . '</li>';
+      $output .= '<li>' . t('Allows the parent teaser field to render the parent node in a configurable node view mode.') . '</li>';
+      $output .= '<li>' . t('Provides <code>/nomads-parent-teaser/{node}</code>, which returns the node teaser markup for AJAX panel loading.') . '</li>';
+      $output .= '<li>' . t('Provides a configurable Views area plugin for a map detail panel with title, empty message, and extra CSS classes.') . '</li>';
+      $output .= '<li>' . t('Automatically attaches a map detail panel after the <code>ma</code> or <code>map</code> View display <code>page_1</code> when the page path is <code>map</code>.') . '</li>';
+      $output .= '<li>' . t('Attaches JavaScript that binds map markers and trigger links, fetches parent teaser markup, hydrates injected Drupal settings, and initializes injected Swiper instances.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('Views data is registered in <code>nomads_parent_teaser.views.inc</code>. Field plugins share <code>ParagraphParentFieldBase</code>, which resolves the current paragraph row and walks up parent entities until it finds a node. The parent-line relationship builds SQL joins through paragraph parent metadata up to a configured depth. The AJAX controller renders the node in teaser view mode and appends any collected <code>drupalSettings</code> as JSON for the front-end behavior to merge. The map panel is rendered through a Twig template and enhanced by the <code>nomads_parent_teaser/map_teaser</code> library.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Configure the Views fields and relationship on paragraph-based Views. The parent teaser field accepts a node view mode machine name. The teaser trigger field accepts link text and a target CSS selector, defaulting to <code>.map-detail-panel</code>. The parent-line relationship exposes a maximum parent paragraph depth from 1 to 12, defaulting to 8. The map panel Views area plugin accepts a panel title, empty message, and additional wrapper classes. The automatic map-panel injection is hardcoded to the <code>ma</code> and <code>map</code> Views, display <code>page_1</code>, route names <code>view.ma.page_1</code> and <code>view.map.page_1</code>, and display path <code>map</code>.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Parent resolution depends on Paragraphs parent metadata being correct and can fail for orphaned paragraphs, cyclic references, or non-node parent chains.') . '</li>';
+      $output .= '<li>' . t('The SQL relationship depends on paragraph storage table names, parent fields, casted joins, and the configured maximum depth.') . '</li>';
+      $output .= '<li>' . t('Automatic map panel attachment is tightly coupled to specific View IDs, display IDs, route names, and path settings.') . '</li>';
+      $output .= '<li>' . t('Marker binding assumes Leaflet marker DOM order matches Views row order with <code>data-views-row-index</code> source rows.') . '</li>';
+      $output .= '<li>' . t('The JavaScript includes production console logging and manually initializes injected Swiper instances, both of which can drift from upstream library behavior.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for Views relationships, parent lookup, AJAX teaser responses, marker binding, Swiper hydration, or cache behavior.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('The AJAX teaser route requires normal node view access and the controller checks access again before rendering. Views fields and relationships expose information from parent nodes, so Views access, row access, and node permissions must be configured appropriately. The AJAX response contains rendered HTML and Drupal settings from the parent teaser; only trusted view modes and fields should be used when exposing this on public map pages. The JavaScript fetches same-origin teaser URLs and does not grant access beyond the route’s entity access requirement.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
 
 /**
  * Implements hook_theme().

@@ -210,7 +210,7 @@
         const maxSelection = parseInt(widget.dataset.maxSelection || '0', 10) || 0;
         const sortableEnabled = widget.dataset.sortable !== '0';
 
-        once('special-category-select-toggle', '.term-reference-tree-button', widget).forEach((button) => {
+        once('special-category-select-toggle', '.special-category-select__tree-toggle', widget).forEach((button) => {
           $(button).on('click keydown', function (event) {
             if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') {
               return;
@@ -222,7 +222,7 @@
             if (isCollapsed) {
               const currentItem = $toggle.closest('li');
               const siblings = currentItem.siblings('li');
-              siblings.find('> .term-reference-tree-button').each((index, button) => {
+              siblings.find('> .special-category-select__tree-toggle').each((index, button) => {
                 const $button = $(button);
                 $button.addClass('term-reference-tree-collapsed');
                 $button.attr('aria-expanded', 'false');

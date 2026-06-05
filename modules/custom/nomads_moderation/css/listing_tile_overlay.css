@@ -1,0 +1,173 @@
+/* Listing moderation/admin image tile overlay. */
+.views-table.views-view-table td.views-field-title .listing-img-wrapper {
+  position: relative;
+  width: 250px;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #111;
+}
+
+.views-table.views-view-table td.views-field-title .listing-img-wrapper > a:first-child {
+  display: block;
+  line-height: 0;
+}
+
+.views-table.views-view-table td.views-field-title .listing-img-wrapper img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  pointer-events: none;
+}
+
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay .organizer,
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay .type,
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay .title {
+  pointer-events: auto;
+}
+
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay .organizer:empty,
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay .type:empty,
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay .title:empty {
+  display: none;
+}
+
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay .organizer {
+  max-width: calc(100% - 12px);
+  margin: 6px 6px 0;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #000;
+  color: #fff;
+  font-size: 0.72em;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay .organizer a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay .type {
+  margin: 5px 6px 0;
+}
+
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay .type .item-list,
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay .type ul {
+  margin: 0;
+  padding: 0;
+}
+
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay .type ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  list-style: none;
+}
+
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay .type li {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #0879bd;
+  color: #fff;
+  font-size: 0.8em;
+  font-weight: 600;
+  line-height: 1.15;
+  list-style: none;
+}
+
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay .bulk {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  z-index: 3;
+  transform: translateY(-50%);
+  pointer-events: auto;
+}
+
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay .bulk .form-item {
+  margin: 0;
+}
+
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay .bulk input[type="checkbox"] {
+  display: block;
+  margin: 0;
+  transform: scale(2);
+  transform-origin: left center;
+}
+
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay > .title {
+  align-self: stretch;
+  margin-top: auto;
+  padding: 24px 8px 7px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0));
+  color: #fff;
+  font-size: 0.95em;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay > .title a {
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay > .title a:hover,
+.views-table.views-view-table td.views-field-title .listing-img-wrapper .overlay > .title a:focus {
+  color: #fff;
+  text-decoration: none;
+}
+
+.paragraph-relevance-marker {
+  white-space: nowrap;
+}
+
+.paragraph-relevance-marker a {
+  text-decoration: none;
+}
+
+.paragraph-relevance-marker div {
+  border: 1px solid #999;
+  white-space: nowrap;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.paragraph-relevance-marker .paragraph-rel-pill {
+  padding: 0;
+  max-width: 200px;
+}
+
+.paragraph-relevance-marker .paragraph-rel-pill2 {
+  margin: 0;
+  width: 60%;
+}
+
+.paragraph-relevance-marker .paragraph-rel-pill2 span {
+  padding: 0;
+}
+
+.paragraph-relevance-marker .paragraph-rel-pill span {
+  padding-right: 8px;
+}
+
+.views-field-field-defaults-tags {
+  width: 300px;
+}

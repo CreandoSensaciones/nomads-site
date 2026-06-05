@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - nomads_moderation
+id: nomads_moderation_mark_listing_not_advanced_action
+label: 'Mark selected listings as not advanced'
+type: node
+plugin: nomads_moderation_mark_listing_not_advanced
+configuration: {  }

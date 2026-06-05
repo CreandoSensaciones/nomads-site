@@ -1,0 +1,54 @@
+<?php
+
+/**
+ * @file
+ * Help hooks for Nomads Geo Widget.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_geo_widget_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_geo_widget':
+      $output = '';
+      $output .= '<h2>' . t('Nomads Geo Widget') . '</h2>';
+      $output .= '<p>' . t('Nomads Geo Widget provides a specialized form widget for taxonomy term reference fields that model geographic hierarchy. Editors choose a country or region first, then select allowed child places or add constrained free-tag place terms.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Provides the <code>nomads_geo_country_places</code> field widget, shown as <em>Geo Country + Places</em> on Manage form display.') . '</li>';
+      $output .= '<li>' . t('Limits the first autocomplete to configured country and region-like taxonomy terms.') . '</li>';
+      $output .= '<li>' . t('After a country is selected, shows direct child place terms as checkboxes and allows existing or new free-tag place terms below that country.') . '</li>';
+      $output .= '<li>' . t('When a region-like term is selected, shows descendant country terms instead of place tags.') . '</li>';
+      $output .= '<li>' . t('Persists the selected country or region term together with selected places and created or reused free-tag terms in the same taxonomy reference field.') . '</li>';
+      $output .= '<li>' . t('Can prefill the country or region from an existing host entity field when the widget field itself has no usable saved root term.') . '</li>';
+      $output .= '<li>' . t('Integrates with Field Subtitle when available by rendering the configured subtitle above the widget.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The widget is implemented as a Drupal 11 attribute-based <code>FieldWidget</code> plugin for <code>entity_reference</code> fields. It uses AJAX to rebuild the places area after the country autocomplete changes, stores root-term state in the widget state, and massages submitted values into normal taxonomy reference target IDs. Two entity reference selection plugins constrain autocomplete queries: <code>nomads_geo_widget:country_terms</code> for country or region roots, and <code>nomads_geo_widget:country_free_tags</code> for free-tag terms directly below the selected country.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Configure the widget from an entity Manage form display page for a taxonomy term reference field. Settings are <code>vocabulary</code>, <code>country_field_name</code>, <code>type_field</code>, <code>country_value</code>, <code>region_values</code>, <code>place_value</code>, and <code>freetag_value</code>. Defaults target the <code>cit_countries_information</code> vocabulary, use <code>field_country</code> as the optional host prefill field, use <code>field_type</code> as the taxonomy type field, and expect values such as <code>country</code>, <code>place</code>, and <code>free</code>. Region-like values are configured as a comma-separated list.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('The widget depends on a strict taxonomy model: one configured vocabulary, a configured type field, expected type values, and parent-child relationships between regions, countries, places, and free tags.') . '</li>';
+      $output .= '<li>' . t('Changing taxonomy hierarchy, type values, field machine names, or vocabulary machine names can make existing saved selections fail to rebuild as expected.') . '</li>';
+      $output .= '<li>' . t('The country or region is saved in the same field as the places, so downstream display or query code must understand that the field can contain mixed geographic term types.') . '</li>';
+      $output .= '<li>' . t('Region mode traverses descendant taxonomy terms level by level; very large or deeply nested vocabularies may add query overhead on edit forms.') . '</li>';
+      $output .= '<li>' . t('Recovery from malformed or incomplete saved values scans a bounded number of candidate terms, so unusually large existing selections may not always recover the intended root term.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for AJAX rebuilds, region traversal, free-tag creation, root recovery, or interaction with Field Subtitle.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('Autocomplete queries use entity queries with access checks, and submitted country, place, and existing tag IDs are revalidated against the configured vocabulary, type values, and parent relationship before saving. New free-tag terms are only created after taxonomy term create access is checked for the configured vocabulary. The widget does not grant access to hidden taxonomy terms or bypass field access; normal entity, field, and taxonomy permissions still apply. New free-tag labels are editor input and should be displayed through Drupal render or escaping APIs.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}

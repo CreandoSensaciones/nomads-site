@@ -14,6 +14,8 @@
   - `open_default` to auto-open empty paragraph subforms.
 - Provides modal route/controller for paragraph display:
   - `/paragraph/{paragraph}/modal` using `modal` view mode.
+- Provides Paragraph Views filter:
+  - `Current node paragraph reference` keeps only paragraph revisions currently referenced by node paragraph fields.
 - Attaches paragraph layout CSS globally on paragraph entity view.
 - Includes sticky action and leaflet-resize JS helpers for listing editor UX.
 
@@ -40,6 +42,10 @@
   Paragraph base layout CSS.
 - `config/schema/paragraph_relevance.schema.yml`
   Third-party settings schema for paragraph type and field config.
+- `config/schema/paragraph_relevance.views.schema.yml`
+  Views filter settings schema.
+- `src/Plugin/views/filter/CurrentNodeParagraphReference.php`
+  Views filter that removes stale paragraph revisions from Paragraph views.
 - `config/install/core.entity_view_mode.paragraph.modal.yml`
   Installed paragraph view mode `modal`.
 
@@ -49,6 +55,7 @@
 3. On submit/presave, paragraph fields tied to non-allowed or zero relevance are reset to original/empty values.
 4. Paragraph entities receive additional classes from paragraph-type settings during preprocess.
 5. Paragraph modal links can render paragraph content through dedicated modal route/view mode.
+6. Paragraph Views can add `Current node paragraph reference` to show only paragraph revisions referenced by current node paragraph field tables.
 
 ## Concerns
 - Structural coupling: Logic is hardcoded to listing bundle/form IDs and field names (`field_type`, `field_<term>_relevance`, `field_<term>`), so schema/workflow changes can break behavior.

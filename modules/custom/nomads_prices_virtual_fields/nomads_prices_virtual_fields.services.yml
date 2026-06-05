@@ -1,6 +1,0 @@
-services:
-  nomads_prices_virtual_fields.builder:
-    class: Drupal\nomads_prices_virtual_fields\PriceVirtualFieldBuilder
-    arguments:
-      - '@commerce_price.currency_formatter'
-      - '@string_translation'

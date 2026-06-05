@@ -6,6 +6,50 @@
  */
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_form_widgets_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_form_widgets':
+      $output = '';
+      $output .= '<h2>' . t('Nomads Form Widgets') . '</h2>';
+      $output .= '<p>' . t('Nomads Form Widgets centralizes custom form widget behavior and small editor-form UI fixes used across Nomads forms. It combines one custom options widget with conditional library attachment and validation fixes for several third-party widget patterns.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Provides the <code>nomads_buttons</code> widget for boolean, <code>list_string</code>, and <code>list_integer</code> fields.') . '</li>';
+      $output .= '<li>' . t('Enhances button-style options by removing the <code>_none</code> radio option and allowing selected radios to be unchecked.') . '</li>';
+      $output .= '<li>' . t('Attaches layout CSS for Double Field widgets, Geolocation widgets, and inline date range widgets when matching form elements are detected.') . '</li>';
+      $output .= '<li>' . t('Adds sliderwidget bubble positioning tweaks, empty-range display handling, and default-value range synchronization on field configuration forms.') . '</li>';
+      $output .= '<li>' . t('Fixes required <code>list_integer</code> widgets whose allowed values include key <code>0</code>, so zero is treated as a real selection rather than empty.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The <code>ButtonsWidget</code> extends Drupal core’s options buttons widget and attaches the buttons library. Procedural hooks scan form render arrays to attach only the libraries that are needed on each form, alter date range and list-integer widgets, and adjust field configuration forms. JavaScript behaviors handle radio unchecking, slider bubble positioning, and hidden range-default synchronization.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Select <em>Buttons</em> on Manage form display to use the custom options widget. Other behaviors have no separate settings; they activate automatically when matching form structures are present. The slider default-value fix runs only on <code>field_config_edit_form</code>, and the zero-value validation applies only to <code>list_integer</code> fields with an allowed value key of <code>0</code>.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Several helpers recursively scan complete form arrays, which can add overhead on very large forms.') . '</li>';
+      $output .= '<li>' . t('Slider tweaks depend on sliderwidget and jQuery UI slider markup, classes, hidden fields, and Drupal settings.') . '</li>';
+      $output .= '<li>' . t('The buttons JavaScript intentionally changes normal radio behavior by allowing uncheck, which can surprise users and other scripts expecting standard radio semantics.') . '</li>';
+      $output .= '<li>' . t('Automatic CSS attachment depends on class names such as <code>double-field-elements</code>, <code>geolocation-map-widget</code>, <code>field--type-geolocation</code>, and <code>sliderwidget</code>.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for recursive form detection, list-integer zero validation, slider default syncing, bubble positioning, or radio uncheck behavior.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('This module changes form presentation and client-side interaction, not permissions or field access. Server-side validation remains responsible for required values and submitted data. JavaScript synchronization improves editor usability but should not be the only protection for important stored values. The zero-value validation is server-side and helps avoid rejecting a legitimate <code>0</code> selection.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
 
 /**
  * Implements hook_form_alter().

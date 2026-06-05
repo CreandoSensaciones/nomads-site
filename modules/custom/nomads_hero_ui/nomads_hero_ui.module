@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Template\Attribute;
 use Drupal\Core\Render\Markup;
@@ -15,6 +16,52 @@ use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
 use Drupal\user\Form\UserLoginForm;
 use Drupal\user\Form\UserPasswordForm;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_hero_ui_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_hero_ui':
+      $output = '';
+      $output .= '<h2>' . t('Nomads Hero UI') . '</h2>';
+      $output .= '<p>' . t('Nomads Hero UI provides the full-page presentation layer for hero nodes. It supplies custom hero templates, prepares hero-specific template variables, renders optimized background images, and can replace gated hero body content with inline login, registration, and password recovery forms for anonymous visitors.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Registers custom full-view templates for <code>hero</code> nodes, including a special template suggestion for node ID <code>99</code>.') . '</li>';
+      $output .= '<li>' . t('Builds hero template variables for title, background media, subtitle, teaser line, body, CTA field, authentication state, and content wrapper IDs.') . '</li>';
+      $output .= '<li>' . t('Renders the first usable media image from <code>field_hero</code> as a direct <code>&lt;picture&gt;</code> background using the <code>hero_xl</code>, <code>hero_lg</code>, <code>hero_md</code>, and <code>hero_sm</code> image styles when available.') . '</li>';
+      $output .= '<li>' . t('Supports media images stored in either <code>field_stock_image</code> or <code>field_media_image</code>.') . '</li>';
+      $output .= '<li>' . t('Treats hero nodes with <code>field_hero_settings</code> values of <code>login</code> or <code>login_portal</code> as login-gated heroes.') . '</li>';
+      $output .= '<li>' . t('For anonymous visitors on gated heroes, replaces the body slot with AJAX login, registration, and password recovery forms.') . '</li>';
+      $output .= '<li>' . t('Redirects successful gated authentication submissions back to the hero node.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The module uses procedural Drupal hooks for theme registration, theme suggestion alteration, theme registry alteration, node preprocessing, and auth form alteration. The preprocess layer prepares variables consumed by <code>node--hero--full.html.twig</code> and <code>node--hero--full--99.html.twig</code>. Gated auth content is built as a replaceable render-array slot with a stable DOM ID, while <code>NomadsHeroUiAuthController</code> returns AJAX replace commands for switching between login, register, and recover forms.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('There is no administration form for this module. Configuration is implicit in site structure: a <code>hero</code> content type, <code>field_hero</code> media reference, optional <code>field_subtitle</code>, <code>field_teaser_line</code>, <code>body</code>, <code>field_cta</code>, and <code>field_hero_settings</code> fields, compatible media image fields, and the expected hero image styles. Auth gating is controlled by storing <code>login</code> or <code>login_portal</code> in <code>field_hero_settings</code>.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('The module is tightly coupled to the <code>hero</code> node bundle and specific field machine names.') . '</li>';
+      $output .= '<li>' . t('The special template for node ID <code>99</code> is content-ID dependent and may break if content is recreated across environments with different IDs.') . '</li>';
+      $output .= '<li>' . t('Background image rendering depends on image styles named <code>hero_xl</code>, <code>hero_lg</code>, <code>hero_md</code>, and <code>hero_sm</code>; missing styles reduce responsive output or fall back to original file URLs.') . '</li>';
+      $output .= '<li>' . t('The direct <code>&lt;picture&gt;</code> markup bypasses normal formatter configuration, so changes to media display settings do not affect hero backgrounds.') . '</li>';
+      $output .= '<li>' . t('AJAX authentication behavior depends on Drupal core auth form structure, submit button placement, and the replaceable wrapper ID remaining present in the hero template.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for template suggestions, background image rendering, gated auth form switching, redirect behavior, or cache contexts.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('The auth-switch route is publicly accessible so anonymous users can request login, register, or recover forms, but the controller only responds for anonymous visitors on login-gated hero nodes. The module changes presentation and form placement; it does not protect node access by itself. If hero body content must be truly private, enforce that with node, field, or route access controls instead of relying only on this UI gate. Background image URLs are generated from referenced media files, so media and file access policies must match the privacy requirements of the hero content.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
 
 /**
  * Implements hook_theme().
@@ -29,6 +76,14 @@ function nomads_hero_ui_theme(): array {
     'node__hero__full__99' => [
       'base hook' => 'node',
       'template' => 'node--hero--full--99',
+      'path' => \Drupal::service('extension.list.module')->getPath('nomads_hero_ui') . '/templates',
+    ],
+    'nomads_hero_ui_magic_link_widget' => [
+      'variables' => [
+        'csrf_token' => NULL,
+        'request_url' => NULL,
+      ],
+      'template' => 'nomads-hero-ui-magic-link-widget',
       'path' => \Drupal::service('extension.list.module')->getPath('nomads_hero_ui') . '/templates',
     ],
   ];
@@ -131,6 +186,8 @@ function nomads_hero_ui_form_alter(array &$form, FormStateInterface $form_state,
   if (empty($form['actions']['submit']) || !is_array($form['actions']['submit'])) {
     return;
   }
+
+  unset($form['magic_link_widget']);
 
   $form['nomads_hero_ui_node_id'] = [
     '#type' => 'hidden',
@@ -283,6 +340,9 @@ function nomads_hero_ui_build_auth_form(NodeInterface $node, string $form_type):
   $destination = $node->toUrl()->toString();
 
   switch ($form_type) {
+    case 'magic':
+      return nomads_hero_ui_build_magic_link_form($node);
+
     case 'register':
       $form = \Drupal::service('entity.form_builder')->getForm(User::create(), 'register');
       break;
@@ -323,8 +383,8 @@ function nomads_hero_ui_build_auth_switcher(NodeInterface $node, string $form_ty
   $links = [];
 
   if ($form_type === 'login') {
+    $links[] = nomads_hero_ui_build_auth_switch_link($node, 'magic', 'Send Magic Link');
     $links[] = nomads_hero_ui_build_auth_switch_link($node, 'register', 'Register');
-    $links[] = nomads_hero_ui_build_auth_switch_link($node, 'recover', 'Recover Password');
   }
   else {
     $links[] = nomads_hero_ui_build_auth_switch_link($node, 'login', 'Back to Login');
@@ -348,7 +408,52 @@ function nomads_hero_ui_build_auth_switch_link(NodeInterface $node, string $form
       'form_type' => $form_type,
     ]),
     '#attributes' => [
-      'class' => ['use-ajax', 'button'],
+      'class' => ['use-ajax', 'button', 'hero-ui__auth-switch-link'],
+    ],
+  ];
+}
+
+/**
+ * Builds the Magic Link panel for the anonymous hero auth gate.
+ */
+function nomads_hero_ui_build_magic_link_form(NodeInterface $node): array {
+  if (!\Drupal::moduleHandler()->moduleExists('magic_link')) {
+    return [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['hero-ui__auth-unavailable'],
+      ],
+      'message' => [
+        '#markup' => t('Magic link login is not available.'),
+      ],
+    ];
+  }
+
+  $request_url = Url::fromRoute('magic_link.request');
+  $csrf_token = \Drupal::csrfToken()->get($request_url->getInternalPath());
+
+  return [
+    '#type' => 'container',
+    '#attributes' => [
+      'class' => ['hero-ui__magic-link-form'],
+    ],
+    '#attached' => [
+      'library' => ['core/drupal.htmx'],
+    ],
+    'content' => [
+      '#theme' => 'nomads_hero_ui_magic_link_widget',
+      '#csrf_token' => $csrf_token,
+      '#request_url' => $request_url->toString(),
+    ],
+    'node_id' => [
+      '#type' => 'hidden',
+      '#name' => 'nomads_hero_ui_node_id',
+      '#value' => (int) $node->id(),
+    ],
+    'form_type' => [
+      '#type' => 'hidden',
+      '#name' => 'nomads_hero_ui_form_type',
+      '#value' => 'magic',
     ],
   ];
 }

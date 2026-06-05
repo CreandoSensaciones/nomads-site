@@ -1,0 +1,6 @@
+services:
+  nomads_dashboards.builder:
+    class: Drupal\nomads_dashboards\Service\DashboardBuilder
+    arguments:
+      - '@config.factory'
+      - '@entity_type.manager'

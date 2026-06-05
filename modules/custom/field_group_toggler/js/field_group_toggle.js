@@ -108,17 +108,26 @@
     return !!details.querySelector('.special-category-select__selected-item');
   }
 
+  function syncToggleState(details, checkbox) {
+    var stateInput = details.querySelector('.field-group-toggle__state');
+    if (stateInput) {
+      stateInput.value = checkbox.checked ? '1' : '0';
+    }
+  }
+
   function updateToggle(details, checkbox, options) {
     var hasValue = groupHasValue(details);
     if (hasValue) {
       checkbox.checked = true;
       details.open = true;
+      syncToggleState(details, checkbox);
       return;
     }
     if (options && options.forceEmpty) {
       checkbox.checked = false;
       details.open = false;
     }
+    syncToggleState(details, checkbox);
   }
 
   function buildToggle(details) {
@@ -172,9 +181,11 @@
     });
     checkbox.addEventListener('change', function () {
       details.open = checkbox.checked;
+      syncToggleState(details, checkbox);
     });
     details.addEventListener('toggle', function () {
       checkbox.checked = details.open;
+      syncToggleState(details, checkbox);
     });
     details.addEventListener('change', function (event) {
       if (!event.target || !event.target.matches('input, select, textarea')) {

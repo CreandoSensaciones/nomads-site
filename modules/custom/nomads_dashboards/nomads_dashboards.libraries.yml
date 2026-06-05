@@ -1,0 +1,9 @@
+dashboard:
+  css:
+    theme:
+      css/nomads_dashboards.css: {}
+  js:
+    js/nomads_dashboards.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

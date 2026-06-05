@@ -8,8 +8,54 @@
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_listing_virtual_fields_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_listing_virtual_fields':
+      $output = '';
+      $output .= '<h2>' . t('Nomads listing virtual fields') . '</h2>';
+      $output .= '<p>' . t('Nomads listing virtual fields is the consolidated provider for listing-related display-only extra fields. It replaces older single-purpose virtual-field modules while preserving their existing display component machine names, so current view display configuration can continue to work.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Adds the hosting paragraph extra field <code>nomads_hosting_period_virtual_field</code>.') . '</li>';
+      $output .= '<li>' . t('Adds listing node extra fields for <code>location_vfield</code>, <code>combined_map_virtual_field</code>, <code>date_location_block_virtual_field</code>, and <code>listing_menu_virtual_field</code>.') . '</li>';
+      $output .= '<li>' . t('Combines minimum hosting and typical hosting period values into one hosting-period output.') . '</li>';
+      $output .= '<li>' . t('Builds listing location output from <code>field_location_date</code> location paragraphs, including detailed, combined, and threshold-switched output modes.') . '</li>';
+      $output .= '<li>' . t('Embeds filtered Views output for the combined map and date/location table using location paragraph IDs from the current listing.') . '</li>';
+      $output .= '<li>' . t('Builds an inline listing menu with anchors for location, map, and links sections when the listing content warrants them.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The module registers extra fields with <code>hook_entity_extra_field_info()</code> and injects their render arrays during <code>hook_entity_view()</code> only when the corresponding display component is enabled. Dedicated builder services handle hosting period, prices, location output, combined map, and date/location blocks; the listing menu currently instantiates its builder directly. Theme hooks map each virtual field to Twig templates. <code>hook_views_query_alter()</code> filters the supported Views displays to the paragraph IDs supplied by the current virtual field render build.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Enable and position the virtual fields from Manage display for the <code>listing</code> node bundle and the <code>hosting</code> paragraph bundle. For listing displays, this module adds a <em>Location virtual field</em> settings section with <code>link_terms</code>, <code>output_mode</code>, and <code>max_bundles</code> third-party settings. <code>output_mode</code> accepts <code>detailed</code>, <code>combined</code>, or <code>switch</code>; <code>switch</code> uses detailed output up to the configured bundle limit and combined output above it.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('The module is tightly coupled to the <code>listing</code> node bundle, the <code>hosting</code> and <code>location</code> paragraph bundles, and many hardcoded field machine names.') . '</li>';
+      $output .= '<li>' . t('Combined map output depends on the <code>map_virtual_field</code> View and its <code>combined_map</code> display; date/location output depends on the <code>location_periods</code> View and its <code>date_location_table</code> display.') . '</li>';
+      $output .= '<li>' . t('Views filtering depends on the SQL field name <code>paragraphs_item_field_data.id</code>, which may need review if the View base table or query structure changes.') . '</li>';
+      $output .= '<li>' . t('Location rendering depends on taxonomy structure, term type metadata, date fields, settlement/surroundings fields, and optional term links, so schema or vocabulary changes can alter output.') . '</li>';
+      $output .= '<li>' . t('Price output depends on Commerce price fields with specific machine names, including a fallback from <code>field_max_price_field</code> to <code>field_max_price_week</code>.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for extra-field registration, display settings persistence, Views filtering, location aggregation, price formatting, hosting-period rendering, or cache metadata.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('These virtual fields render data that is already stored on the current listing, its referenced paragraphs, taxonomy terms, Commerce price fields, and configured Views. They do not add access controls and should not be used as a privacy boundary. Sensitive listing fields, paragraphs, files, or taxonomy terms must be protected with normal entity, field, paragraph, View, and route access rules. Term links and generated markup should continue to be rendered through the provided builders and Twig templates so labels and URLs are escaped consistently.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
 
 /**
  * Implements hook_entity_extra_field_info().
@@ -24,12 +70,6 @@ function nomads_listing_virtual_fields_entity_extra_field_info(): array {
             'description' => t('Combined output of minimum hosting and typical hosting period.'),
             'weight' => 0,
             'visible' => TRUE,
-          ],
-          'nomads_prices_virtual_fields_price_range' => [
-            'label' => t('Price Range'),
-            'description' => t('Combined price range from Commerce price fields.'),
-            'weight' => 0,
-            'visible' => FALSE,
           ],
         ],
       ],
@@ -73,7 +113,6 @@ function nomads_listing_virtual_fields_entity_extra_field_info(): array {
 function nomads_listing_virtual_fields_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, string $view_mode): void {
   if ($entity->getEntityTypeId() === 'paragraph' && $entity->bundle() === 'hosting') {
     nomads_listing_virtual_fields_build_hosting_period($build, $entity, $view_mode);
-    nomads_listing_virtual_fields_build_price_range($build, $entity, $view_mode);
     return;
   }
 
@@ -105,28 +144,6 @@ function nomads_listing_virtual_fields_build_hosting_period(array &$build, Entit
   $render_array['#weight'] = $component['weight'] ?? 0;
   $render_array['#region'] = $component['region'] ?? 'content';
   $build['nomads_hosting_period_virtual_field'] = $render_array;
-}
-
-/**
- * Renders the price range virtual field.
- */
-function nomads_listing_virtual_fields_build_price_range(array &$build, EntityInterface $entity, string $view_mode): void {
-  $view_display = \Drupal::service('entity_display.repository')->getViewDisplay('paragraph', 'hosting', $view_mode);
-  $component = $view_display->getComponent('nomads_prices_virtual_fields_price_range');
-  if (empty($component) || ($component['region'] ?? 'hidden') === 'hidden') {
-    return;
-  }
-
-  /** @var \Drupal\nomads_listing_virtual_fields\PriceVirtualFieldBuilder $builder */
-  $builder = \Drupal::service('nomads_listing_virtual_fields.price_builder');
-  $render_array = $builder->buildPriceRange($entity, $entity->language()->getId());
-  if (empty($render_array)) {
-    return;
-  }
-
-  $render_array['#weight'] = $component['weight'] ?? 0;
-  $render_array['#region'] = $component['region'] ?? 'content';
-  $build['nomads_prices_virtual_fields_price_range'] = $render_array;
 }
 
 /**
@@ -350,6 +367,10 @@ function nomads_listing_virtual_fields_add_location_display_settings(array &$for
 
   $default_link_terms = (bool) $display->getThirdPartySetting('nomads_listing_virtual_fields', 'link_terms', TRUE);
   $default_max_bundles = max(1, (int) $display->getThirdPartySetting('nomads_listing_virtual_fields', 'max_bundles', 6));
+  $default_output_mode = (string) $display->getThirdPartySetting('nomads_listing_virtual_fields', 'output_mode', 'detailed');
+  if (!in_array($default_output_mode, ['detailed', 'combined', 'switch'], TRUE)) {
+    $default_output_mode = 'detailed';
+  }
 
   $form['location_virtual_field_settings'] = [
     '#type' => 'details',
@@ -364,6 +385,18 @@ function nomads_listing_virtual_fields_add_location_display_settings(array &$for
     '#description' => t('Link region, country and place terms to their term pages.'),
     '#default_value' => $default_link_terms,
   ];
+  $form['location_virtual_field_settings']['output_mode'] = [
+    '#type' => 'radios',
+    '#title' => t('Output mode'),
+    '#options' => [
+      'detailed' => t('Detailed'),
+      'combined' => t('Combined'),
+      'switch' => t('Switch'),
+    ],
+    '#description' => t('Detailed keeps the current location output. Combined renders country/date summaries and collapses multiple dated locations to their shared geo region and full month span. Switch uses Detailed up to the maximal number of bundles, then Combined above that threshold.'),
+    '#default_value' => $default_output_mode,
+    '#required' => TRUE,
+  ];
   $form['location_virtual_field_settings']['max_bundles'] = [
     '#type' => 'number',
     '#title' => t('Maximal number of bundles'),
@@ -374,36 +407,35 @@ function nomads_listing_virtual_fields_add_location_display_settings(array &$for
     '#required' => TRUE,
   ];
 
-  if (!isset($form['#submit']) || !is_array($form['#submit'])) {
-    $form['#submit'] = [];
+  if (!isset($form['#entity_builders']) || !is_array($form['#entity_builders'])) {
+    $form['#entity_builders'] = [];
   }
-  if (!in_array('nomads_listing_virtual_fields_entity_view_display_edit_form_submit', $form['#submit'], TRUE)) {
-    $form['#submit'][] = 'nomads_listing_virtual_fields_entity_view_display_edit_form_submit';
+  if (!in_array('nomads_listing_virtual_fields_entity_view_display_builder', $form['#entity_builders'], TRUE)) {
+    $form['#entity_builders'][] = 'nomads_listing_virtual_fields_entity_view_display_builder';
   }
 }
 
 /**
- * Submit callback for entity view display forms.
+ * Entity builder for location virtual field display settings.
  */
-function nomads_listing_virtual_fields_entity_view_display_edit_form_submit(array &$form, FormStateInterface $form_state): void {
-  $form_object = $form_state->getFormObject();
-  if (!$form_object || !method_exists($form_object, 'getEntity')) {
+function nomads_listing_virtual_fields_entity_view_display_builder(string $entity_type_id, EntityInterface $entity, array &$form, FormStateInterface $form_state): void {
+  if (!$entity instanceof EntityViewDisplayInterface) {
     return;
   }
 
-  $display = $form_object->getEntity();
-  if (!$display instanceof EntityViewDisplayInterface) {
-    return;
-  }
-
-  if ($display->getTargetEntityTypeId() !== 'node' || $display->getTargetBundle() !== 'listing') {
+  if ($entity->getTargetEntityTypeId() !== 'node' || $entity->getTargetBundle() !== 'listing') {
     return;
   }
 
   $settings = (array) $form_state->getValue('location_virtual_field_settings', []);
   $link_terms = !empty($settings['link_terms']);
   $max_bundles = max(1, (int) ($settings['max_bundles'] ?? 6));
+  $output_mode = (string) ($settings['output_mode'] ?? 'detailed');
+  if (!in_array($output_mode, ['detailed', 'combined', 'switch'], TRUE)) {
+    $output_mode = 'detailed';
+  }
 
-  $display->setThirdPartySetting('nomads_listing_virtual_fields', 'link_terms', $link_terms);
-  $display->setThirdPartySetting('nomads_listing_virtual_fields', 'max_bundles', $max_bundles);
+  $entity->setThirdPartySetting('nomads_listing_virtual_fields', 'link_terms', $link_terms);
+  $entity->setThirdPartySetting('nomads_listing_virtual_fields', 'output_mode', $output_mode);
+  $entity->setThirdPartySetting('nomads_listing_virtual_fields', 'max_bundles', $max_bundles);
 }

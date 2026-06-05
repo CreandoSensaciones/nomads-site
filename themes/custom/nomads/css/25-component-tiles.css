@@ -23,66 +23,54 @@
   cursor: zoom-in;
 }
 
-
-
 /* --------- Tiles layout -------- */
 
 /* Tile Label on top, rest shares space evenly */
 .nomads-tiles .data-tile {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: space-between;
   height: 250px;
+  line-height: 1.25em;
 }
+
+
 .nomads-tiles .data-tile > h3 {
+  flex: 0 0 100%;
   margin: 0;
-  flex: 0 0 auto;
 }
-.nomads-tiles .data-tile .tile-items {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  align-content: space-evenly;
-  height: 235px;
+.nomads-tiles .data-tile > div {
+  flex: 0 0 100%;
 }
+
+.nomads-tiles .data-tile > .inline {
+  flex: 1 1 0;
+  min-width: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.nomads-tiles .data-tile > .inline .nomads-icon-field-label__wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+}
+
+
 .nomads-tiles .data-tile .tile-items > div {
-  grid-column: 1/-1;
-  width: 240px;
-  text-align: center;
-}
-.nomads-tiles .data-tile .tile-items > div.span2 {
-  grid-column: span 2;
-}
-.nomads-tiles .data-tile .tile-items > div.span3 {
-  grid-column: span 3;
-  text-align: center;
-}
-.nomads-tiles .data-tile .tile-items > div.span4 {
-  grid-column: span 4;
-}
-.nomads-tiles .data-tile .tile-items > div.span5 {
-  grid-column: span 5;
-}
-.nomads-tiles .data-tile .tile-items > div.span6 {
-  grid-column: span 6;
-}
-.nomads-tiles .data-tile .tile-items > div.span7 {
-  grid-column: span 7;
-}
-.nomads-tiles .data-tile .tile-items > div.span8 {
-  grid-column: span 8;
+  /* grid-column: 1/-1;
+  text-align: center; */
 }
 
 
 
 
-/* Title spans full width */
-.data-tile > h3 {
-  grid-column: 1 / -1;
-}
-
+/*
 .data-tile .inline-field {
   display: inline-flex;
 }
-
+*/
 
 
 /* --------- Tiles Style --------- */
@@ -95,13 +83,13 @@
 .nomads-tiles .data-tile {
   padding: 8px 2px;
   text-align: center;
-  background: linear-gradient(125deg, #cff6f0, #94d9fe);
+  background: linear-gradient(125deg, #D6F5F2 0%, #9ADFEF 100%);
 }
 .nomads-tiles .tile h3 {
   font-size: 12pt;
   font-family: inter;
   font-weight: 700;
-  color: #0575b1;
+  color: #0072A3;
 }
 
 
@@ -163,21 +151,34 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
 /* --------- Tiles - Pills ---------- */
 
 .nomads-tiles .data-tile .nomads-pill {
   font-size: 12pt;
   font-weight: 500;
+  margin: 2px;
 }
+.nomads-tiles .data-tile .nomads-pill .small {
+  font-size: 8pt;
+  font-weight: 400;
+}
+
 .nomads-tiles .data-tile .items-3  .nomads-pill { font-size: 10pt; }
 .nomads-tiles .data-tile .items-6  .nomads-pill { font-size: 8pt; }
 .nomads-tiles .data-tile .items-9  .nomads-pill { font-size: 8pt; }
 .nomads-tiles .data-tile .items-12 .nomads-pill { font-size: 8pt; }
 
 
-.nomads-tiles .field--name-field-amenities.items-6 .nomads-pill {
-  font-size: 10pt;
-}
 .nomads-hosting-period__text > span:nth-of-type(2) .nomads-pill {
   font-size: 8pt;
 }

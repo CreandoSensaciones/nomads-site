@@ -1,7 +1,13 @@
 hero_gallery:
+  js:
+    js/nomads-hero-gallery.swiper.js: {}
   css:
     theme:
       css/hero-gallery.css: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - swiper_formatter/remote
 
 glightbox:
   js:
@@ -15,10 +21,10 @@ glightbox:
     - core/drupal
     - core/once
 
-mobile_swiper:
-  js:
-    js/nomads-hero-gallery.swiper.js: {}
+swiper:
   dependencies:
-    - core/drupal
-    - core/once
-    - swiper_formatter/remote
+    - nomads_hero_gallery/hero_gallery
+
+mobile_swiper:
+  dependencies:
+    - nomads_hero_gallery/hero_gallery

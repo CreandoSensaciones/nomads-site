@@ -5,7 +5,43 @@
  * Selection Tweaks module.
  */
 
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function selection_tweaks_help($route_name, RouteMatchInterface $route_match): ?string {
+  if ($route_name !== 'help.page.selection_tweaks') {
+    return NULL;
+  }
+
+  return '<h2>' . t('Selection Tweaks') . '</h2>'
+    . '<p>' . t('Selection Tweaks improves option-heavy node forms by applying client-side selection limits and by hiding priority markers from option labels.') . '</p>'
+    . '<h3>' . t('Functionality') . '</h3>'
+    . '<ul>'
+    . '<li>' . t('Attaches selection behavior to node forms.') . '</li>'
+    . '<li>' . t('Reads encoded group limits from option values, such as “a2” or “a2-b1”, and disables choices that would exceed the active group limits.') . '</li>'
+    . '<li>' . t('Supports multiple select widgets and checkbox-style option widgets, including Pretty Checkboxes/Radios markup.') . '</li>'
+    . '<li>' . t('Adds finite Drupal field cardinality metadata to options widgets so the browser can disable additional unselected choices when the field value limit has been reached.') . '</li>'
+    . '<li>' . t('Removes trailing priority suffixes such as “ *2” or “_*3” from visible option labels on node forms.') . '</li>'
+    . '</ul>'
+    . '<h3>' . t('Architecture') . '</h3>'
+    . '<p>' . t('The module attaches its library from node form alters and recursively normalizes option labels before render. Widget alter hooks add data-selection-tweaks-cardinality to finite options widgets. The JavaScript behavior uses Drupal once() to process multiple selects and checkbox containers, parses group tokens from option values, computes selected counts and group limits, and disables choices that would exceed either group rules or field cardinality. The stylesheet only adjusts the disabled state for Pretty-styled checkbox elements.') . '</p>'
+    . '<h3>' . t('Configuration') . '</h3>'
+    . '<p>' . t('There is no configuration form. Behavior is controlled by option values and field storage cardinality. Group limits are encoded in option values as letter-number segments separated by hyphens, for example “a2-b1”. Priority markers are encoded in option labels with a trailing asterisk and number, for example “Option label *2”.') . '</p>'
+    . '<h3>' . t('Stability considerations') . '</h3>'
+    . '<ul>'
+    . '<li>' . t('Group limiting depends on the option value encoding pattern. If values stop using letter-number tokens, limits will stop applying without a PHP error.') . '</li>'
+    . '<li>' . t('The library is attached to all node forms, so new node forms and option widgets should be checked for unintended disabled choices or label changes.') . '</li>'
+    . '<li>' . t('Label cleanup is text-based and can remove meaningful trailing text if an option label intentionally ends with an asterisk and number.') . '</li>'
+    . '<li>' . t('Disabled options communicate the current limit state, but they do not explain the specific group rule that caused the option to be disabled.') . '</li>'
+    . '<li>' . t('There are no automated tests for token parsing, mixed-group interactions, AJAX rebuilds, label cleanup, or widget variant compatibility.') . '</li>'
+    . '</ul>'
+    . '<h3>' . t('Security considerations') . '</h3>'
+    . '<p>' . t('The group-limit behavior is client-side only. Users or integrations can bypass disabled controls, so any group combination that must be guaranteed needs server-side validation. Drupal field cardinality is still enforced by the Field API, but this module does not add custom server-side validation for encoded group rules. It does not alter access checks or permissions.') . '</p>';
+}
 
 /**
  * Implements hook_form_BASE_FORM_ID_alter() for node forms.
@@ -23,6 +59,44 @@ function selection_tweaks_form_alter(array &$form, FormStateInterface $form_stat
   if (($form['#base_form_id'] ?? '') === 'node_form') {
     selection_tweaks_form_node_form_alter($form, $form_state, $form_id);
   }
+}
+
+/**
+ * Implements hook_field_widget_single_element_WIDGET_TYPE_form_alter().
+ */
+function selection_tweaks_field_widget_single_element_options_buttons_form_alter(array &$element, FormStateInterface $form_state, array $context): void {
+  selection_tweaks_add_cardinality_attribute($element, $context);
+}
+
+/**
+ * Implements hook_field_widget_single_element_WIDGET_TYPE_form_alter().
+ */
+function selection_tweaks_field_widget_single_element_options_pretty_form_alter(array &$element, FormStateInterface $form_state, array $context): void {
+  selection_tweaks_add_cardinality_attribute($element, $context);
+}
+
+/**
+ * Implements hook_field_widget_single_element_WIDGET_TYPE_form_alter().
+ */
+function selection_tweaks_field_widget_single_element_options_select_form_alter(array &$element, FormStateInterface $form_state, array $context): void {
+  selection_tweaks_add_cardinality_attribute($element, $context);
+}
+
+/**
+ * Adds finite field cardinality metadata for client-side option limiting.
+ */
+function selection_tweaks_add_cardinality_attribute(array &$element, array $context): void {
+  if (!isset($context['items'])) {
+    return;
+  }
+
+  $field_definition = $context['items']->getFieldDefinition();
+  $cardinality = (int) $field_definition->getFieldStorageDefinition()->getCardinality();
+  if ($cardinality === FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED || $cardinality < 1) {
+    return;
+  }
+
+  $element['#attributes']['data-selection-tweaks-cardinality'] = (string) $cardinality;
 }
 
 /**

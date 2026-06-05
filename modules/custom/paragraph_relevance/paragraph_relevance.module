@@ -6,9 +6,11 @@
  */
 
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Template\Attribute;
 use Drupal\Core\Url;
 use Drupal\Component\Utility\NestedArray;
@@ -17,13 +19,111 @@ use Drupal\field\FieldConfigInterface;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
+ * Implements hook_help().
+ */
+function paragraph_relevance_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.paragraph_relevance':
+      $output = '';
+      $output .= '<h2>' . t('Paragraph Relevance') . '</h2>';
+      $output .= '<p>' . t('Paragraph Relevance controls listing paragraph relevance workflows. It annotates listing forms for relevance-driven UI behavior, computes effective paragraph relevance from content completeness, syncs paragraph relevance back to listing fields, and provides modal paragraph display support.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Adds relevance UI wrappers around paragraph <code>field_relevance</code> and <code>field_relevance2</code> widgets.') . '</li>';
+      $output .= '<li>' . t('Attaches relevance JavaScript and CSS to listing add/edit forms, and marks those forms with <code>data-paragraph-relevance-form</code>.') . '</li>';
+      $output .= '<li>' . t('Annotates source taxonomy fields and relevance fields with data attributes used by the front-end relevance engine.') . '</li>';
+      $output .= '<li>' . t('Applies static paragraph-field visibility on split listing form modes such as text and images, based on the stored listing state.') . '</li>';
+      $output .= '<li>' . t('Adds a paragraph type third-party setting for CSS classes applied to rendered paragraphs of that bundle.') . '</li>';
+      $output .= '<li>' . t('Adds a paragraph reference field third-party setting to open an empty paragraph subform by default.') . '</li>';
+      $output .= '<li>' . t('Computes effective relevance in <code>field_relevance2</code> from desired relevance and content completeness rules.') . '</li>';
+      $output .= '<li>' . t('Syncs paragraph effective relevance back to listing fields named <code>field_{paragraph_bundle}_relevance</code>.') . '</li>';
+      $output .= '<li>' . t('Provides <code>/paragraph/{paragraph}/modal</code> and a paragraph <code>modal</code> view mode for AJAX modal display.') . '</li>';
+      $output .= '<li>' . t('Provides the <code>paragraph_relevance_rendered_relevant_paragraph</code> formatter to render only referenced paragraphs whose <code>field_relevance2</code> matches selected values.') . '</li>';
+      $output .= '<li>' . t('Provides a Paragraph Views filter, <em>Current node paragraph reference</em>, that keeps only paragraph revisions currently referenced by node paragraph fields.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('Most behavior is implemented in procedural hooks in <code>paragraph_relevance.module</code>. Form alters prepare listing forms, add libraries, and annotate relevance source/target elements after build. Entity presave syncs paragraph <code>field_relevance2</code> and parent listing relevance fields inside a request-level save guard. Paragraph preprocessing adds bundle/view-mode/classes and modal link metadata. <code>ParagraphModalController</code> renders paragraphs in <code>modal</code> view mode, while <code>RenderedRelevantParagraphFormatter</code> extends the entity reference revisions formatter and filters referenced paragraphs by effective relevance. The Views filter compares paragraph <code>id</code> and <code>revision_id</code> against current <code>node__field_*</code> paragraph reference rows.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Configuration is mostly stored as third-party settings. On paragraph types, configure <code>paragraph_relevance.css_classes</code>. On paragraph reference fields, configure <code>paragraph_relevance.open_default</code>. The workflow also depends on listing fields and naming conventions: source terms such as <code>field_type</code>, paragraph bundles with matching listing relevance fields such as <code>field_hosting_relevance</code>, and paragraph fields <code>field_relevance</code> and <code>field_relevance2</code>. Configure the modal display through the installed paragraph <code>modal</code> view mode.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('The module is tightly coupled to the <code>listing</code> node bundle, specific listing form IDs, paragraph field names, and <code>field_{bundle}_relevance</code> naming conventions.') . '</li>';
+      $output .= '<li>' . t('Listing forms are marked <code>novalidate</code>, so browser validation is intentionally bypassed and server-side validation must remain reliable.') . '</li>';
+      $output .= '<li>' . t('Effective relevance rules are hardcoded: title, filled data-field count, description length, and image count determine the maximum allowed relevance.') . '</li>';
+      $output .= '<li>' . t('Presave synchronization can create new paragraph revisions and update parent revision references, so changes should be tested carefully with revisions, translations, and autosave/AJAX rebuilds.') . '</li>';
+      $output .= '<li>' . t('The form UI depends on Field Group, Paragraphs widget markup, vertical tab structures, and JavaScript selectors that may change with contrib or admin theme updates.') . '</li>';
+      $output .= '<li>' . t('The module contains debug logging and disabled legacy pruning paths, which can obscure active behavior during maintenance.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for relevance UI annotation, open-default behavior, static form-mode visibility, relevance syncing, modal rendering, or filtered paragraph formatter output.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('The relevance UI is an editing aid and should not be treated as an access-control layer. Hidden or disabled paragraph fields can still require server-side validation and permission checks. The modal route requires normal paragraph view access and renders the configured paragraph view mode. Because the module derives visibility and relevance from taxonomy and paragraph data, sensitive paragraph content should be protected through normal node, paragraph, field, and view-mode access controls rather than relying on relevance settings alone.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function paragraph_relevance_views_data_alter(array &$data): void {
+  if (!isset($data['paragraphs_item_field_data'])) {
+    return;
+  }
+
+  $data['paragraphs_item_field_data']['paragraph_relevance_current_node_reference'] = [
+    'title' => t('Current node paragraph reference'),
+    'help' => t('Filters paragraph rows to direct paragraph revisions currently referenced by a node default revision field. This removes older paragraph revisions that still carry the same parent node metadata.'),
+    'filter' => [
+      'id' => 'paragraph_relevance_current_node_reference',
+    ],
+  ];
+}
+
+/**
  * Implements hook_form_alter().
  */
 function paragraph_relevance_form_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof EntityFormInterface) {
+    return;
+  }
+
+  $entity = $form_object->getEntity();
+  if (!$entity instanceof EntityInterface || !method_exists($entity, 'bundle')) {
+    return;
+  }
+
+  $is_listing = $entity->getEntityTypeId() === 'node' && $entity->bundle() === 'listing';
+  $is_relevance_paragraph = paragraph_relevance_is_relevance_enabled_paragraph($entity);
+  if (!$is_listing && !$is_relevance_paragraph) {
+    return;
+  }
+
+  if ($is_relevance_paragraph && empty($form['#entity'])) {
+    $form['#entity'] = $entity;
+  }
+
+  if ($is_relevance_paragraph) {
+    paragraph_relevance_override_paragraphs_edit_title($form, $entity);
+  }
+
   paragraph_relevance_inject_group_attrs($form);
   paragraph_relevance_attach_relevance_ui_wrappers($form);
+  if ($is_relevance_paragraph) {
+    paragraph_relevance_seed_direct_edit_relevance($form, $entity);
+  }
   paragraph_relevance_attach_sync_library($form, $form_state);
-  paragraph_relevance_apply_static_form_mode_visibility($form, $form_state, $form_id);
+
+  if ($is_listing) {
+    paragraph_relevance_apply_static_form_mode_visibility($form, $form_state, $form_id);
+  }
 
   if (paragraph_relevance_is_listing_form($form_state, $form_id)) {
     $form['#attached']['library'][] = 'paragraph_relevance/relevance';
@@ -45,6 +145,76 @@ function paragraph_relevance_form_alter(array &$form, FormStateInterface $form_s
   }
 
   paragraph_relevance_open_default_form_alter($form, $form_state, $form_id);
+}
+
+/**
+ * Overrides the direct paragraph edit form title from paragraphs_edit.
+ */
+function paragraph_relevance_override_paragraphs_edit_title(array &$form, EntityInterface $paragraph): void {
+  $route_match = \Drupal::routeMatch();
+  if ($route_match->getRouteName() !== 'paragraphs_edit.edit_form') {
+    return;
+  }
+
+  $root_parent = $route_match->getParameter('root_parent');
+  if (!$root_parent instanceof EntityInterface || $root_parent->getEntityTypeId() !== 'node') {
+    $root_parent = method_exists($paragraph, 'getParentEntity') ? $paragraph->getParentEntity() : NULL;
+  }
+  if (!$root_parent instanceof EntityInterface || $root_parent->getEntityTypeId() !== 'node') {
+    return;
+  }
+
+  $paragraph_type = \Drupal::entityTypeManager()
+    ->getStorage('paragraphs_type')
+    ->load($paragraph->bundle());
+  $bundle_label = $paragraph_type ? $paragraph_type->label() : $paragraph->bundle();
+
+  $form['#title'] = t('Edit @node_title > Key aspect: @bundle_label', [
+    '@node_title' => $root_parent->label(),
+    '@bundle_label' => $bundle_label,
+  ]);
+}
+
+/**
+ * Seeds direct paragraph edit forms with the stored effective relevance.
+ */
+function paragraph_relevance_seed_direct_edit_relevance(array &$form, EntityInterface $paragraph): void {
+  if (\Drupal::routeMatch()->getRouteName() !== 'paragraphs_edit.edit_form') {
+    return;
+  }
+  if (!$paragraph->hasField('field_relevance2')) {
+    return;
+  }
+
+  $value = paragraph_relevance_extract_value($paragraph->get('field_relevance2')->getValue());
+  if (paragraph_relevance_relevance_is_empty($value)) {
+    $value = '0';
+  }
+
+  if (!isset($form['paragraph_relevance_ui_wrapper']) || !is_array($form['paragraph_relevance_ui_wrapper'])) {
+    return;
+  }
+  if (!isset($form['paragraph_relevance_ui_wrapper']['#attributes']) || !is_array($form['paragraph_relevance_ui_wrapper']['#attributes'])) {
+    $form['paragraph_relevance_ui_wrapper']['#attributes'] = [];
+  }
+
+  $form['paragraph_relevance_ui_wrapper']['#attributes']['data-paragraph-relevance-initial-effective'] = (string) $value;
+}
+
+/**
+ * Implements hook_entity_prepare_form().
+ */
+function paragraph_relevance_entity_prepare_form(EntityInterface $entity, $operation, FormStateInterface $form_state): void {
+  if (
+    $entity->getEntityTypeId() !== 'node' ||
+    !method_exists($entity, 'bundle') ||
+    $entity->bundle() !== 'listing' ||
+    !in_array($operation, ['default', 'edit'], TRUE)
+  ) {
+    return;
+  }
+
+  paragraph_relevance_append_open_default_items($entity, $form_state);
 }
 
 
@@ -402,8 +572,10 @@ function paragraph_relevance_set_relevance_ui_wrapper_attributes(array &$wrapper
     $wrapper['#attributes']['class'] = [];
   }
 
-  if (!in_array('relevance-ui', $wrapper['#attributes']['class'], TRUE)) {
-    $wrapper['#attributes']['class'][] = 'relevance-ui';
+  foreach (['required-fields', 'field-group-html-element', 'relevance-ui'] as $class) {
+    if (!in_array($class, $wrapper['#attributes']['class'], TRUE)) {
+      $wrapper['#attributes']['class'][] = $class;
+    }
   }
 
   $wrapper['#attributes']['data-paragraph-relevance-group'] = $bundle;
@@ -768,7 +940,9 @@ function paragraph_relevance_preprocess_paragraph(array &$variables): void {
  * After build callback to annotate relevance-driven field groups.
  */
 function paragraph_relevance_after_build(array $form, FormStateInterface $form_state): array {
-  \Drupal::logger('paragraph_relevance')->notice('paragraph_relevance_after_build ran');
+  if (paragraph_relevance_debug_enabled()) {
+    \Drupal::logger('paragraph_relevance')->notice('paragraph_relevance_after_build ran');
+  }
 
   if (!paragraph_relevance_is_listing_form($form_state, $form['#form_id'] ?? '')) {
     return $form;
@@ -851,22 +1025,24 @@ function paragraph_relevance_after_build(array $form, FormStateInterface $form_s
  * Submit handler placeholder.
  */
 function paragraph_relevance_listing_submit(array &$form, FormStateInterface $form_state): void {
-  \Drupal::logger('paragraph_relevance')->notice('SUBMIT handler ran: form_id=@id', [
-    '@id' => $form['#form_id'] ?? 'unknown',
-  ]);
-
-  foreach (['field_retreats', 'field_hosting'] as $fname) {
-    $v = $form_state->getValue($fname);
-
-    \Drupal::logger('paragraph_relevance')->notice('SUBMIT @f items: @count', [
-      '@f' => $fname,
-      '@count' => is_array($v) ? count($v) : -1,
+  if (paragraph_relevance_debug_enabled()) {
+    \Drupal::logger('paragraph_relevance')->notice('SUBMIT handler ran: form_id=@id', [
+      '@id' => $form['#form_id'] ?? 'unknown',
     ]);
 
-    \Drupal::logger('paragraph_relevance')->notice('SUBMIT @f raw: @raw', [
-      '@f' => $fname,
-      '@raw' => substr(json_encode($v), 0, 4000),
-    ]);
+    foreach (['field_retreats', 'field_hosting'] as $fname) {
+      $v = $form_state->getValue($fname);
+
+      \Drupal::logger('paragraph_relevance')->notice('SUBMIT @f items: @count', [
+        '@f' => $fname,
+        '@count' => is_array($v) ? count($v) : -1,
+      ]);
+
+      \Drupal::logger('paragraph_relevance')->notice('SUBMIT @f raw: @raw', [
+        '@f' => $fname,
+        '@raw' => substr(json_encode($v), 0, 4000),
+      ]);
+    }
   }
 }
 
@@ -1063,9 +1239,8 @@ function paragraph_relevance_hide_static_form_mode_paragraph_fields(array &$form
 /**
  * Sync paragraph field_relevance2 values on listing save.
  *
- * Standard relevance-enabled paragraphs keep the higher value between stored
- * field_relevance2 and the paragraph's desired field_relevance. Location
- * paragraphs are treated as if their desired relevance were always 3.
+ * field_relevance is the user-selected target. field_relevance2 is the
+ * effective value allowed by the paragraph's stored content.
  */
 function paragraph_relevance_sync_listing_paragraph_relevance2(EntityInterface $listing): void {
   if ($listing->getEntityTypeId() !== 'node' || !method_exists($listing, 'bundle')) {
@@ -1096,23 +1271,13 @@ function paragraph_relevance_sync_listing_paragraph_relevance2(EntityInterface $
         continue;
       }
 
-      $desired_relevance = paragraph_relevance_get_desired_relevance_for_sync($paragraph);
-      if (paragraph_relevance_relevance_is_empty($desired_relevance)) {
-        continue;
-      }
-
       $existing_relevance = paragraph_relevance_extract_value($paragraph->get('field_relevance2')->getValue());
-      $effective_relevance = paragraph_relevance_pick_higher_relevance($existing_relevance, $desired_relevance);
+      $effective_relevance = paragraph_relevance_calculate_effective_relevance($paragraph);
       if ((string) $existing_relevance === (string) $effective_relevance) {
         continue;
       }
 
-      if (paragraph_relevance_relevance_is_empty($effective_relevance)) {
-        $paragraph->set('field_relevance2', []);
-      }
-      else {
-        $paragraph->set('field_relevance2', $effective_relevance);
-      }
+      $paragraph->set('field_relevance2', $effective_relevance);
 
       if ($paragraph->id()) {
         paragraph_relevance_persist_synced_paragraph($paragraph, $items, (int) $delta, $item);
@@ -1148,25 +1313,145 @@ function paragraph_relevance_persist_synced_paragraph(EntityInterface $paragraph
 }
 
 /**
- * Determine the desired paragraph relevance used for field_relevance2 sync.
+ * Calculate effective relevance from desired relevance and content completeness.
  */
-function paragraph_relevance_get_desired_relevance_for_sync(EntityInterface $paragraph): ?string {
-  if ($paragraph->hasField('field_relevance')) {
-    $desired = paragraph_relevance_extract_value($paragraph->get('field_relevance')->getValue());
-    if (!paragraph_relevance_relevance_is_empty($desired)) {
-      return $desired;
+function paragraph_relevance_calculate_effective_relevance(EntityInterface $paragraph): string {
+  if (!$paragraph->hasField('field_relevance')) {
+    return '0';
+  }
+
+  $desired = paragraph_relevance_extract_value($paragraph->get('field_relevance')->getValue());
+  if (paragraph_relevance_relevance_is_empty($desired)) {
+    return '0';
+  }
+
+  $computed = paragraph_relevance_calculate_content_relevance($paragraph);
+  return (string) min((int) $desired, $computed);
+}
+
+/**
+ * Calculate maximum relevance allowed by paragraph content.
+ */
+function paragraph_relevance_calculate_content_relevance(EntityInterface $paragraph): int {
+  $title_filled = paragraph_relevance_paragraph_title_filled($paragraph);
+  $data_fields_count = paragraph_relevance_paragraph_filled_data_field_count($paragraph);
+  $description_length = paragraph_relevance_paragraph_description_length($paragraph);
+  $images_count = paragraph_relevance_paragraph_image_count($paragraph);
+
+  if ($title_filled && $data_fields_count >= 2 && $description_length >= 500 && $images_count >= 5) {
+    return 3;
+  }
+  if ($title_filled && $data_fields_count >= 2 && $description_length > 0) {
+    return 2;
+  }
+  if ($title_filled && $data_fields_count >= 2) {
+    return 1;
+  }
+
+  return 0;
+}
+
+/**
+ * Determine whether the paragraph title requirement is met.
+ */
+function paragraph_relevance_paragraph_title_filled(EntityInterface $paragraph): bool {
+  foreach (['field_title', 'title'] as $field_name) {
+    if ($paragraph->hasField($field_name) && !$paragraph->get($field_name)->isEmpty()) {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+/**
+ * Count filled non-title/non-description/non-image data fields.
+ */
+function paragraph_relevance_paragraph_filled_data_field_count(EntityInterface $paragraph): int {
+  if (!method_exists($paragraph, 'getFieldDefinitions')) {
+    return 0;
+  }
+
+  $count = 0;
+  foreach ($paragraph->getFieldDefinitions() as $name => $definition) {
+    if (!$definition instanceof FieldConfigInterface || !$paragraph->hasField($name)) {
+      continue;
+    }
+    if (paragraph_relevance_is_excluded_completeness_field($name)) {
+      continue;
+    }
+    if (!$paragraph->get($name)->isEmpty()) {
+      $count++;
     }
   }
 
-  if (method_exists($paragraph, 'bundle') && $paragraph->bundle() === 'location') {
-    return '3';
+  return $count;
+}
+
+/**
+ * Determine whether a paragraph field is excluded from data-field counting.
+ */
+function paragraph_relevance_is_excluded_completeness_field(string $field_name): bool {
+  if (in_array($field_name, ['field_relevance', 'field_relevance2', 'field_title', 'title', 'field_description', 'field_images'], TRUE)) {
+    return TRUE;
+  }
+  if (str_starts_with($field_name, 'revision_') || str_starts_with($field_name, 'moderation_')) {
+    return TRUE;
+  }
+  if (str_contains($field_name, 'description') || str_contains($field_name, 'image') || str_contains($field_name, 'media')) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/**
+ * Get the plain-text description length.
+ */
+function paragraph_relevance_paragraph_description_length(EntityInterface $paragraph): int {
+  $text = '';
+  foreach ($paragraph->getFieldDefinitions() as $name => $definition) {
+    if (!$definition instanceof FieldConfigInterface || !$paragraph->hasField($name)) {
+      continue;
+    }
+    if ($name !== 'field_description' && !str_contains($name, 'description')) {
+      continue;
+    }
+    foreach ($paragraph->get($name)->getValue() as $item) {
+      foreach (['value', 'summary'] as $key) {
+        if (isset($item[$key])) {
+          $text .= ' ' . strip_tags((string) $item[$key]);
+        }
+      }
+    }
   }
 
-  return NULL;
+  return mb_strlen(trim((string) preg_replace('/\s+/', ' ', $text)));
+}
+
+/**
+ * Count referenced image/media items.
+ */
+function paragraph_relevance_paragraph_image_count(EntityInterface $paragraph): int {
+  $count = 0;
+  foreach ($paragraph->getFieldDefinitions() as $name => $definition) {
+    if (!$definition instanceof FieldConfigInterface || !$paragraph->hasField($name)) {
+      continue;
+    }
+    if ($name !== 'field_images' && !str_contains($name, 'image') && !str_contains($name, 'media')) {
+      continue;
+    }
+    if (!$paragraph->get($name)->isEmpty()) {
+      $count += $paragraph->get($name)->count();
+    }
+  }
+
+  return $count;
 }
 
 /**
  * Copy paragraph field_relevance2 values into listing field_<bundle>_relevance fields.
+ *
+ * Relevance paragraph bundles are expected to exist once per listing, so the
+ * first paragraph value for each bundle is the source of truth.
  */
 function paragraph_relevance_sync_listing_paragraph_effective_relevance(EntityInterface $listing): void {
   if ($listing->getEntityTypeId() !== 'node' || !method_exists($listing, 'bundle')) {
@@ -1202,14 +1487,9 @@ function paragraph_relevance_sync_listing_paragraph_effective_relevance(EntityIn
         continue;
       }
 
-      $value = paragraph_relevance_extract_value($paragraph->get('field_relevance2')->getValue());
-      $current_value = $bundle_relevance_values[$parent_relevance_field] ?? NULL;
-
-      if ($current_value === NULL) {
+      if (!array_key_exists($parent_relevance_field, $bundle_relevance_values)) {
+        $value = paragraph_relevance_extract_value($paragraph->get('field_relevance2')->getValue());
         $bundle_relevance_values[$parent_relevance_field] = $value;
-      }
-      else {
-        $bundle_relevance_values[$parent_relevance_field] = paragraph_relevance_pick_higher_relevance($current_value, $value);
       }
     }
   }
@@ -1421,7 +1701,14 @@ function paragraph_relevance_open_default_form_alter(array &$form, FormStateInte
     return;
   }
 
-  $open_fields = paragraph_relevance_collect_open_default_fields($entity);
+  paragraph_relevance_append_open_default_items($entity, $form_state);
+}
+
+/**
+ * Append empty paragraph items for fields that should open by default.
+ */
+function paragraph_relevance_append_open_default_items(EntityInterface $entity, FormStateInterface $form_state): void {
+  $open_fields = paragraph_relevance_collect_open_default_fields($entity, $form_state);
   if (!$open_fields) {
     return;
   }
@@ -1436,7 +1723,13 @@ function paragraph_relevance_open_default_form_alter(array &$form, FormStateInte
     }
     $items = $entity->get($field_name);
     if ($items->isEmpty()) {
-      $items->appendItem();
+      $paragraph = paragraph_relevance_create_open_default_paragraph($entity, $field_name);
+      if ($paragraph instanceof EntityInterface) {
+        $items->appendItem(['entity' => $paragraph]);
+      }
+      else {
+        $items->appendItem();
+      }
       if (paragraph_relevance_debug_enabled()) {
         \Drupal::logger('paragraph_relevance')->debug('Added empty item for field @field.', ['@field' => $field_name]);
       }
@@ -1444,6 +1737,35 @@ function paragraph_relevance_open_default_form_alter(array &$form, FormStateInte
   }
 
   // Do not attach save-time pruning handlers here.
+}
+
+/**
+ * Create a new paragraph entity for an open-default paragraph field.
+ */
+function paragraph_relevance_create_open_default_paragraph(EntityInterface $entity, string $field_name): ?EntityInterface {
+  if (!$entity->hasField($field_name)) {
+    return NULL;
+  }
+
+  $definition = $entity->getFieldDefinition($field_name);
+  if (!$definition instanceof FieldConfigInterface) {
+    return NULL;
+  }
+
+  $target_bundles = $definition->getSetting('handler_settings')['target_bundles'] ?? [];
+  $target_bundles = array_values(array_filter(array_map('strval', $target_bundles)));
+  if (count($target_bundles) !== 1) {
+    return NULL;
+  }
+
+  $bundle = reset($target_bundles);
+  if ($bundle === FALSE || $bundle === '') {
+    return NULL;
+  }
+
+  return \Drupal::entityTypeManager()->getStorage('paragraph')->create([
+    'type' => $bundle,
+  ]);
 }
 
 /**
@@ -1456,8 +1778,10 @@ function paragraph_relevance_open_default_validate(array &$form, FormStateInterf
 /**
  * Collect open default paragraph fields from the entity.
  */
-function paragraph_relevance_collect_open_default_fields(EntityInterface $entity): array {
+function paragraph_relevance_collect_open_default_fields(EntityInterface $entity, ?FormStateInterface $form_state = NULL): array {
   $fields = [];
+  $visible_relevance_bundles = paragraph_relevance_collect_visible_open_default_bundles($entity, $form_state);
+
   foreach ($entity->getFieldDefinitions() as $field_name => $definition) {
     if (!$definition instanceof FieldConfigInterface) {
       continue;
@@ -1468,13 +1792,103 @@ function paragraph_relevance_collect_open_default_fields(EntityInterface $entity
     if ($definition->getSetting('target_type') !== 'paragraph') {
       continue;
     }
-    if (!$definition->getThirdPartySetting('paragraph_relevance', 'open_default', FALSE)) {
+
+    $explicit_open_default = (bool) $definition->getThirdPartySetting('paragraph_relevance', 'open_default', FALSE);
+    $relevance_open_default = paragraph_relevance_field_matches_visible_open_default_bundle($entity, $definition, $visible_relevance_bundles);
+    if (!$explicit_open_default && !$relevance_open_default) {
       continue;
     }
     $fields[] = $field_name;
   }
 
   return $fields;
+}
+
+/**
+ * Collect paragraph bundles that should open by default for this listing.
+ */
+function paragraph_relevance_collect_visible_open_default_bundles(EntityInterface $entity, ?FormStateInterface $form_state): array {
+  if (
+    $entity->getEntityTypeId() !== 'node' ||
+    !method_exists($entity, 'bundle') ||
+    $entity->bundle() !== 'listing'
+  ) {
+    return [];
+  }
+
+  $term_ids = paragraph_relevance_collect_selected_term_ids($form_state, $entity);
+  if (!$term_ids) {
+    return [];
+  }
+
+  $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadMultiple($term_ids);
+  if (!$terms) {
+    return [];
+  }
+
+  $bundles = [];
+  foreach ($terms as $term) {
+    if (!$term instanceof EntityInterface) {
+      continue;
+    }
+
+    if ($term->hasField('field_key_aspects') && !$term->get('field_key_aspects')->isEmpty()) {
+      foreach ($term->get('field_key_aspects')->referencedEntities() as $key_aspect) {
+        if ($key_aspect instanceof EntityInterface) {
+          $bundles = array_merge($bundles, paragraph_relevance_collect_term_bundles($key_aspect));
+        }
+      }
+    }
+
+    $bundles = array_merge($bundles, paragraph_relevance_collect_term_bundles($term));
+
+    if ($term->hasField('field_dependee') && !$term->get('field_dependee')->isEmpty()) {
+      foreach ($term->get('field_dependee')->referencedEntities() as $dependee_term) {
+        if ($dependee_term instanceof EntityInterface) {
+          $bundles = array_merge($bundles, paragraph_relevance_collect_term_bundles($dependee_term));
+        }
+      }
+    }
+  }
+
+  $lookup = [];
+  foreach (array_values(array_unique(array_filter($bundles))) as $bundle) {
+    $bundle = trim((string) $bundle);
+    if ($bundle === '') {
+      continue;
+    }
+    $lookup[$bundle] = TRUE;
+    $lookup[strtr($bundle, ['-' => '_'])] = TRUE;
+  }
+
+  return $lookup;
+}
+
+/**
+ * Determine if a paragraph field should get a visible open-default item.
+ */
+function paragraph_relevance_field_matches_visible_open_default_bundle(EntityInterface $entity, FieldConfigInterface $definition, array $visible_bundles): bool {
+  if (!$visible_bundles) {
+    return FALSE;
+  }
+
+  $target_bundles = $definition->getSetting('handler_settings')['target_bundles'] ?? [];
+  $target_bundles = array_values(array_filter(array_map('strval', $target_bundles)));
+  if (count($target_bundles) !== 1) {
+    return FALSE;
+  }
+
+  $bundle = reset($target_bundles);
+  if ($bundle === FALSE || $bundle === '') {
+    return FALSE;
+  }
+
+  $normalized_bundle = strtr((string) $bundle, ['-' => '_']);
+  if (empty($visible_bundles[$bundle]) && empty($visible_bundles[$normalized_bundle])) {
+    return FALSE;
+  }
+
+  return $entity->hasField('field_' . $normalized_bundle . '_relevance');
 }
 
 /**
@@ -1657,16 +2071,18 @@ function paragraph_relevance_prune_empty_zero_paragraph_items(EntityInterface $e
       $has_content = paragraph_relevance_paragraph_has_meaningful_entity_content($paragraph);
       $relevance = paragraph_relevance_get_entity_relevance_value($paragraph);
       if (!$has_content && paragraph_relevance_relevance_is_empty($relevance)) {
-        $pid = method_exists($paragraph, 'id') ? ($paragraph->id() ?? 'new') : 'n/a';
-        $uuid = method_exists($paragraph, 'uuid') ? ($paragraph->uuid() ?? 'n/a') : 'n/a';
-        $bundle = method_exists($paragraph, 'bundle') ? ($paragraph->bundle() ?? 'n/a') : 'n/a';
-        \Drupal::logger('paragraph_relevance')->notice('Pruning paragraph reference: field=@field delta=@delta bundle=@bundle id=@id uuid=@uuid', [
-          '@field' => $field_name,
-          '@delta' => (string) $delta,
-          '@bundle' => $bundle,
-          '@id' => (string) $pid,
-          '@uuid' => (string) $uuid,
-        ]);
+        if (paragraph_relevance_debug_enabled()) {
+          $pid = method_exists($paragraph, 'id') ? ($paragraph->id() ?? 'new') : 'n/a';
+          $uuid = method_exists($paragraph, 'uuid') ? ($paragraph->uuid() ?? 'n/a') : 'n/a';
+          $bundle = method_exists($paragraph, 'bundle') ? ($paragraph->bundle() ?? 'n/a') : 'n/a';
+          \Drupal::logger('paragraph_relevance')->notice('Pruning paragraph reference: field=@field delta=@delta bundle=@bundle id=@id uuid=@uuid', [
+            '@field' => $field_name,
+            '@delta' => (string) $delta,
+            '@bundle' => $bundle,
+            '@id' => (string) $pid,
+            '@uuid' => (string) $uuid,
+          ]);
+        }
         $remove_deltas[] = (int) $delta;
       }
     }
@@ -1684,6 +2100,10 @@ function paragraph_relevance_prune_empty_zero_paragraph_items(EntityInterface $e
  * Checks whether the paragraph bundle has relevance fields enabled.
  */
 function paragraph_relevance_is_relevance_enabled_paragraph(EntityInterface $paragraph): bool {
+  if ($paragraph->getEntityTypeId() !== 'paragraph' || !method_exists($paragraph, 'hasField')) {
+    return FALSE;
+  }
+
   return $paragraph->hasField('field_relevance') || $paragraph->hasField('field_relevance2');
 }
 
@@ -1772,7 +2192,7 @@ function paragraph_relevance_clear_errors_for_item(FormStateInterface $form_stat
  * Check whether debug logging is enabled.
  */
 function paragraph_relevance_debug_enabled(): bool {
-  return (bool) \Drupal::config('paragraph_relevance.settings')->get('debug');
+  return (bool) \Drupal::state()->get('paragraph_relevance.debug', FALSE);
 }
 
 /**

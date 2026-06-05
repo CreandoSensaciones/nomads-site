@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * @file
+ * Install and update hooks for Nomads Perks.
+ */
+
+use Drupal\Core\Entity\Entity\EntityFormMode;
+
+/**
+ * Implements hook_install().
+ */
+function nomads_perks_install(): void {
+  nomads_perks_ensure_perk_form_mode();
+}
+
+/**
+ * Adds the Listing perk form mode.
+ */
+function nomads_perks_update_11001(): void {
+  nomads_perks_ensure_perk_form_mode();
+}
+
+/**
+ * Ensures the node perk form mode exists.
+ */
+function nomads_perks_ensure_perk_form_mode(): void {
+  if (EntityFormMode::load('node.perk')) {
+    return;
+  }
+
+  EntityFormMode::create([
+    'id' => 'node.perk',
+    'label' => 'Perk',
+    'targetEntityType' => 'node',
+    'cache' => TRUE,
+  ])->save();
+}

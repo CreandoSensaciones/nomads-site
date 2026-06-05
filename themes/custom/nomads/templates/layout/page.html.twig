@@ -3,25 +3,29 @@
 {% set list_active = current_path == '/list' or current_path starts with '/list/' %}
 {% set map_active = current_path == '/map' or current_path starts with '/map/' %}
 {% set cal_active = current_path == '/cal' or current_path starts with '/cal/' %}
+{% set navigation_region_active = list_active or map_active or cal_active %}
+{% set map_navigation_active = map_active and page.navigation %}
+{% set standard_navigation_active = navigation_region_active and page.navigation and not map_active %}
 {% set domain_prefix = nomads_domain_prefix|default('coliving') %}
 {% set navbar_logo = '/' ~ directory ~ '/assets/navbar/logo-' ~ domain_prefix ~ '.svg' %}
+{% set navbar_urls = nomads_navigation_navbar_urls|default({
+  'front': '/',
+  'list': '/list',
+  'map': '/map',
+  'cal': '/cal'
+}) %}
 
-<div class="mobile-announcement-overlay">
-  <div class="mobile-announcement-overlay__inner">
-    <img src="{{ navbar_logo }}" alt="Logo" class="mobile-announcement-overlay__logo">
-    <div class="mobile-announcement-overlay__text">
-      <p>Nomads.site is currently under construction.</p>
-      <p>Launching at Bansko Nomad Fest in June</p>
-      <p>early access is offered only on desktop devices<br>with a screen width above 1200px.</p>
-    </div>
-  </div>
-</div>
+{% if map_navigation_active %}
+  <div class="nomads-navbar-region-wrapper nomads-navbar-region-wrapper--map">
+{% endif %}
+
 <header class="nomads-navbar nomads-breakout" role="banner">
   <div class="nomads-navbar__inner nomads-inner nomads-inner--constrained">
     <div class="nomads-navbar__brand-wrap nomads-navbar__dropdownwrap nomads-navbar__dropdownwrap--domains">
-      <a class="nomads-navbar__brand nomads-navbar__domains" href="http://nomads.site:8080" aria-label="Domains" aria-expanded="false" aria-controls="nomads-domainsmenu" data-once="nomads-navbar-domains">
+      <a class="nomads-navbar__brand nomads-navbar__domains" href="https://nomads.site" aria-label="Domains" aria-expanded="false" aria-controls="nomads-domainsmenu" data-once="nomads-navbar-domains">
         <img class="nomads-navbar__brand-logo" src="{{ navbar_logo }}" alt="nomads.site" />
       </a>
+      <span class="navbar-beta">beta</span>
       <div id="nomads-domainsmenu" class="nomads-navbar__dropdown nomads-navbar__dropdown--domains" hidden>
         <ul class="nomads-navbar__dropdown-list">
           {% for item in nomads_domainsmenu_items %}
@@ -39,26 +43,43 @@
           {% endfor %}
         </ul>
       </div>
+      <div class="logo-label">select your site</div>
     </div>
 
-    <form class="nomads-navbar__search" action="/search" method="get" role="search">
-      <input class="nomads-navbar__search-input" type="search" name="q" placeholder="Where do I go? - No function still" aria-label="Where do I go? - No function still" />
+    <form class="nomads-navbar__search" action="/list" method="get" role="search" data-nomads-navbar-search>
+      <input class="nomads-navbar__search-input" type="search" name="q" placeholder="Where do I go?" aria-label="Where do I go?" autocomplete="off" />
+      <div class="nomads-navbar__search-results" hidden></div>
     </form>
 
-    <nav class="nomads-navbar__actions" aria-label="Primary actions">
+    <button class="nomads-navbar__mobile-search-toggle" type="button" aria-label="Search and filters" aria-expanded="false" data-nomads-mobile-search-toggle>
+      <span class="nomads-navbar__mobile-search-icon" aria-hidden="true"></span>
+    </button>
+
+    
       <div class="nomads-navbar__group nomads-navbar__group--views">
-        <a class="nomads-navbar__icon search-icon{{ front_active ? ' active' : '' }}" href="/" aria-label="Front">
+        <div class="nav-widget-wrapper icon-wrapper"><a class="nomads-navbar__icon search-icon{{ front_active ? ' active' : '' }}" href="{{ navbar_urls.front }}" aria-label="Front">
           <img src="{{ '/' ~ directory ~ '/assets/navbar/icon-front.svg' }}" alt="" />
         </a>
-        <a class="nomads-navbar__icon search-icon{{ list_active ? ' active' : '' }}" href="/list" aria-label="List">
+        <div class="icon-label">Landing</div>
+      </div>
+      <div class="nav-widget-wrapper icon-wrapper">
+        <a class="nomads-navbar__icon search-icon{{ list_active ? ' active' : '' }}" href="{{ navbar_urls.list }}" aria-label="List">
           <img src="{{ '/' ~ directory ~ '/assets/navbar/icon-list.svg' }}" alt="" />
         </a>
-        <a class="nomads-navbar__icon search-icon{{ map_active ? ' active' : '' }}" href="/map" aria-label="Map">
+        <div class="icon-label">List</div>
+      </div>
+      <div class="nav-widget-wrapper icon-wrapper">
+        <a class="nomads-navbar__icon search-icon{{ map_active ? ' active' : '' }}" href="{{ navbar_urls.map }}" aria-label="Map">
           <img src="{{ '/' ~ directory ~ '/assets/navbar/icon-map.svg' }}" alt="" />
         </a>
-        <a class="nomads-navbar__icon search-icon{{ cal_active ? ' active' : '' }}" href="/cal" aria-label="Calendar">
+        <div class="icon-label">Map</div>
+      </div>
+      <div class="nav-widget-wrapper icon-wrapper">
+        <a class="nomads-navbar__icon search-icon{{ cal_active ? ' active' : '' }}" href="{{ navbar_urls.cal }}" aria-label="Calendar">
           <img src="{{ '/' ~ directory ~ '/assets/navbar/icon-cal.svg' }}" alt="" />
         </a>
+        <div class="icon-label">Calendar</div>
+        </div>
       </div>
 
       <div class="nomads-navbar__group nomads-navbar__group--user">
@@ -76,9 +97,20 @@
           <div id="nomads-mainmenu" class="nomads-navbar__dropdown" hidden>{{ nomads_mainmenu }}</div>
         </div>
       </div>
-    </nav>
+    
   </div>
 </header>
+
+{% if map_navigation_active %}
+    <section class="region-navigation region-navigation--map-extension" aria-label="Map filters">
+      <div class="nomads-inner nomads-inner--constrained">
+        <div class="region-navigation__blocks">
+          {{ page.navigation }}
+        </div>
+      </div>
+    </section>
+  </div>
+{% endif %}
 
 {% if page.hero %}
   <section class="region-hero">
@@ -90,6 +122,16 @@
   <section class="region-title">
     <div class="nomads-inner nomads-inner--constrained">
       {{ page.title }}
+    </div>
+  </section>
+{% endif %}
+
+{% if standard_navigation_active %}
+  <section class="region-navigation">
+    <div class="nomads-inner nomads-inner--constrained">
+      <div class="region-navigation__blocks">
+        {{ page.navigation }}
+      </div>
     </div>
   </section>
 {% endif %}

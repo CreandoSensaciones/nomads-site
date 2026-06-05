@@ -1,3 +1,7 @@
 filter_tid: null
 filter_tids: {  }
 sort_key_tids: {  }
+specific_navigation_parent_tids: {  }
+term_label_overrides: {  }
+view_title: ''
+view_subtitle: ''

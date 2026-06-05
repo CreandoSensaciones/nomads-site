@@ -18,3 +18,21 @@ nomads_navigation.settings:
       sequence:
         type: integer
         label: 'Sort key term ID'
+    specific_navigation_parent_tids:
+      type: sequence
+      label: 'Specific navigation term tokens'
+      sequence:
+        type: string
+        label: 'Specific navigation term token'
+    term_label_overrides:
+      type: sequence
+      label: 'Term label overrides'
+      sequence:
+        type: label
+        label: 'Term label override'
+    view_title:
+      type: text
+      label: 'View title'
+    view_subtitle:
+      type: text
+      label: 'View subtitle'

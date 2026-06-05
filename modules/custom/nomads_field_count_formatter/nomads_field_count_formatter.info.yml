@@ -1,0 +1,10 @@
+name: Nomads Field Count Formatter
+type: module
+description: Drupal 11 adaptation of the Field Count Formatter project for showing the number of values entered in a field.
+package: Other
+core_version_requirement: ^11
+
+# Information added by Drupal.org packaging script on 2022-12-18
+version: '3.0.0'
+project: 'nomads_field_count_formatter'
+datestamp: 1671362163

@@ -1,0 +1,7 @@
+views.filter.paragraph_relevance_current_node_reference:
+  type: views_filter
+  label: 'Current node paragraph reference'
+  mapping:
+    published_parent_node:
+      type: boolean
+      label: 'Require published parent node'

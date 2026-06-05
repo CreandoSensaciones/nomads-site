@@ -1,19 +1,243 @@
 
-.node--type-landing-page.node--view-mode-full .viewsreference--view-title {
-    font-size: 14pt;
-    color: #666;
-    margin: -40px 0 0 400px;
-}
+
 .node--type-landing-page.node--view-mode-full  .paragraph--bundle-view h2 {
-    font-size: 16pt;
     text-align: left;
-    color: #015180;
-    text-transform: uppercase;
-    font-weight: 600;
+}
+.node--type-landing-page.node--view-mode-full .viewsreference--view-title {
+    text-align: center;
+    margin: -10px 0;
 }
 
-.node--type-landing-page .paragraph--bundle-text {
-    max-width: 960px;
-    margin: 30px auto;
-    font-size: 1.2em;
+.landing-statement h2 {
+    text-transform: uppercase;
+    font-weight: 600;
+    font-size: clamp(1rem, 1.5vw, 2rem);
+    color: #aaa;
+}
+
+
+/* ======== Front ========= */
+
+/* Hide upper title area */
+.frontpage #hero-wrapper,
+.frontpage .hero-overlay {
+  display: none !important;
+}
+
+/* Put paragraphs before body claim */
+.frontpage .node__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.frontpage .node__content > .field--name-field-paragraphs {
+  display: contents;
+}
+.frontpage .node__content > .field--name-field-paragraphs > .field__item:first-of-type {
+  order: 1;
+}
+.frontpage .node__content > .field--name-field-paragraphs > .field__item:nth-of-type(2)  {
+  order: 2;
+}
+.frontpage .node__content > .field--name-field-paragraphs > .field__item:nth-of-type(3)  {
+  order: 4;
+}
+.frontpage .node__content > .field--name-field-paragraphs > .field__item:nth-of-type(4)  {
+  order: 5;
+}
+.frontpage .node__content > .field--name-field-paragraphs > .field__item:nth-of-type(5)  {
+  order: 6;
+}
+.frontpage .node__content > .field--name-field-paragraphs > .field__item:nth-of-type(6)  {
+  order: 7;
+}
+.frontpage .node__content > .field--name-body {
+  order: 3;
+}
+
+/* Remove Drupal field wrappers from layout */
+.field--name-field-paragraphs > .field__items {
+  display: block;
+}
+
+.field--name-field-paragraphs > .field__items > .field__item,
+.field__item:has(.paragraph--viewmode-half_hero) {
+  margin: 0 !important;
+}
+
+/* Every promo = 3-column hero row */
+.paragraph--type--promo {
+  display: grid !important;
+  grid-template-columns: 2fr 1fr 2fr;
+  align-items: center;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden;
+}
+
+/* Swiper replaces the old image field as the visual block */
+.paragraph--type--promo > .swiper-container {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  margin: 0 !important;
+}
+
+/* First row: image left, text right */
+.half-hero-left > .swiper-container {
+  grid-column: 1 / 3;
+  grid-row: 1;
+}
+
+.half-hero-left .half-hero-body {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+/* Second row: text left, image right */
+.half-hero-right > .swiper-container {
+  grid-column: 2 / 4;
+  grid-row: 1;
+}
+
+.half-hero-right .half-hero-body {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/* Swiper inner elements must fill the visual block */
+.paragraph--type--promo .swiper-wrapper,
+.paragraph--type--promo .swiper-slide,
+.paragraph--type--promo .swiper-slide article,
+.paragraph--type--promo .swiper-slide picture {
+  height: 100% !important;
+}
+
+.paragraph--type--promo .swiper-slide article,
+.paragraph--type--promo .swiper-slide picture {
+  display: block;
+  width: 100%;
+}
+
+/* Image fills the available hero area */
+.paragraph--type--promo img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  margin: 0 !important;
+}
+
+/* Remove remaining media/image margins */
+.paragraph--type--promo .field--name-field-stock-image,
+.paragraph--type--promo .field--name-field-stock-image .field__item,
+.paragraph--type--promo article {
+  margin: 0 !important;
+}
+
+/* Text positioning */
+.paragraph--type--promo .half-hero-body {
+  max-width: 420px;
+  margin-left: clamp(2rem, 7vw, 7rem);
+  margin-right: clamp(2rem, 7vw, 7rem);
+}
+
+/* Buttons */
+.promo-style .nomads-button {
+  display: inline-block;
+  padding: 1em 1.4em;
+  border-radius: 999px;
+  text-decoration: none;
+  background: linear-gradient(135deg, #1382BC 0%, #0B5F8D 100%);
+  font-weight: 400;
+}
+
+/* Claim below */
+.frontpage > .node__content > .field--name-body {
+  text-align: center;
+  padding: clamp(3rem, 6vw, 6rem) 1.5rem;
+}
+
+.frontpage-explainer {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(1rem, 4vw, 4rem);
+  max-width: 1200px;
+  margin: 2rem auto 0;
+  text-align: left;
+}
+
+/* Mobile stack */
+@media (max-width: 760px) {
+  .paragraph--type--promo {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+  }
+
+  .paragraph--type--promo > .swiper-container {
+    /* width: 100%;
+    height: 55vw;
+    min-height: 260px; */
+  }
+
+  .half-hero-left .half-hero-body,
+  .half-hero-right .half-hero-body {
+    max-width: none;   
+    margin: 30px;
+  }
+
+  .frontpage-explainer {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.promo-style h2 {
+    text-align: left;
+}
+.promo-style h2 em {
+    color: #0570A1;
+}
+
+.frontpage h1 {
+    font-size: clamp(20pt, 4vw, 50pt);
+    line-height: 1.1em;
+    color: #666;
+  
+}
+.frontpage h1 .blue {
+    color: #0570A1;
+}
+.frontpage h3.subtitle {
+    color: #0570A1;
+    margin: 70px auto;
+}
+.frontpage h4.why {
+    color: #777;
+}
+
+
+.frontpage-explainer h3 {
+    text-align: left;
+    color: #0570A1;
+}
+.frontpage-explainer .arrow {
+    display: inline-block;
+    font-size: 1em;
+    font.weight: 900;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+@media (max-width: 760px) {
+  .frontpage-explainer p {
+    font-size: 13px;
+}
+}
+.frontpage  > div > .field--name-body {
+  padding: 3vw;
+  background: #eee;
 }

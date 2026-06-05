@@ -88,7 +88,7 @@
   overflow: visible;
 
   background: #fff;
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 5px 15px 15px 15px;
   margin: 0 0 1rem 0;
 
@@ -172,26 +172,6 @@
 
 
 
-/* ========== Tags in Teaser ========== */
-
-.node--view-mode-teaser .field--name-field-defaults-tags.field__items {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 0.5rem;
-  row-gap: 0.38rem; /* set to 0 if you want no extra vertical spacing */
-}
-
-/* keep items from adding their own margins that would break the rhythm */
-.node--view-mode-teaser .field--name-field-defaults-tags.field__items > .field__item {
-  margin: 0;
-}
-
-/* responsive: back to 1 column */
-@media (max-width: 700px) {
-  .node--view-mode-teaser .field--name-field-defaults-tags.field__items {
-    grid-template-columns: 1fr;
-  }
-}
 
 
 

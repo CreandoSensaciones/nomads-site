@@ -63,14 +63,18 @@
     if (raw.indexOf('[subform][title]') !== -1) {
       return 'title';
     }
-    return null;
+    match = raw.match(/^([a-z0-9_]+)(?:\[|$)/i);
+    return match ? match[1] : null;
   }
 
   function isExcludedDataFieldName(fieldName) {
     return fieldName === 'title' ||
       fieldName === 'field_title' ||
       fieldName === 'field_description' ||
-      fieldName === 'field_images';
+      fieldName === 'field_images' ||
+      fieldName.indexOf('description') !== -1 ||
+      fieldName.indexOf('image') !== -1 ||
+      fieldName.indexOf('media') !== -1;
   }
 
   function isSpecialCategorySelectValueControl(control) {
@@ -120,7 +124,10 @@
       return [];
     }
     return Array.prototype.slice.call(
-      wrapper.querySelectorAll('input[type="radio"][name*="[field_relevance]"]:not([name*="field_relevance2"])')
+      wrapper.querySelectorAll([
+        'input[type="radio"][name*="[field_relevance]"]:not([name*="field_relevance2"])',
+        'input[type="radio"][name="field_relevance"]'
+      ].join(', '))
     );
   }
 
@@ -129,7 +136,10 @@
       return [];
     }
     return Array.prototype.slice.call(
-      wrapper.querySelectorAll('input[type="radio"][name*="[field_relevance2]"]')
+      wrapper.querySelectorAll([
+        'input[type="radio"][name*="[field_relevance2]"]',
+        'input[type="radio"][name="field_relevance2"]'
+      ].join(', '))
     );
   }
 
@@ -139,6 +149,28 @@
       return radio.checked;
     });
     return checked ? parseIntSafe(checked.value, 0) : 0;
+  }
+
+  function getEffectiveValue(wrapper) {
+    var radios = getEffectiveRadios(wrapper);
+    var checked = radios.find(function (radio) {
+      return radio.checked;
+    });
+    return checked ? parseIntSafe(checked.value, 0) : 0;
+  }
+
+  function isDirectParagraphFormWrapper(wrapper) {
+    if (!wrapper || !wrapper.querySelector) {
+      return false;
+    }
+    return !!wrapper.querySelector('input[type="radio"][name="field_relevance"]');
+  }
+
+  function ensureInitialEffectiveValue(wrapper) {
+    if (!wrapper || !wrapper.dataset || typeof wrapper.dataset.paragraphRelevanceInitialEffective !== 'undefined') {
+      return;
+    }
+    wrapper.dataset.paragraphRelevanceInitialEffective = String(getEffectiveValue(wrapper));
   }
 
   function findParagraphSubform(wrapper) {
@@ -175,6 +207,9 @@
       return [];
     }
     var selectors = [
+      'input[name="field_title"]:not([type="hidden"])',
+      'textarea[name="field_title"]',
+      'input[name="title"]:not([type="hidden"])',
       'input[name*="[field_title]"]:not([type="hidden"])',
       'textarea[name*="[field_title]"]',
       'input[name*="[title]"]:not([name*="[field_relevance]"]):not([type="hidden"])'
@@ -193,7 +228,9 @@
       return null;
     }
     return findFieldContainerByName(subform, 'field_description') ||
+      subform.querySelector('.field[class*="field--name-"][class*="-description"]') ||
       subform.querySelector('[data-drupal-selector*="-field-description-"]') ||
+      subform.querySelector('[data-drupal-selector*="-description-"]') ||
       subform.querySelector('.field--name-field-description');
   }
 
@@ -211,7 +248,7 @@
       });
 
       if (!texts.length) {
-        container.querySelectorAll('textarea[name*="[field_description]"]').forEach(function (ta) {
+        container.querySelectorAll('textarea[name*="description"]').forEach(function (ta) {
           var txt = stripHtml(ta.value);
           if (txt) {
             texts.push(txt);
@@ -220,7 +257,7 @@
       }
 
       if (!texts.length) {
-        container.querySelectorAll('input[type="hidden"][name*="[field_description]"][name$="[value]"]').forEach(function (input) {
+        container.querySelectorAll('input[type="hidden"][name*="description"][name$="[value]"]').forEach(function (input) {
           var txt = stripHtml(input.value);
           if (txt) {
             texts.push(txt);
@@ -237,7 +274,13 @@
       return null;
     }
     return findFieldContainerByName(subform, 'field_images') ||
+      subform.querySelector('.field[class*="field--name-"][class*="-images"]') ||
+      subform.querySelector('.field[class*="field--name-"][class*="-image"]') ||
+      subform.querySelector('.field[class*="field--name-"][class*="-media"]') ||
       subform.querySelector('[data-drupal-selector*="-field-images-"]') ||
+      subform.querySelector('[data-drupal-selector*="-images-"]') ||
+      subform.querySelector('[data-drupal-selector*="-image-"]') ||
+      subform.querySelector('[data-drupal-selector*="-media-"]') ||
       subform.querySelector('.field--name-field-images');
   }
 
@@ -384,6 +427,7 @@
   function buildOptionMaps(wrapper) {
     var effectiveField = wrapper.querySelector('.field--name-field-relevance2') ||
       wrapper.querySelector('[data-drupal-selector$="subform-field-relevance2"]') ||
+      wrapper.querySelector('[data-drupal-selector$="field-relevance2"]') ||
       wrapper.querySelector('[id*="subform-field-relevance2"]');
     var effectiveOptions = Object.create(null);
     var tooltipMap = Object.create(null);
@@ -394,12 +438,19 @@
           return;
         }
         var optionEl = label.closest('.pretty-element');
-        var radio = optionEl ? optionEl.querySelector('input[type="radio"][name*="[field_relevance2]"]') : null;
+        var radio = optionEl ? optionEl.querySelector([
+          'input[type="radio"][name*="[field_relevance2]"]',
+          'input[type="radio"][name="field_relevance2"]'
+        ].join(', ')) : null;
         if (!radio || !label) {
           return;
         }
         if (!label.dataset.paragraphRelevanceOriginalLabel) {
-          label.dataset.paragraphRelevanceOriginalLabel = compactText(label.textContent);
+          var labelText = compactText(label.textContent);
+          var tooltipText = compactText(label.getAttribute('data-tooltip') || label.getAttribute('title') || '');
+          label.dataset.paragraphRelevanceOriginalLabel = tooltipText && labelText.indexOf(LABEL_DELIMITER) === -1
+            ? labelText + LABEL_DELIMITER + tooltipText
+            : labelText;
         }
         var parsed = parseLabelWithTooltip(label.dataset.paragraphRelevanceOriginalLabel);
         if (parsed.tooltip && parsed.label) {
@@ -464,6 +515,8 @@
   }
 
   function computeState(wrapper) {
+    ensureInitialEffectiveValue(wrapper);
+
     var subform = findParagraphSubform(wrapper);
     var desired = getDesiredValue(wrapper);
     var titleElements = findTitleElements(subform);
@@ -479,20 +532,19 @@
     var filledFieldNames = getFilledFieldNames(subform);
     var filledDataCount = filledFieldNames.length;
 
-    var allGroups = collectDataFieldGroups(subform);
-    var totalDataFields = Object.keys(allGroups).length;
-    var oneThirdThreshold = Math.ceil(totalDataFields / 3);
-    var oneThirdRule = filledDataCount >= oneThirdThreshold;
-
     var computed = 0;
-    if (titleFilled && descriptionLength >= 500 && imageCount >= 5 && filledDataCount >= 2 && oneThirdRule) {
+    if (titleFilled && filledDataCount >= 2 && descriptionLength >= 500 && imageCount >= 5) {
       computed = 3;
     }
-    else if (titleFilled && descriptionFilled && filledDataCount >= 2 && oneThirdRule) {
+    else if (titleFilled && filledDataCount >= 2 && descriptionFilled) {
       computed = 2;
     }
-    else if (titleFilled && filledDataCount >= 3) {
+    else if (titleFilled && filledDataCount >= 2) {
       computed = 1;
+    }
+
+    if (isDirectParagraphFormWrapper(wrapper)) {
+      computed = Math.max(computed, parseIntSafe(wrapper.dataset.paragraphRelevanceInitialEffective, 0));
     }
 
     return {
@@ -503,11 +555,8 @@
       descriptionFilled: descriptionFilled,
       descriptionLength: descriptionLength,
       imageCount: imageCount,
-      totalDataFields: totalDataFields,
       filledDataCount: filledDataCount,
       filledFieldNames: filledFieldNames,
-      oneThirdRule: oneThirdRule,
-      oneThirdThreshold: oneThirdThreshold,
       subform: subform
     };
   }

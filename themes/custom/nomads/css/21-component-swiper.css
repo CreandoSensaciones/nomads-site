@@ -1,0 +1,111 @@
+
+
+/* =========== Subdomain slideshow arrows ============ */
+
+/* Swiper arrows as bold white circles */
+.swiper-container {
+  position: relative;
+}
+
+.swiper-button-prev,
+.swiper-button-next {
+  width: 32px;
+  height: 32px;
+  margin-top: -16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.28);
+  border: 3px solid rgba(255,255,255,0.95);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.swiper-button-prev:hover,
+.swiper-button-next:hover {
+  transform: scale(1.08);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+}
+
+.swiper-button-prev::after,
+.swiper-button-next::after {
+  font-size: 16px;
+  font-weight: 900;
+  color: #000;
+}
+
+.swiper-button-prev {
+  left: 10px;
+}
+
+.swiper-button-next {
+  right: 10px;
+}
+
+.swiper-button-disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* optional: vertically center better if autoheight jumps */
+.swiper-button-prev,
+.swiper-button-next {
+  top: 50%;
+}
+/* 
+.subdomain-slideshow .swiper-slide {
+  width: 400px;
+  max-width: 80%;
+  margin: 0 15px;
+} */
+
+
+
+
+
+/* image / slider area */
+.timeline .paragraph--type--story > .swiper-container,
+.timeline .paragraph--type--story [id^="paragraph-story-"][id$="-field-images"] {
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.10);
+}
+
+/* slides */
+.timeline .paragraph--type--story .swiper-slide {
+  overflow: hidden;
+}
+
+.timeline .paragraph--type--story .swiper-slide picture,
+.timeline .paragraph--type--story .swiper-slide a,
+.timeline .paragraph--type--story .swiper-slide img {
+  display: block;
+  width: 100%;
+}
+
+.timeline .paragraph--type--story .swiper-slide img {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  height: auto;
+}
+
+/* swiper controls, calmer */
+.timeline .paragraph--type--story .swiper-pagination {
+  bottom: 10px !important;
+}
+
+.timeline .paragraph--type--story .swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+}
+
+.timeline .paragraph--type--story .swiper-button-prev,
+.timeline .paragraph--type--story .swiper-button-next {
+  width: 40px;
+  height: 40px;
+  margin-top: -20px;
+}
+
+.timeline .paragraph--type--story .swiper-button-prev::after,
+.timeline .paragraph--type--story .swiper-button-next::after {
+  font-size: 18px;
+  font-weight: 700;
+}

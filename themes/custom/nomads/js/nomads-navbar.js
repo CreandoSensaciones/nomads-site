@@ -15,6 +15,7 @@
       var dropdownOffset = 8;
       var positionedDropdownIds = new Set(["nomads-mainmenu", "nomads-accountmenu"]);
       var rafId = null;
+      var mobileSearchOpenClass = "nomads-mobile-search-open";
 
       var closeDropdown = function (button, dropdown) {
         dropdown.hidden = true;
@@ -102,6 +103,210 @@
           }
         });
       };
+
+      once("nomads-navbar-search", "[data-nomads-navbar-search]", context).forEach(function (form) {
+        var input = form.querySelector(".nomads-navbar__search-input");
+        var results = form.querySelector(".nomads-navbar__search-results");
+        var controller = null;
+        var selectedIndex = -1;
+        var currentItems = [];
+
+        if (!input || !results) {
+          return;
+        }
+
+        var isNavigationPath = function (path) {
+          return path === "/list" || path.indexOf("/list/") === 0 ||
+            path === "/map" || path.indexOf("/map/") === 0 ||
+            path === "/cal" || path.indexOf("/cal/") === 0;
+        };
+
+        var parseIds = function (value) {
+          return String(value || "")
+            .split(/[~,]/)
+            .map(function (id) {
+              return id.trim();
+            })
+            .filter(function (id, index, ids) {
+              return id && /^\d+$/.test(id) && ids.indexOf(id) === index;
+            });
+        };
+
+        var applyTerm = function (item) {
+          var targetPath = isNavigationPath(window.location.pathname) ? window.location.pathname : "/list";
+          var url = new URL(targetPath, window.location.origin);
+
+          if (isNavigationPath(window.location.pathname)) {
+            url.search = window.location.search;
+          }
+
+          if (item.vocabulary === "cit_countries_information") {
+            url.searchParams.set("geo", String(item.id));
+          }
+          else if (item.vocabulary === "t") {
+            var ids = parseIds(url.searchParams.get("tags"));
+            var itemId = String(item.id);
+            var siblingIds = (item.sibling_ids || []).map(function (id) {
+              return String(id);
+            });
+
+            if (siblingIds.length) {
+              ids = ids.filter(function (id) {
+                return siblingIds.indexOf(id) === -1;
+              });
+            }
+
+            if (ids.indexOf(itemId) === -1) {
+              ids.push(itemId);
+            }
+            url.searchParams.set("tags", ids.join("~"));
+          }
+
+          window.location.assign(url.toString());
+        };
+
+        var clearResults = function () {
+          results.hidden = true;
+          results.replaceChildren();
+          selectedIndex = -1;
+          currentItems = [];
+        };
+
+        var highlightResult = function () {
+          results.querySelectorAll("button").forEach(function (button, index) {
+            button.classList.toggle("is-active", index === selectedIndex);
+          });
+        };
+
+        var renderResults = function (items) {
+          clearResults();
+          currentItems = items;
+
+          if (!items.length) {
+            return;
+          }
+
+          items.forEach(function (item) {
+            var button = document.createElement("button");
+            button.type = "button";
+            button.className = "nomads-navbar__search-result";
+            button.textContent = item.label;
+            button.setAttribute("data-vocabulary", item.vocabulary);
+            button.addEventListener("click", function () {
+              applyTerm(item);
+            });
+            results.appendChild(button);
+          });
+
+          results.hidden = false;
+        };
+
+        var fetchResults = function () {
+          var query = input.value.trim();
+          if (query.length < 4) {
+            clearResults();
+            return;
+          }
+
+          if (controller) {
+            controller.abort();
+          }
+
+          controller = new AbortController();
+          fetch("/nomads-navigation/navbar-term-search?q=" + encodeURIComponent(query), {
+            signal: controller.signal,
+            headers: {
+              "Accept": "application/json"
+            }
+          })
+            .then(function (response) {
+              if (!response.ok) {
+                throw new Error("Search request failed");
+              }
+              return response.json();
+            })
+            .then(renderResults)
+            .catch(function (error) {
+              if (error.name !== "AbortError") {
+                clearResults();
+              }
+            });
+        };
+
+        input.addEventListener("input", fetchResults);
+
+        input.addEventListener("keydown", function (event) {
+          if (results.hidden || !currentItems.length) {
+            return;
+          }
+
+          if (event.key === "ArrowDown") {
+            event.preventDefault();
+            selectedIndex = Math.min(selectedIndex + 1, currentItems.length - 1);
+            highlightResult();
+          }
+          else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            selectedIndex = Math.max(selectedIndex - 1, 0);
+            highlightResult();
+          }
+          else if (event.key === "Enter") {
+            event.preventDefault();
+            applyTerm(currentItems[selectedIndex >= 0 ? selectedIndex : 0]);
+          }
+          else if (event.key === "Escape") {
+            clearResults();
+          }
+        });
+
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+          if (currentItems.length) {
+            applyTerm(currentItems[selectedIndex >= 0 ? selectedIndex : 0]);
+          }
+        });
+
+        document.addEventListener("click", function (event) {
+          if (!form.contains(event.target)) {
+            clearResults();
+          }
+        });
+      });
+
+      once("nomads-mobile-search-toggle", "[data-nomads-mobile-search-toggle]", context).forEach(function (toggle) {
+        var search = document.querySelector("[data-nomads-navbar-search]");
+        var input = search ? search.querySelector(".nomads-navbar__search-input") : null;
+
+        var setMobileSearchOpen = function (isOpen) {
+          document.body.classList.toggle(mobileSearchOpenClass, isOpen);
+          toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+
+          if (isOpen && input) {
+            window.setTimeout(function () {
+              input.focus();
+            }, 180);
+          }
+        };
+
+        toggle.addEventListener("click", function (event) {
+          event.preventDefault();
+          event.stopPropagation();
+          setMobileSearchOpen(!document.body.classList.contains(mobileSearchOpenClass));
+        });
+
+        document.addEventListener("keydown", function (event) {
+          if (event.key === "Escape" && document.body.classList.contains(mobileSearchOpenClass)) {
+            setMobileSearchOpen(false);
+            toggle.focus();
+          }
+        });
+
+        window.addEventListener("resize", function () {
+          if (window.matchMedia("(min-width: 981px)").matches) {
+            setMobileSearchOpen(false);
+          }
+        });
+      });
 
       buttons.forEach(function (button) {
         var targetId = button.getAttribute("aria-controls");

@@ -4,3 +4,41 @@
  * @file
  * Special Category Select module.
  */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function special_category_select_help($route_name, RouteMatchInterface $route_match): ?string {
+  if ($route_name !== 'help.page.special_category_select') {
+    return NULL;
+  }
+
+  return '<h2>' . t('Special Category Select') . '</h2>'
+    . '<p>' . t('Special Category Select provides a taxonomy term reference widget with a two-column category tree and ordered selected-list interface. It is designed for listing category workflows where editors need to browse a hierarchy, select multiple terms, and preserve a meaningful order.') . '</p>'
+    . '<h3>' . t('Functionality') . '</h3>'
+    . '<ul>'
+    . '<li>' . t('Adds the “Special Category select” widget for entity reference fields that target taxonomy terms.') . '</li>'
+    . '<li>' . t('Renders configured vocabularies as expandable taxonomy trees with a separate selected categories column.') . '</li>'
+    . '<li>' . t('Can restrict selection to leaf terms only, while still showing parent terms as tree structure.') . '</li>'
+    . '<li>' . t('Can make the selected list sortable so submitted target IDs preserve editor-defined order.') . '</li>'
+    . '<li>' . t('Writes selected term IDs into ordered hidden target_id inputs and a helper _cf_values input used by Conditional Fields state matching.') . '</li>'
+    . '<li>' . t('Displays per-term tooltip text from a taxonomy term field named field_tooltip when that field exists.') . '</li>'
+    . '</ul>'
+    . '<h3>' . t('Architecture') . '</h3>'
+    . '<p>' . t('The field widget plugin builds the taxonomy tree, selected-list markup, hidden inputs, widget settings, input normalization, and validation handling. The attached JavaScript manages tree expansion, selecting and removing terms, drag ordering, max-selection state, and synchronization of hidden inputs after each UI change. A Conditional Fields handler points dependency checks at the widget’s _cf_values hidden input. The library also depends on Term Reference Tree styling and uses jQuery for tree toggle animation.') . '</p>'
+    . '<h3>' . t('Configuration') . '</h3>'
+    . '<p>' . t('Configure the widget on an entity reference field’s Manage form display page by selecting “Special Category select”. Widget settings include Leaves only, Sortable selected list, Tree column label, and Selected column label. The taxonomy vocabularies come from the field’s target bundle settings; if no target bundles are configured, the widget can load all vocabularies. Field cardinality is used as the client-side maximum selection limit.') . '</p>'
+    . '<h3>' . t('Stability considerations') . '</h3>'
+    . '<ul>'
+    . '<li>' . t('The widget supports taxonomy term references only. Using it on another entity reference target type will render a warning instead of the tree UI.') . '</li>'
+    . '<li>' . t('The JavaScript depends on the generated class names, data attributes, hidden input names, and Term Reference Tree markup conventions.') . '</li>'
+    . '<li>' . t('Tooltip support is hardcoded to a term field named field_tooltip; renaming or removing that field removes the tooltip enhancement.') . '</li>'
+    . '<li>' . t('The tree and selected list are built as generated markup, so markup changes should be reviewed carefully against the JavaScript selectors and Conditional Fields selector logic.') . '</li>'
+    . '<li>' . t('Client-side max-selection and leaves-only behavior are part of the editor UI. Field cardinality is still enforced by Drupal, but custom UX assumptions should be verified during submit handling.') . '</li>'
+    . '<li>' . t('Input normalization has unit test coverage, but ordering persistence, tree interaction, tooltip display, and Conditional Fields behavior still need browser or functional coverage.') . '</li>'
+    . '</ul>'
+    . '<h3>' . t('Security considerations') . '</h3>'
+    . '<p>' . t('The module escapes taxonomy labels and tooltip text before writing generated markup and stores submitted values as term IDs in normal field input structures. It does not bypass entity access, field access, or Field API validation. Because hidden inputs are client-controlled, server-side constraints and entity reference validation remain the authority for which terms may be saved. Conditional Fields integration should be treated as form presentation logic, not as an access-control mechanism.') . '</p>';
+}

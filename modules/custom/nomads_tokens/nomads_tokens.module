@@ -1,0 +1,203 @@
+<?php
+
+declare(strict_types=1);
+
+use Drupal\Core\Block\BlockPluginInterface;
+use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * @file
+ * Provides Nomads tokens and resolves them in menu labels.
+ */
+
+/**
+ * Implements hook_help().
+ */
+function nomads_tokens_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_tokens':
+      $output = '';
+      $output .= '<h2>' . t('Nomads Tokens') . '</h2>';
+      $output .= '<p>' . t('Nomads Tokens provides small site-context tokens based on the current request host. It is mainly used to make menu labels adapt to the active domain or subdomain.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Defines the <code>nomads</code> token type for Nomads site values.') . '</li>';
+      $output .= '<li>' . t('Provides <code>[nomads:domain]</code>, the current request host without scheme or port.') . '</li>';
+      $output .= '<li>' . t('Provides <code>[nomads:subdomain-label]</code>, the first segment of the current host.') . '</li>';
+      $output .= '<li>' . t('Provides <code>[nomads:subdomain-label-cap]</code>, the same first host segment with an initial capital.') . '</li>';
+      $output .= '<li>' . t('Adds the <code>url.site</code> cache context when replacing tokens through the Token API.') . '</li>';
+      $output .= '<li>' . t('Manually replaces raw <code>[nomads:*]</code> strings in system menu block item titles and menu template variables.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The module implements <code>hook_token_info()</code> and <code>hook_tokens()</code> for token-aware text. Because menu item labels are not always processed through the Token API, it also alters rendered system menu blocks and preprocesses menu variables to recursively replace known <code>[nomads:*]</code> strings in menu titles. Token values are derived from the current request host through the request stack.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('There is no settings form. Use <code>[nomads:domain]</code>, <code>[nomads:subdomain-label]</code>, or <code>[nomads:subdomain-label-cap]</code> in token-aware text or directly in menu link titles. Menu output varies by active host, so caches must keep the <code>url.site</code> context.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('The subdomain label is always the first host segment, so apex domains, aliases, local development hosts, or multi-level public suffixes may produce unexpected labels.') . '</li>';
+      $output .= '<li>' . t('Manual menu replacement only knows exact raw strings in the form <code>[nomads:name]</code>; nested token syntax or token options are not processed there.') . '</li>';
+      $output .= '<li>' . t('Menu preprocess replacement does not itself add cache context; the system menu block alter does, but other menu render paths should be reviewed if output is reused across domains.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for Token API replacements, menu title replacement, recursion through child menu items, or host/cache context behavior.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('Token values come from the current request host. Drupal’s trusted host settings and reverse proxy configuration should be correct so user-controlled Host headers cannot influence rendered labels unexpectedly. The module only changes displayed text and menu labels; it does not grant access, change routing, or validate domain ownership.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
+
+/**
+ * Implements hook_token_info().
+ */
+function nomads_tokens_token_info(): array {
+  return [
+    'types' => [
+      'nomads' => [
+        'name' => t('Nomads'),
+        'description' => t('Tokens for Nomads site values.'),
+      ],
+    ],
+    'tokens' => [
+      'nomads' => [
+        'domain' => [
+          'name' => t('Domain'),
+          'description' => t('The Nomads site domain.'),
+        ],
+        'subdomain-label' => [
+          'name' => t('Subdomain label'),
+          'description' => t('The Nomads site subdomain label.'),
+        ],
+        'subdomain-label-cap' => [
+          'name' => t('Capitalized subdomain label'),
+          'description' => t('The Nomads site subdomain label with an initial capital.'),
+        ],
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function nomads_tokens_tokens(string $type, array $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata): array {
+  if ($type !== 'nomads') {
+    return [];
+  }
+
+  $bubbleable_metadata->addCacheContexts(['url.site']);
+  $values = nomads_tokens_values();
+
+  $replacements = [];
+  foreach ($tokens as $name => $original) {
+    if (isset($values[$name])) {
+      $replacements[$original] = $values[$name];
+    }
+  }
+
+  return $replacements;
+}
+
+/**
+ * Implements hook_block_view_BASE_BLOCK_ID_alter() for 'system_menu_block'.
+ */
+function nomads_tokens_block_view_system_menu_block_alter(array &$build, BlockPluginInterface $block): void {
+  if (empty($build['#items']) || !is_array($build['#items'])) {
+    return;
+  }
+
+  if (nomads_tokens_replace_menu_item_titles($build['#items'], nomads_tokens_menu_replacements())) {
+    $build['#cache']['contexts'][] = 'url.site';
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for menu.html.twig.
+ */
+function nomads_tokens_preprocess_menu(array &$variables): void {
+  if (empty($variables['items']) || !is_array($variables['items'])) {
+    return;
+  }
+
+  nomads_tokens_replace_menu_item_titles($variables['items'], nomads_tokens_menu_replacements());
+}
+
+/**
+ * Replaces Nomads tokens in a menu tree.
+ *
+ * @return bool
+ *   TRUE if any menu item title was changed.
+ */
+function nomads_tokens_replace_menu_item_titles(array &$items, array $replacements): bool {
+  $changed = FALSE;
+
+  foreach ($items as &$item) {
+    if (isset($item['title'])) {
+      $title = (string) $item['title'];
+      if (str_contains($title, '[nomads:')) {
+        $item['title'] = strtr($title, $replacements);
+        $changed = $changed || $item['title'] !== $title;
+      }
+    }
+
+    if (!empty($item['below']) && is_array($item['below'])) {
+      $changed = nomads_tokens_replace_menu_item_titles($item['below'], $replacements) || $changed;
+    }
+  }
+
+  return $changed;
+}
+
+/**
+ * Returns the current request's Nomads token values keyed by token name.
+ */
+function nomads_tokens_values(): array {
+  $domain = nomads_tokens_current_domain();
+  $label = nomads_tokens_subdomain_label($domain);
+
+  return [
+    'domain' => $domain,
+    'subdomain-label' => $label,
+    'subdomain-label-cap' => ucfirst($label),
+  ];
+}
+
+/**
+ * Returns static replacements for raw Nomads menu label tokens.
+ */
+function nomads_tokens_menu_replacements(): array {
+  $replacements = [];
+  foreach (nomads_tokens_values() as $name => $value) {
+    $replacements['[nomads:' . $name . ']'] = $value;
+  }
+
+  return $replacements;
+}
+
+/**
+ * Returns the current request host without scheme or port.
+ */
+function nomads_tokens_current_domain(): string {
+  $request = \Drupal::requestStack()->getCurrentRequest();
+  if ($request === NULL) {
+    return '';
+  }
+
+  return $request->getHost();
+}
+
+/**
+ * Returns the first host segment as the subdomain label.
+ */
+function nomads_tokens_subdomain_label(string $domain): string {
+  $host_parts = explode('.', $domain);
+
+  return $host_parts[0] ?? '';
+}

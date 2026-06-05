@@ -37,33 +37,26 @@ function nomads_preprocess_page(array &$variables): void {
   $parameters = (new \Drupal\Core\Menu\MenuTreeParameters())
     ->setMaxDepth(1);
   $current_query = $request->query->all();
+  $domain_menu_query = $current_query;
+  unset($domain_menu_query['t']);
   $domain_target_path = _nomads_domain_menu_target_path($request_path);
 
   $main_tree = $menu_tree->load('main', $parameters);
   $main_tree = $menu_tree->transform(
     $main_tree,
-    [
-      ['callable' => 'menu.default_tree_manipulators:checkAccess'],
-      ['callable' => 'menu.default_tree_manipulators:generateIndexAndSort'],
-    ]
+    _nomads_menu_tree_manipulators('main')
   );
 
   $account_tree = $menu_tree->load('account', $parameters);
   $account_tree = $menu_tree->transform(
     $account_tree,
-    [
-      ['callable' => 'menu.default_tree_manipulators:checkAccess'],
-      ['callable' => 'menu.default_tree_manipulators:generateIndexAndSort'],
-    ]
+    _nomads_menu_tree_manipulators('account')
   );
 
   $domains_tree = $menu_tree->load('domains', $parameters);
   $domains_tree = $menu_tree->transform(
     $domains_tree,
-    [
-      ['callable' => 'menu.default_tree_manipulators:checkAccess'],
-      ['callable' => 'menu.default_tree_manipulators:generateIndexAndSort'],
-    ]
+    _nomads_menu_tree_manipulators('domains')
   );
 
   $domains = [];
@@ -72,7 +65,7 @@ function nomads_preprocess_page(array &$variables): void {
     $url = $link->getUrlObject();
     $domains[] = [
       'title' => $link->getTitle(),
-      'url' => _nomads_rewrite_domain_menu_url($url, $domain_target_path, $current_query),
+      'url' => _nomads_rewrite_domain_menu_url($url, $domain_target_path, $domain_menu_query),
     ];
   }
 
@@ -82,6 +75,26 @@ function nomads_preprocess_page(array &$variables): void {
   $variables['nomads_current_path'] = $current_path;
   $variables['nomads_domain_prefix'] = _nomads_domain_prefix($request->getHost());
   $variables['#cache']['contexts'][] = 'url.site';
+}
+
+/**
+ * Returns menu tree manipulators for custom navbar menu rendering.
+ */
+function _nomads_menu_tree_manipulators(string $menu_name): array {
+  $manipulators = [
+    ['callable' => 'menu.default_tree_manipulators:checkAccess'],
+  ];
+
+  if (\Drupal::moduleHandler()->moduleExists('domain_menu_access')) {
+    $domain_menu_enabled = \Drupal::config('domain_menu_access.settings')->get('menu_enabled') ?: [];
+    if (in_array($menu_name, $domain_menu_enabled, TRUE)) {
+      $manipulators[] = ['callable' => 'domain_menu_access.default_tree_manipulators:checkDomain'];
+    }
+  }
+
+  $manipulators[] = ['callable' => 'menu.default_tree_manipulators:generateIndexAndSort'];
+
+  return $manipulators;
 }
 
 /**

@@ -1,0 +1,55 @@
+<?php
+
+/**
+ * @file
+ * Help hooks for Nomads Easy Tagging.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_easy_tagging_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_easy_tagging':
+      $output = '';
+      $output .= '<h2>' . t('Easy Tagging') . '</h2>';
+      $output .= '<p>' . t('Easy Tagging provides a card-based taxonomy term reference widget for Nomads tagging fields. It is designed for large taxonomy sets where editors need visual grouping, branch navigation, selection limits, and live incompatibility feedback.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Provides the <code>nomads_easy_tagging_master</code> field widget for taxonomy term entity reference fields.') . '</li>';
+      $output .= '<li>' . t('Renders terms as selectable cards, grouped by vocabulary or top-level taxonomy branches.') . '</li>';
+      $output .= '<li>' . t('Supports category-label branches, initially hidden sections, branch replacement, branch opening, and ignored child branches through term machine-name settings.') . '</li>';
+      $output .= '<li>' . t('Stores selected term IDs in a hidden <code>_net_values</code> input and normalizes them back into entity reference field values on submit.') . '</li>';
+      $output .= '<li>' . t('Provides Ajax endpoints for loading child terms and computing blocked terms from current selections.') . '</li>';
+      $output .= '<li>' . t('Integrates with <code>nomads_term_dependees</code> and provides a Conditional Fields handler for dependency states based on Easy Tagging selections.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Taxonomy data') . '</h3>';
+      $output .= '<p>' . t('The widget behavior is driven by term fields when they exist. <code>field_settings</code>, <code>field_easy_tagging_settings</code>, or <code>field_easy_tagging_behavior</code> provide machine-name settings such as <code>category_label</code>, <code>shows_initially</code>, <code>branch_replace</code>, <code>branch_open</code>, and <code>limit_1_child</code> through <code>limit_3_child</code>. <code>field_children_limit</code> is used as a fallback limit. <code>field_no_combine</code> and the Nomads term dependees map provide incompatible-term constraints. <code>field_ui_explainer</code> provides card help text, and <code>field_icons</code> provides icon media, preferring onboarding, then default, then the first available icon variant.') . '</p>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The widget class builds the initial card sections, hidden value input, endpoint URLs, and data attributes used by JavaScript. The <code>nomads_easy_tagging.constraint_resolver</code> service loads published taxonomy terms, resolves branch settings, selects icon URLs, caches child and descendant lookups per language, and computes blocked terms from selected unified and type terms. The controller exposes <code>/nomads-easy-tagging/children/{parent_tid}</code> and <code>/nomads-easy-tagging/constraints</code> for browser-side interaction.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Configure the widget from Manage form display by selecting <em>Easy Tagging</em> on a taxonomy term reference field. The widget uses the field’s target vocabulary settings; when no target bundles are configured, it can fall back to all vocabularies. Most behavior is configured on taxonomy terms through the term fields listed above rather than through a module settings form.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('The widget relies on specific taxonomy term fields, but intentionally degrades when optional fields are missing.') . '</li>';
+      $output .= '<li>' . t('Most editor behavior is JavaScript-driven, including card selection, branch navigation, dynamic child loading, wizard modal behavior, and live constraint updates.') . '</li>';
+      $output .= '<li>' . t('Constraint behavior depends on the <code>nomads_term_dependees</code> constraint map and cross-field context from <code>field_type</code> when present.') . '</li>';
+      $output .= '<li>' . t('Children and descendant lookups are cached by parent term and language with taxonomy cache tags; constraint responses are intentionally not cached because they depend on live form state.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for widget submission normalization, Ajax endpoints, term setting semantics, icon variant selection, Conditional Fields integration, or JavaScript branch behavior.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('Endpoint access is limited to users who can administer taxonomy or create listing content. Submitted term IDs are normalized and filtered to published terms, but the widget is still an editor UI layer; entity field access, taxonomy access, and server-side validation remain responsible for protecting stored data. UI explainer markup is filtered to a small allowed tag set, labels and data attributes are escaped, and icon URLs come from managed media files. Because blocked-term rules are computed for the browser, do not treat client-side disabling as the only integrity control for critical data.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}

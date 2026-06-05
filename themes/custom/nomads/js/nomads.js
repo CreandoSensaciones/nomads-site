@@ -1,3 +1,4 @@
+
 (function (Drupal, once) {
   "use strict";
 
@@ -81,6 +82,45 @@
         selectWrap.hidden = false;
         tabsNav.hidden = true;
       });
+
+
+
+
+    once("landing-collapsed", context.querySelectorAll(".landing-collapsed")).forEach(function (content, index) {
+
+  var wrapper = content.parentElement;
+
+  // Create wrapper if not existing
+  if (!wrapper || !wrapper.classList.contains("landing-collapsed-wrap")) {
+    wrapper = document.createElement("div");
+    wrapper.className = "landing-collapsed-wrap";
+    content.parentNode.insertBefore(wrapper, content);
+    wrapper.appendChild(content);
+  }
+
+  // Create button if not existing
+  if (!wrapper.querySelector(".landing-collapsed-toggle")) {
+    var button = document.createElement("button");
+    button.className = "landing-collapsed-toggle";
+    button.type = "button";
+
+    var id = content.id || ("landing-collapsed-" + index);
+    content.id = id;
+
+    button.setAttribute("aria-controls", id);
+    button.setAttribute("aria-expanded", "false");
+    button.setAttribute("aria-label", Drupal.t("Expand text"));
+
+    wrapper.appendChild(button);
+
+    button.addEventListener("click", function () {
+      var isOpen = wrapper.classList.toggle("is-open");
+      button.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      button.setAttribute("aria-label", isOpen ? Drupal.t("Collapse text") : Drupal.t("Expand text"));
+    });
+  }
+
+});
     }
   };
 })(Drupal, once);

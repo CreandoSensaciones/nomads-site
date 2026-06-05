@@ -1,5 +1,0 @@
-services:
-  nomads_hosting_period_virtual_field.builder:
-    class: Drupal\nomads_hosting_period_virtual_field\HostingPeriodExtraFieldBuilder
-    arguments:
-      - '@string_translation'

@@ -1,0 +1,17 @@
+nomads_dashboards.user:
+  title: 'Dashboard'
+  route_name: nomads_dashboards.user
+  base_route: entity.user.canonical
+  weight: 5
+
+nomads_dashboards.team:
+  title: 'Team Dashboard'
+  route_name: nomads_dashboards.team
+  base_route: entity.user.canonical
+  weight: 6
+
+nomads_dashboards.node:
+  title: 'Dashboard'
+  route_name: nomads_dashboards.node
+  base_route: entity.node.canonical
+  weight: 5

@@ -1,0 +1,21 @@
+listings_moderation_widget:
+  css:
+    theme:
+      css/listings_moderation_widget.css: {}
+  js:
+    js/listings_moderation_widget.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/once
+
+term_tree_display:
+  css:
+    theme:
+      css/term_tree_display.css: {}
+      css/listing_tile_overlay.css: {}
+  js:
+    js/term_tree_display.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

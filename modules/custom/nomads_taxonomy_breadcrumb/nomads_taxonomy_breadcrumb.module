@@ -1,0 +1,53 @@
+<?php
+
+/**
+ * @file
+ * Help hooks for Nomads Taxonomy Breadcrumb.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_taxonomy_breadcrumb_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_taxonomy_breadcrumb':
+      $output = '';
+      $output .= '<h2>' . t('Nomads Taxonomy Breadcrumb') . '</h2>';
+      $output .= '<p>' . t('Nomads Taxonomy Breadcrumb provides a field formatter for taxonomy term reference fields. It renders each selected term with selected parent terms as a compact breadcrumb-style label.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Provides the <code>nomads_taxonomy_breadcrumb</code> formatter, shown as <em>Taxonomy breadcrumb</em>.') . '</li>';
+      $output .= '<li>' . t('Applies only to entity reference fields that target taxonomy terms.') . '</li>';
+      $output .= '<li>' . t('Walks upward through the selected term’s parent chain and includes only parents marked with a <code>tax_breadcrumb</code> setting.') . '</li>';
+      $output .= '<li>' . t('Supports both <code>field_setting</code> and <code>field_settings</code> as the parent term setting field.') . '</li>';
+      $output .= '<li>' . t('Can independently link the selected term and parent terms to their taxonomy term pages.') . '</li>';
+      $output .= '<li>' . t('Adds CSS classes from <code>field_type</code> values for terms in the <code>cit_countries_information</code> vocabulary.') . '</li>';
+      $output .= '<li>' . t('Adds taxonomy term cache tags to the rendered breadcrumb output.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The formatter is a Drupal 11 attribute-based <code>FieldFormatter</code> plugin with dependency injection for the entity type manager. It resolves each referenced taxonomy term, walks the single parent chain while guarding against cycles, filters eligible parents by normalized setting values, and builds one container render array per field item. Linked crumbs use Drupal link render arrays; unlinked crumbs use plain text.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Configure the formatter from an entity Manage display page. Settings are <code>link_term</code> and <code>link_parents</code>. To include a parent term in the breadcrumb, add a value equivalent to <code>tax_breadcrumb</code> in that parent term’s <code>field_setting</code> or <code>field_settings</code> field; spaces and hyphens are normalized to underscores during comparison.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('The formatter follows only the first referenced parent at each level, so multi-parent taxonomy structures are not represented fully.') . '</li>';
+      $output .= '<li>' . t('Breadcrumb inclusion depends on specific term fields and setting values; schema changes or renamed settings can silently remove parents from output.') . '</li>';
+      $output .= '<li>' . t('CSS type classes are hardcoded to terms in <code>cit_countries_information</code> with <code>field_type</code> values.') . '</li>';
+      $output .= '<li>' . t('Separators are plain <code> &gt; </code> text and there is no dedicated Twig template or library for theming.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for parent traversal, setting normalization, link settings, cycle protection, cache metadata, or multi-value fields.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('Term labels are rendered as plain text or through Drupal link render arrays, and generated CSS classes are cleaned with Drupal’s CSS identifier helper. The formatter does not enforce taxonomy term access beyond the normal field/entity rendering context. If linked term pages or parent labels should be hidden from some users, enforce that through field, entity, taxonomy term, or route access controls.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}

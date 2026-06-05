@@ -11,6 +11,7 @@ generator: 'starterkit_theme:11.2.8'
 regions:
   hero: Hero
   title: Title
+  navigation: Navigation
   content: Content
   bottom: Bottom
   footer: Footer

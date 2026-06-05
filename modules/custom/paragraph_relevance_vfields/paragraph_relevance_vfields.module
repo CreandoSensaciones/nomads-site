@@ -10,10 +10,57 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
 use Drupal\paragraphs\ParagraphInterface;
 use Drupal\taxonomy\TermInterface;
 use Drupal\views\Views;
+
+/**
+ * Implements hook_help().
+ */
+function paragraph_relevance_vfields_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.paragraph_relevance_vfields':
+      $output = '';
+      $output .= '<h2>' . t('Paragraph Relevance Virtual Fields') . '</h2>';
+      $output .= '<p>' . t('Paragraph Relevance Virtual Fields adds listing display extra fields that render relevance-filtered paragraphs and key-aspect summaries. It uses hostname-specific subsite taxonomy configuration to order key aspects and uses listing relevance summary fields to decide which paragraph bundles appear in each output section.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Registers listing node extra fields: <code>key_aspects</code>, <code>core_focus_paragraphs_3</code>, <code>relevant_paragraphs_2</code>, and <code>relevance_1_block</code>.') . '</li>';
+      $output .= '<li>' . t('Renders key aspects grouped by relevance levels 3, 2, and 1, with configurable labels, output styles, anchors, top label, item limit, and Crew/Audience filtering.') . '</li>';
+      $output .= '<li>' . t('Loads key-aspect ordering from a <code>subsites</code> taxonomy term matched by <code>field_hostname</code>, falling back to hostname <code>default</code>.') . '</li>';
+      $output .= '<li>' . t('Maps key aspect terms to paragraph bundles through <code>field_paragraph_bundle</code>, with label-based fallback normalization.') . '</li>';
+      $output .= '<li>' . t('Renders relevance 3 paragraphs in paragraph view mode <code>3</code> and relevance 2 paragraphs in view mode <code>2</code>, falling back to <code>default</code> when the display is missing.') . '</li>';
+      $output .= '<li>' . t('Builds the relevance 1 output by embedding the <code>relevance_paragraphs</code> View display <code>relevance1block</code> for the current listing.') . '</li>';
+      $output .= '<li>' . t('Includes an update hook that adds <code>field_relevance2</code> to paragraph bundles referenced by key aspect terms when the field storage exists.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The module declares extra display fields with <code>hook_entity_extra_field_info()</code> and injects render arrays during <code>hook_entity_view()</code>. It collects all paragraph references on a listing, groups them by paragraph bundle, reads listing summary fields named <code>field_{bundle}_relevance</code>, and builds sections in the order defined by the current host’s subsite key aspects. The <code>key_aspects</code> extra field has custom Manage display settings stored as third-party settings on the node listing view display.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Enable and position the virtual fields from the listing Manage display page. Use the cog settings on <code>key_aspects</code> to configure each relevance group’s label, output style (<code>icon</code>, <code>pill</code>, <code>label</code>, or <code>none</code>), anchor behavior, top label, max item count, and Crew/Audience filtering. Taxonomy configuration must provide <code>subsites.field_hostname</code>, <code>subsites.field_key_aspects</code>, and key aspect terms with <code>field_paragraph_bundle</code>. Listing fields must follow the <code>field_{bundle}_relevance</code> naming convention.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('The module is tightly coupled to listing nodes, paragraph bundles, <code>subsites</code> and key-aspect taxonomy fields, and <code>field_{bundle}_relevance</code> naming conventions.') . '</li>';
+      $output .= '<li>' . t('Hostname-based ordering depends on request host matching <code>field_hostname</code>; aliases, proxy configuration, local domains, or missing default terms can change output.') . '</li>';
+      $output .= '<li>' . t('Taxonomy lookups use <code>accessCheck(FALSE)</code> because they are display configuration lookups, so output assumes these taxonomy mappings are not sensitive.') . '</li>';
+      $output .= '<li>' . t('Key-aspect Manage display settings hook into Drupal’s field display multistep UI, which can be fragile across core UI changes.') . '</li>';
+      $output .= '<li>' . t('Anchor output targets <code>#bundle</code> IDs, which can collide when multiple page sections use the same paragraph bundle ID.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for hostname fallback, key-aspect ordering, display settings persistence, relevance filtering, View embedding, or update-hook field creation.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('These virtual fields render data from the current listing, referenced paragraphs, paragraph type icons, taxonomy mappings, and a configured View. They do not add access control and should not be used as a privacy boundary. Protect sensitive paragraphs and fields with normal node, paragraph, field, view-mode, and Views access. Hostname-derived subsite selection depends on correct trusted host and reverse proxy configuration.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
 
 /**
  * Implements hook_entity_extra_field_info().
@@ -33,13 +80,13 @@ function paragraph_relevance_vfields_entity_extra_field_info(): array {
           ],
           'core_focus_paragraphs_3' => [
             'label' => $t->translate('Core Focus Paragraphs (3)'),
-            'description' => $t->translate('Renders all Listing paragraphs whose field_relevance2 value is 3, using Paragraph view mode "3".'),
+            'description' => $t->translate('Renders all Listing paragraphs from bundles whose listing field_<bundle>_relevance value is 3, using Paragraph view mode "3".'),
             'weight' => 0,
             'visible' => FALSE,
           ],
           'relevant_paragraphs_2' => [
             'label' => $t->translate('Relevant Paragraphs (2)'),
-            'description' => $t->translate('Renders all Listing paragraphs whose field_relevance2 value is 2, using Paragraph view mode "2".'),
+            'description' => $t->translate('Renders all Listing paragraphs from bundles whose listing field_<bundle>_relevance value is 2, using Paragraph view mode "2".'),
             'weight' => 1,
             'visible' => FALSE,
           ],
@@ -113,6 +160,34 @@ function paragraph_relevance_vfields_build(EntityInterface $listing, int $target
   /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $etm */
   $etm = \Drupal::entityTypeManager();
   $paragraph_view_builder = $etm->getViewBuilder('paragraph');
+
+  if ($target_relevance === 2 || $target_relevance === 3) {
+    $build = [];
+    $delta = 0;
+
+    foreach ($sections as $section) {
+      $bundle = $section['bundle'];
+      $view_mode = paragraph_relevance_vfields_paragraph_view_mode($bundle, (string) $target_relevance);
+
+      foreach ($section['paragraphs'] as $paragraph) {
+        $paragraph_build = $paragraph_view_builder->view($paragraph, $view_mode);
+        $paragraph_build['#attributes']['class'][] = 'paragraph-bundle-' . Html::getClass($bundle);
+        if ($target_relevance === 2) {
+          $paragraph_build['#attributes']['class'][] = 'shadow-box';
+          $paragraph_build['#attributes']['class'][] = 'flexi-box';
+        }
+        else {
+          $paragraph_build['#attributes']['class'][] = 'shadow-box';
+          $paragraph_build['#attributes']['class'][] = 'full-width-box';
+        }
+        $build[$delta] = $paragraph_build;
+        $delta++;
+      }
+    }
+
+    $cacheability->applyTo($build);
+    return $build;
+  }
 
   $wrapper_suffix = $target_relevance === 3 ? 'core' : 'relevant';
   $build = [
@@ -343,28 +418,7 @@ function paragraph_relevance_vfields_group_paragraphs_by_bundle(array $paragraph
  */
 function paragraph_relevance_vfields_collect_key_aspect_sections(EntityInterface $listing, array $key_aspect_terms, int $target_relevance, CacheableMetadata $cacheability): array {
   $paragraphs = paragraph_relevance_vfields_collect_paragraphs($listing, $cacheability);
-  $all_paragraphs_by_bundle = paragraph_relevance_vfields_group_paragraphs_by_bundle($paragraphs);
-  $paragraphs_by_bundle = [];
-  $seen = [];
-
-  foreach ($paragraphs as $paragraph) {
-    $bundle = (string) $paragraph->bundle();
-    if ($bundle === '') {
-      continue;
-    }
-    $relevance_value = paragraph_relevance_vfields_extract_paragraph_relevance_value($paragraph);
-    if ($relevance_value !== $target_relevance) {
-      continue;
-    }
-    $id = $paragraph->id();
-    if ($id !== NULL && isset($seen[$bundle][$id])) {
-      continue;
-    }
-    if ($id !== NULL) {
-      $seen[$bundle][$id] = TRUE;
-    }
-    $paragraphs_by_bundle[$bundle][] = $paragraph;
-  }
+  $paragraphs_by_bundle = paragraph_relevance_vfields_group_paragraphs_by_bundle($paragraphs);
 
   $sections = [];
   foreach ($key_aspect_terms as $term) {
@@ -372,7 +426,13 @@ function paragraph_relevance_vfields_collect_key_aspect_sections(EntityInterface
       continue;
     }
     $bundle = trim((string) ($term->get('field_paragraph_bundle')->value ?? ''));
-    if ($bundle === '' || empty($paragraphs_by_bundle[$bundle])) {
+    if ($bundle === '') {
+      continue;
+    }
+    if (paragraph_relevance_vfields_listing_bundle_relevance($listing, $bundle) !== $target_relevance) {
+      continue;
+    }
+    if (empty($paragraphs_by_bundle[$bundle])) {
       continue;
     }
     $sections[] = [

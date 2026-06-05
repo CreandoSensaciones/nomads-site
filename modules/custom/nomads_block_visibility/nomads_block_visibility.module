@@ -7,7 +7,60 @@
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_block_visibility_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_block_visibility':
+      $output = '';
+      $output .= '<h2>' . t('Nomads Block Visibility') . '</h2>';
+      $output .= '<p>' . t('Nomads Block Visibility adds a Nomads-specific block visibility condition named <em>Nomads Tweaks</em>. It lets site builders enable reusable visibility rules from block configuration without duplicating path or bundle logic across blocks.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Provides the condition plugin <code>nomads_tweaks</code> for Drupal block visibility configuration.') . '</li>';
+      $output .= '<li>' . t('Displays available Nomads rules as checkboxes in the block configuration form.') . '</li>';
+      $output .= '<li>' . t('Removes the standard condition negate option so each selected rule keeps its own explicit meaning.') . '</li>';
+      $output .= '<li>' . t('Evaluates selected rules with AND semantics: if any selected rule returns false, the block is hidden.') . '</li>';
+      $output .= '<li>' . t('Aggregates cache contexts, tags, and max-age from all selected rules so block visibility varies by the correct request data.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Built-in rules') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('<em>Side wide Announcement</em>: shows a block on landing page node pages and on <code>/front</code>, <code>/front/*</code>, <code>/list</code>, <code>/list/*</code>, <code>/cal</code>, and <code>/cal/*</code>.') . '</li>';
+      $output .= '<li>' . t('<em>Not Listing</em>: shows a block everywhere except canonical listing node pages.') . '</li>';
+      $output .= '<li>' . t('<em>Not Landing Page</em>: shows a block everywhere except canonical landing page node pages.') . '</li>';
+      $output .= '<li>' . t('<em>My own node</em>: shows a block only on canonical node pages authored by the current user.') . '</li>';
+      $output .= '<li>' . t('<em>Actual node is not published</em>: shows a block only on unpublished canonical node pages.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The <code>NomadsTweaks</code> condition plugin delegates all rule discovery, evaluation, summaries, and cacheability to helper functions in the module file. Rule definitions are built by <code>nomads_block_visibility_get_rule_definitions()</code>, validated, normalized, and alterable through <code>hook_nomads_block_visibility_rules_alter()</code>. Each rule is a callable that receives the rule ID, definition, and condition plugin instance, then returns a boolean visibility outcome.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Configure this from a block’s visibility settings by enabling the <em>Nomads Tweaks</em> condition and selecting one or more rules. The condition stores only <code>enabled_rules</code>, a sequence of selected rule IDs, under the block visibility condition configuration. Additional rules can be provided by another module with <code>hook_nomads_block_visibility_rules_alter()</code>; custom rules should declare their required cache contexts, tags, and max-age.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Built-in rules depend on specific bundle machine names: <code>listing</code> and <code>landing_page</code>.') . '</li>';
+      $output .= '<li>' . t('The announcement rule depends on hardcoded path aliases and system paths for front, list, and calendar pages.') . '</li>';
+      $output .= '<li>' . t('Rule callbacks use the current route, path, alias, and sometimes loaded node parameters; route or alias changes can alter visibility results.') . '</li>';
+      $output .= '<li>' . t('A custom rule without correct cacheability metadata can cause blocks to be cached visible or hidden in the wrong context.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for built-in rule outcomes, block configuration forms, cacheability aggregation, or alter-hook extensions.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('Block visibility is presentation logic, not access control. Hiding a block does not protect the underlying route, entity, or data source, and showing a block does not grant access beyond the block’s normal access checks. Custom rule callbacks should avoid exposing private data through labels, descriptions, cache metadata, or route-dependent side effects. Cacheability must be accurate so visibility decisions do not leak across users, routes, or paths.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
 
 /**
  * Returns available Nomads visibility rule definitions.
@@ -44,6 +97,18 @@ function nomads_block_visibility_get_rule_definitions(): array {
       'label' => t('Not Landing Page'),
       'description' => t('Shows the block everywhere except on full landing page node pages.'),
       'callback' => 'nomads_block_visibility_not_landing_page',
+      'cache_contexts' => ['route'],
+    ],
+    'my_own_node' => [
+      'label' => t('My own node'),
+      'description' => t('Shows the block only on a full node page authored by the current user.'),
+      'callback' => 'nomads_block_visibility_my_own_node',
+      'cache_contexts' => ['route', 'user'],
+    ],
+    'actual_node_is_not_published' => [
+      'label' => t('Actual node is not published'),
+      'description' => t('Shows the block only on a full node page when the current node is unpublished.'),
+      'callback' => 'nomads_block_visibility_actual_node_is_not_published',
       'cache_contexts' => ['route'],
     ],
   ];
@@ -121,19 +186,52 @@ function nomads_block_visibility_not_landing_page(string $rule_id, array $defini
 }
 
 /**
+ * Built-in rule callback for full node pages owned by the current user.
+ */
+function nomads_block_visibility_my_own_node(string $rule_id, array $definition, ?object $condition = NULL): bool {
+  $node = nomads_block_visibility_get_canonical_node();
+
+  return $node instanceof \Drupal\node\NodeInterface
+    && !\Drupal::currentUser()->isAnonymous()
+    && (string) $node->getOwnerId() === (string) \Drupal::currentUser()->id();
+}
+
+/**
+ * Built-in rule callback for unpublished full node pages.
+ */
+function nomads_block_visibility_actual_node_is_not_published(string $rule_id, array $definition, ?object $condition = NULL): bool {
+  $node = nomads_block_visibility_get_canonical_node();
+
+  return $node instanceof \Drupal\node\NodeInterface
+    && !$node->isPublished();
+}
+
+/**
  * Determines whether the current route is a canonical node page for a bundle.
  */
 function nomads_block_visibility_is_canonical_node_bundle(string $bundle): bool {
+  $node = nomads_block_visibility_get_canonical_node();
+
+  return $node instanceof \Drupal\node\NodeInterface
+    && $node->bundle() === $bundle;
+}
+
+/**
+ * Returns the current canonical node route entity, when available.
+ */
+function nomads_block_visibility_get_canonical_node(): ?\Drupal\node\NodeInterface {
   $route_match = \Drupal::routeMatch();
+  if ($route_match->getRouteName() !== 'entity.node.canonical') {
+    return NULL;
+  }
+
   $node = $route_match->getParameter('node');
 
   if (is_scalar($node) && $node !== '') {
     $node = \Drupal::entityTypeManager()->getStorage('node')->load($node);
   }
 
-  return $node instanceof \Drupal\node\NodeInterface
-    && $route_match->getRouteName() === 'entity.node.canonical'
-    && $node->bundle() === $bundle;
+  return $node instanceof \Drupal\node\NodeInterface ? $node : NULL;
 }
 
 /**
@@ -218,6 +316,13 @@ function nomads_block_visibility_get_cache_tags(array $configuration): array {
 
   foreach (nomads_block_visibility_get_enabled_rules($configuration) as $rule_id) {
     $tags = Cache::mergeTags($tags, $definitions[$rule_id]['cache_tags'] ?? []);
+
+    if (in_array($rule_id, ['my_own_node', 'actual_node_is_not_published'], TRUE)) {
+      $node = nomads_block_visibility_get_canonical_node();
+      if ($node instanceof \Drupal\node\NodeInterface) {
+        $tags = Cache::mergeTags($tags, $node->getCacheTags());
+      }
+    }
   }
 
   return $tags;

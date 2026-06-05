@@ -1,7 +1,45 @@
 /* ========== Paragraphs general ========== */
 
+/* ========== Location ========== */
+
+#edit-group-location-date .tabledrag-toggle-weight-wrapper {
+  display: none;
+}
+#edit-group-price .tabledrag-toggle-weight-wrapper {
+  display: none;
+}
+tbody .paragraph-type--location > td > div > .form-wrapper,
+tbody .paragraph-type--price > td > div > .form-wrapper,
+tbody .paragraph-type--price > td > div.ajax-new-content > div > .form-wrapper {
+  border: 2px solid #000;
+  margin: 20px 0;
+  padding: 20px;
+  border-radius: 12px;
+  background: #ddd;
+}
 
 
+/* ========= paragraphs base ========= */
+
+.paragraph--viewmode-vm-3 h2 {
+      font-size: clamp(1.2rem, 1.8vw, 2.4rem);
+}
+@media (max-width: 1300px) {
+  .paragraph--viewmode-vm-3 h2 {
+      font-size: clamp(1.2rem, 2.2vw, 2.4rem);
+}
+}
+
+
+.page-node-type-listing .field .suffix {
+  font-size: 12px;
+  line-height: 1.1em;
+  color: #666;
+  font-weight: 400;
+  max-width: 70px;
+  display: inline-block;
+  margin-left: 5px;
+}
 
 /* ------- Paragraph Header ------ */
 /* Defaults */
@@ -23,7 +61,7 @@
   font-size: 18pt;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  background: linear-gradient(90deg, #0dafc5, #0575b1);
+  background: linear-gradient(135deg, #66C3D0 0%, #005F8A 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -61,13 +99,13 @@
 
 /* Overlay both fields on top of the map (same grid cell) */
 .vm3-map-column .field--name-field-settlement,
-.vm3-map-column .field--name-field-surroundings{
+.vm3-map-column .field--name-field-surroundings {
   z-index: 6;
   margin: 12px;
 }
 
 /* Settlement pill: top-left */
-.vm3-map-column .field--name-field-settlement{
+.vm3-map-column .field--name-field-settlement {
   z-index: 6;
   margin: 12px;
   align-self: start;        /* top */
@@ -75,7 +113,9 @@
 }
 
 /* Surroundings: bottom-center, pills stacked bottom-up */
-.vm3-map-column .field--name-field-surroundings{
+.vm3-map-column .field--name-field-surroundings {
+  grid-row: 1;
+  grid-column: 1;
   z-index: 6;
   margin: 12px;
   align-self: end;          /* bottom */
@@ -103,4 +143,37 @@
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 40px;
+}
+
+
+.paragraph h2 {
+  color: #666;
+}
+
+
+
+.paragraph--type--profile h2 {
+  color: #0072A3;
+  font-size: clamp(1.3rem, 1.6vw, 2.4rem);
+}
+.paragraph--type--profile h3 {
+  font-size: clamp(1.1rem, 1.2vw, 2rem);
+}
+.paragraph--type--profile img {
+  border-radius: 999px;
+  float: right;
+  margin-left: 2vw;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.3);
+}
+.user-picture {
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.3);
+}
+
+.paragraph--type--profile .field--name-field-profile-link {
+  text-align: center;
+  font-weight: 600;
+  margin-top: 20px;
 }

@@ -5,6 +5,54 @@
  * Field Group Toggler module.
  */
 
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_help().
+ */
+function field_group_toggler_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.field_group_toggler':
+      $output = '';
+      $output .= '<h2>' . t('Field Group Toggler') . '</h2>';
+      $output .= '<p>' . t('Field Group Toggler adds a Field Group formatter that turns a details group into an explicit editor-controlled toggle. It is intended for node edit forms where a group of optional fields should be treated as enabled when checked/open and cleared when unchecked.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Provides the Field Group formatter plugin <code>toggle</code>, labelled <em>Field Group Toggler</em> in the <em>Nomads Forms</em> category.') . '</li>';
+      $output .= '<li>' . t('Renders the group as a details element with a checkbox injected into the summary by JavaScript.') . '</li>';
+      $output .= '<li>' . t('Automatically checks and opens the group when meaningful input is detected inside it.') . '</li>';
+      $output .= '<li>' . t('Stores each group state in a hidden form value so server-side validation and submit handlers can distinguish checked from unchecked groups.') . '</li>';
+      $output .= '<li>' . t('Clears submitted values and entity field values for unchecked toggle groups before node save, including nested paragraph subforms where the owning entity can be resolved.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The formatter class extends Field Group’s Details formatter and adds the <code>field-group-toggle</code> class plus the module library. The JavaScript behavior uses Drupal <code>once</code> to rebuild the summary markup safely after Ajax attaches, evaluate group values, sync the checkbox with the details open state, and update the hidden state field. Procedural hooks alter the Field Group formatter metadata, add hidden state elements during Field Group form processing, and attach node form validation and submit handlers.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Configure this in the Field Group UI by selecting the <em>Field Group Toggler</em> formatter for a group. The formatter inherits the normal Field Group details settings; this module does not add separate site-wide configuration. Its config schema maps the <code>toggle</code> formatter to Field Group’s details formatter schema.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('The formatter plugin ID is <code>toggle</code>, which is short and could conflict with another Field Group formatter plugin if this module is reused outside this project.') . '</li>';
+      $output .= '<li>' . t('Value detection depends on form markup and selectors. It intentionally ignores structural inputs such as weights and has project-specific handling for the Special Category widget.') . '</li>';
+      $output .= '<li>' . t('The clearing logic is designed for node forms and supported nested paragraph subforms. Other entity form contexts may render the formatter but are not the primary supported save path.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for Ajax rebuilds, nested groups, or paragraph clearing, so changes to Field Group, Paragraphs, or related widget markup should be checked manually.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('The checkbox state is submitted by the browser and must not be treated as an access-control decision. Field permissions, entity access, and normal validation still need to enforce who may edit each field. The module clears values when a group is unchecked; editors with access to the form can therefore remove data from fields contained by a toggle group. No user-provided markup is rendered by the module itself, but the JavaScript does restructure existing summary content supplied by Field Group.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
+
 /**
  * Implements hook_field_group_formatter_info_alter().
  */
@@ -13,4 +61,392 @@ function field_group_toggler_field_group_formatter_info_alter(array &$info): voi
     $info['toggle']['label'] = t('Field Group Toggler');
     $info['toggle']['category'] = t('Nomads Forms');
   }
+}
+
+/**
+ * Implements hook_field_group_form_process().
+ */
+function field_group_toggler_field_group_form_process(array &$element, &$group, &$complete_form): void {
+  if (($group->format_type ?? NULL) !== 'toggle' || ($group->context ?? NULL) !== 'form') {
+    return;
+  }
+
+  $state_parents = ['field_group_toggler'];
+  foreach (($element['#parents'] ?? [$group->group_name]) as $parent) {
+    $state_parents[] = (string) $parent;
+  }
+  $state_parents[] = '_state';
+
+  $element['#attributes']['data-field-group-toggle-name'] = $group->group_name;
+  $element['_field_group_toggler_state'] = [
+    '#type' => 'hidden',
+    '#default_value' => '1',
+    '#parents' => $state_parents,
+    '#attributes' => [
+      'class' => ['field-group-toggle__state'],
+      'data-field-group-toggle-state' => $group->group_name,
+    ],
+  ];
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter() for node forms.
+ */
+function field_group_toggler_form_node_form_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
+  $form['#validate'][] = 'field_group_toggler_node_form_validate';
+
+  if (empty($form['actions'])) {
+    return;
+  }
+
+  foreach (Element::children($form['actions']) as $action) {
+    field_group_toggler_add_submit_handler($form['actions'][$action]);
+  }
+}
+
+/**
+ * Adds the clear handler after entity submit processing and before save.
+ */
+function field_group_toggler_add_submit_handler(array &$element): void {
+  if (($element['#type'] ?? '') !== 'submit') {
+    return;
+  }
+
+  $element['#submit'] = $element['#submit'] ?? ['::submitForm', '::save'];
+  if (!is_array($element['#submit'])) {
+    return;
+  }
+
+  $handler = 'field_group_toggler_node_form_submit';
+  if (in_array($handler, $element['#submit'], TRUE)) {
+    return;
+  }
+
+  $save_index = array_search('::save', $element['#submit'], TRUE);
+  if ($save_index === FALSE) {
+    $element['#submit'][] = $handler;
+    return;
+  }
+
+  array_splice($element['#submit'], $save_index, 0, [$handler]);
+}
+
+/**
+ * Clears submitted values before entity submit rebuilds the node for saving.
+ */
+function field_group_toggler_node_form_validate(array &$form, FormStateInterface $form_state): void {
+  if (empty($form['#fieldgroups'])) {
+    return;
+  }
+
+  field_group_toggler_clear_unchecked_form_group_values($form, $form_state);
+  field_group_toggler_clear_unchecked_group_definition_values($form, $form_state);
+}
+
+/**
+ * Clears fields that belong to unchecked toggle groups before the node saves.
+ */
+function field_group_toggler_node_form_submit(array &$form, FormStateInterface $form_state): void {
+  if (empty($form['#fieldgroups'])) {
+    return;
+  }
+
+  $form_object = $form_state->getFormObject();
+  if (!$form_object || !method_exists($form_object, 'getEntity')) {
+    return;
+  }
+
+  $entity = $form_object->getEntity();
+  if (!$entity instanceof NodeInterface) {
+    return;
+  }
+
+  field_group_toggler_clear_unchecked_form_groups($form, $form_state, $entity);
+  field_group_toggler_clear_unchecked_group_definition_entities($form, $form_state, $entity);
+
+  $states = $form_state->getValue('field_group_toggler');
+  if (empty($states) || !is_array($states)) {
+    return;
+  }
+
+  // Backwards-compatible fallback for forms built before state values were
+  // scoped to their exact form subtree.
+  foreach ($form['#fieldgroups'] as $group_name => $group) {
+    if (($group->format_type ?? NULL) !== 'toggle') {
+      continue;
+    }
+    if (($states[$group_name] ?? '1') !== '0') {
+      continue;
+    }
+
+    foreach (field_group_toggler_collect_group_fields($group_name, $form['#fieldgroups'], $entity) as $field_name) {
+      $entity->get($field_name)->setValue([]);
+      $form_state->setValue($field_name, []);
+    }
+  }
+}
+
+/**
+ * Clears submitted values for unchecked groups using Field Group definitions.
+ */
+function field_group_toggler_clear_unchecked_group_definition_values(array &$element, FormStateInterface $form_state): void {
+  if (!empty($element['#fieldgroups']) && is_array($element['#fieldgroups'])) {
+    $base_parents = isset($element['#parents']) && is_array($element['#parents']) ? $element['#parents'] : [];
+    foreach ($element['#fieldgroups'] as $group_name => $group) {
+      if (($group->format_type ?? NULL) !== 'toggle') {
+        continue;
+      }
+      if (!field_group_toggler_group_definition_is_unchecked($element, (string) $group_name, $form_state)) {
+        continue;
+      }
+      foreach (field_group_toggler_collect_group_definition_fields((string) $group_name, $element['#fieldgroups']) as $field_name) {
+        $form_state->setValue(array_merge($base_parents, [$field_name]), []);
+      }
+    }
+  }
+
+  foreach (Element::children($element) as $child) {
+    field_group_toggler_clear_unchecked_group_definition_values($element[$child], $form_state);
+  }
+}
+
+/**
+ * Clears entity fields for unchecked groups using Field Group definitions.
+ */
+function field_group_toggler_clear_unchecked_group_definition_entities(array &$element, FormStateInterface $form_state, NodeInterface $root_entity): void {
+  if (!empty($element['#fieldgroups']) && is_array($element['#fieldgroups'])) {
+    $base_parents = isset($element['#parents']) && is_array($element['#parents']) ? $element['#parents'] : [];
+    foreach ($element['#fieldgroups'] as $group_name => $group) {
+      if (($group->format_type ?? NULL) !== 'toggle') {
+        continue;
+      }
+      if (!field_group_toggler_group_definition_is_unchecked($element, (string) $group_name, $form_state)) {
+        continue;
+      }
+      foreach (field_group_toggler_collect_group_definition_fields((string) $group_name, $element['#fieldgroups']) as $field_name) {
+        $parents = array_merge($base_parents, [$field_name]);
+        field_group_toggler_clear_field_target([
+          'field_name' => $field_name,
+          'parents' => $parents,
+        ], $form_state, $root_entity);
+      }
+    }
+  }
+
+  foreach (Element::children($element) as $child) {
+    field_group_toggler_clear_unchecked_group_definition_entities($element[$child], $form_state, $root_entity);
+  }
+}
+
+/**
+ * Checks whether a group definition's hidden state was submitted unchecked.
+ */
+function field_group_toggler_group_definition_is_unchecked(array $element, string $group_name, FormStateInterface $form_state): bool {
+  if (!empty($element[$group_name]) && field_group_toggler_element_is_unchecked_toggle($element[$group_name], $form_state)) {
+    return TRUE;
+  }
+
+  if (!empty($element['#parents'])) {
+    return FALSE;
+  }
+
+  $states = $form_state->getValue('field_group_toggler');
+  return is_array($states) && field_group_toggler_state_tree_contains_unchecked_group($states, $group_name);
+}
+
+/**
+ * Finds an unchecked group in the submitted state tree.
+ */
+function field_group_toggler_state_tree_contains_unchecked_group(array $states, string $group_name): bool {
+  foreach ($states as $key => $value) {
+    if ((string) $key === $group_name) {
+      if ($value === '0') {
+        return TRUE;
+      }
+      if (is_array($value) && (string) ($value['_state'] ?? '1') === '0') {
+        return TRUE;
+      }
+    }
+    if (is_array($value) && field_group_toggler_state_tree_contains_unchecked_group($value, $group_name)) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Returns field names contained by a field group definition.
+ */
+function field_group_toggler_collect_group_definition_fields(string $group_name, array $groups, array &$seen = []): array {
+  if (isset($seen[$group_name]) || empty($groups[$group_name]->children)) {
+    return [];
+  }
+
+  $seen[$group_name] = TRUE;
+  $field_names = [];
+
+  foreach ($groups[$group_name]->children as $child) {
+    if (isset($groups[$child])) {
+      $field_names = array_merge($field_names, field_group_toggler_collect_group_definition_fields($child, $groups, $seen));
+      continue;
+    }
+
+    if (is_string($child) && str_starts_with($child, 'field_')) {
+      $field_names[] = $child;
+    }
+  }
+
+  return array_values(array_unique($field_names));
+}
+
+/**
+ * Clears unchecked toggle group values by walking the rendered form tree.
+ */
+function field_group_toggler_clear_unchecked_form_group_values(array &$element, FormStateInterface $form_state): void {
+  if (field_group_toggler_element_is_unchecked_toggle($element, $form_state)) {
+    foreach (field_group_toggler_collect_field_targets($element) as $target) {
+      $form_state->setValue($target['parents'], []);
+    }
+  }
+
+  foreach (Element::children($element) as $child) {
+    field_group_toggler_clear_unchecked_form_group_values($element[$child], $form_state);
+  }
+}
+
+/**
+ * Clears unchecked toggle groups by walking the rendered form tree.
+ */
+function field_group_toggler_clear_unchecked_form_groups(array &$element, FormStateInterface $form_state, NodeInterface $entity): void {
+  if (field_group_toggler_element_is_unchecked_toggle($element, $form_state)) {
+    foreach (field_group_toggler_collect_field_targets($element) as $target) {
+      field_group_toggler_clear_field_target($target, $form_state, $entity);
+    }
+  }
+
+  foreach (Element::children($element) as $child) {
+    field_group_toggler_clear_unchecked_form_groups($element[$child], $form_state, $entity);
+  }
+}
+
+/**
+ * Determines whether a form element is an unchecked toggle group wrapper.
+ */
+function field_group_toggler_element_is_unchecked_toggle(array $element, FormStateInterface $form_state): bool {
+  if (empty($element['_field_group_toggler_state']['#parents'])) {
+    return FALSE;
+  }
+
+  return (string) $form_state->getValue($element['_field_group_toggler_state']['#parents'], '1') === '0';
+}
+
+/**
+ * Collects descendant field elements from a toggle group subtree.
+ */
+function field_group_toggler_collect_field_targets(array $element, array &$targets = []): array {
+  if (!empty($element['#field_name']) && !empty($element['#parents']) && is_array($element['#parents'])) {
+    $field_name = (string) $element['#field_name'];
+    $targets[implode('.', $element['#parents']) . ':' . $field_name] = [
+      'field_name' => $field_name,
+      'parents' => $element['#parents'],
+    ];
+  }
+
+  foreach (Element::children($element) as $child) {
+    field_group_toggler_collect_field_targets($element[$child], $targets);
+  }
+
+  return array_values($targets);
+}
+
+/**
+ * Clears a submitted field value and the matching built entity field.
+ */
+function field_group_toggler_clear_field_target(array $target, FormStateInterface $form_state, NodeInterface $root_entity): void {
+  $field_name = $target['field_name'];
+  $parents = $target['parents'];
+
+  $form_state->setValue($parents, []);
+
+  $target_entity = field_group_toggler_resolve_entity_for_field($root_entity, $parents, $field_name);
+  if ($target_entity && $target_entity->hasField($field_name)) {
+    $target_entity->get($field_name)->setValue([]);
+  }
+}
+
+/**
+ * Resolves the entity that owns a field from its submitted form parents.
+ */
+function field_group_toggler_resolve_entity_for_field(EntityInterface $root_entity, array $parents, string $field_name): ?EntityInterface {
+  $entity = $root_entity;
+  $count = count($parents);
+
+  for ($i = 0; $i < $count; $i++) {
+    $part = $parents[$i];
+    if ($part === $field_name) {
+      return $entity;
+    }
+    if (!is_string($part) || !method_exists($entity, 'hasField') || !$entity->hasField($part)) {
+      continue;
+    }
+
+    $items = $entity->get($part);
+    $definition = $items->getFieldDefinition();
+    if ($definition->getType() !== 'entity_reference_revisions' || $definition->getSetting('target_type') !== 'paragraph') {
+      continue;
+    }
+
+    $delta = NULL;
+    $subform_index = NULL;
+    for ($j = $i + 1; $j < $count; $j++) {
+      if ($parents[$j] === 'subform') {
+        $subform_index = $j;
+        break;
+      }
+      if (is_numeric($parents[$j])) {
+        $delta = (int) $parents[$j];
+      }
+    }
+    if ($delta === NULL || !isset($items[$delta])) {
+      return NULL;
+    }
+
+    $referenced = $items->get($delta)->entity;
+    if (!$referenced instanceof EntityInterface) {
+      return NULL;
+    }
+
+    $entity = $referenced;
+    if ($subform_index !== NULL) {
+      $i = $subform_index;
+    }
+  }
+
+  return method_exists($entity, 'hasField') && $entity->hasField($field_name) ? $entity : NULL;
+}
+
+/**
+ * Returns entity field names contained by a field group, including subgroups.
+ */
+function field_group_toggler_collect_group_fields(string $group_name, array $groups, NodeInterface $entity, array &$seen = []): array {
+  if (isset($seen[$group_name]) || empty($groups[$group_name]->children)) {
+    return [];
+  }
+
+  $seen[$group_name] = TRUE;
+  $field_names = [];
+
+  foreach ($groups[$group_name]->children as $child) {
+    if (isset($groups[$child])) {
+      $field_names = array_merge($field_names, field_group_toggler_collect_group_fields($child, $groups, $entity, $seen));
+      continue;
+    }
+
+    if ($entity->hasField($child)) {
+      $field_names[] = $child;
+    }
+  }
+
+  return array_values(array_unique($field_names));
 }

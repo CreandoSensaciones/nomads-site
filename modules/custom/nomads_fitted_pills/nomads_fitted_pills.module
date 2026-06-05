@@ -1,0 +1,52 @@
+<?php
+
+/**
+ * @file
+ * Help hooks for Nomads Fitted Pills.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_fitted_pills_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_fitted_pills':
+      $output = '';
+      $output .= '<h2>' . t('Nomads Fitted Pills') . '</h2>';
+      $output .= '<p>' . t('Nomads Fitted Pills provides display formatters that render list values and taxonomy terms as pill-style UI. It can either output a simple inline pill list or pack pills into rows using a character-budget fitting algorithm.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Provides <code>nomads_fitted_pills_list</code> for <code>list_string</code> fields.') . '</li>';
+      $output .= '<li>' . t('Provides <code>nomads_fitted_pills_term_ref</code> for taxonomy term reference fields.') . '</li>';
+      $output .= '<li>' . t('Can render pills inline or fit them into computed rows.') . '</li>';
+      $output .= '<li>' . t('Can limit the number of rows, switch to big-pills output for short content, and use radical fitting to fill rows with short labels.') . '</li>';
+      $output .= '<li>' . t('Supports optional tooltip output from list labels split with <code> -- </code> or from taxonomy term <code>field_tooltip</code>.') . '</li>';
+      $output .= '<li>' . t('Attaches the <code>nomads_fitted_pills/fitted-pills</code> CSS library for visual output.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('Formatter plugins share <code>FittedPillsFormatterBase</code>, which defines settings, dependency injection, row building, priority suffix handling, and max-row trimming. The <code>nomads_fitted_pills.packer</code> service packs normalized pill items into rows using label length plus configurable overhead. Dedicated list and taxonomy formatters normalize field items before handing them to the base formatter and packer.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Configure the formatter from an entity Manage display page. Important settings include <code>fit_pills</code>, <code>max_chars_per_row</code>, <code>pill_overhead</code>, <code>trigger_gap</code>, <code>min_improvement</code>, <code>max_rows</code>, <code>show_tooltip</code>, <code>auto_big_pills</code>, <code>auto_big_pills_threshold</code>, <code>big_pills_max_chars_per_row</code>, <code>radical_fitting</code>, and <code>radical_fitting_threshold</code>. List labels can use trailing <code>*2</code> or <code>*3</code> priority suffixes, which are stripped from display and used during max-row trimming.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Row fitting is based on character counts, not measured rendered width, so real visual fit can vary by font, language, viewport, and CSS changes.') . '</li>';
+      $output .= '<li>' . t('The packer uses <code>strlen()</code>, which counts bytes and can misestimate labels containing multibyte characters.') . '</li>';
+      $output .= '<li>' . t('Max-row trimming and priority reintroduction are more complex in the list formatter than in the taxonomy formatter.') . '</li>';
+      $output .= '<li>' . t('Tooltip behavior relies on title attributes and CSS hover/focus behavior, which is limited on touch devices and not a full accessible help pattern.') . '</li>';
+      $output .= '<li>' . t('There are unit tests for the packer service, but formatter-level behavior, tooltips, priority suffixes, links, and render output are not covered by automated tests.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('List pill labels are rendered as plain text unless a tooltip span is needed, and taxonomy pills link through Drupal term URLs. Tooltip strings are stored in attributes and should be treated as plain text. The formatters do not alter field or term access; if taxonomy term labels or links should be hidden, enforce that with normal entity and field access controls. Because fitted output may hide overflow by limiting rows, do not use it when every selected value must be visibly disclosed.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}

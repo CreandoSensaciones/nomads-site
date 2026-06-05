@@ -2,16 +2,80 @@
 
 declare(strict_types=1);
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Render\Markup;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Template\Attribute;
 use Drupal\Core\Url;
+use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\UrlHelper;
+use Drupal\nomads_navigation\FilterQueryNormalizer;
 use Drupal\node\NodeInterface;
 
 /**
  * @file
  * Nomads Navigation module hooks.
  */
+
+/**
+ * Implements hook_help().
+ */
+function nomads_navigation_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_navigation':
+      $output = '';
+      $output .= '<h2>' . t('Nomads navigation') . '</h2>';
+      $output .= '<p>' . t('Nomads navigation provides domain-specific navigation settings, Views integrations, filter navigation blocks, and navbar URL handling for listing discovery pages.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Adds a configuration form at <code>/admin/config/search/nomads-navigation</code> for navigation filter terms and sort key terms.') . '</li>';
+      $output .= '<li>' . t('Stores multiple filter term IDs, preserves the legacy single <code>filter_tid</code> value, and validates filter terms against the <code>type</code> and <code>t</code> vocabularies.') . '</li>';
+      $output .= '<li>' . t('Stores up to two sort key terms from the <code>subsites</code> vocabulary.') . '</li>';
+      $output .= '<li>' . t('Adds a Views filter, <em>Has domain term</em>, that limits node results to content matching the current domain’s configured filter terms.') . '</li>';
+      $output .= '<li>' . t('Adds an exposed Views filter, <em>Taxonomy term ID with depth</em>, that reads term IDs separated by <code>~</code>, supports AND/OR matching, vocabulary limits, and positive or negative hierarchy depth.') . '</li>';
+      $output .= '<li>' . t('Adds a Views sort, <em>Taxonomy term ID with depth match</em>, that reads the same kind of term ID input and lists matching rows before non-matching rows.') . '</li>';
+      $output .= '<li>' . t('Adds a Views field, <em>Listing domains</em>, that lists domains whose configured filter terms match a listing.') . '</li>';
+      $output .= '<li>' . t('Provides a <em>Tag navigation</em> block. It renders published top-level branches from the <code>t</code> vocabulary, lets users select one published direct child per branch, writes selected term IDs to <code>tags</code>, and preserves all other query arguments. It also provides per-branch <code>-clear-</code> actions and a global <code>Clear</code> link for tag filters.') . '</li>';
+      $output .= '<li>' . t('Provides a <em>Geo navigation</em> block. It renders the <code>cit_countries_information</code> vocabulary as a three-level hover menu, writes one selected term ID to <code>geo</code>, preserves all other query arguments, and provides <code>-clear-</code> when a geo value is selected.') . '</li>';
+      $output .= '<li>' . t('Provides a <em>Specific navigation</em> block. Plain configured term IDs render as toggle pills directly, while IDs suffixed with <code>&gt;</code> render branches of their published direct children. Branches only receive wrapper classes such as <code>branch1</code> and <code>branch-123</code> when more than one navigation group is rendered. Pills do not include internal parent labels; branch wrappers show the parent label once. Navbar links keep <code>t</code>, while the domains menu intentionally drops <code>t</code> when switching domains.') . '</li>';
+      $output .= '<li>' . t('Provides a <em>Date period navigation</em> block. It renders the current month, six following months, and a <code>6months</code> option, writes one selected value to <code>month</code>, and preserves the value in navbar and domain menu links.') . '</li>';
+      $output .= '<li>' . t('Can match taxonomy terms directly on listing nodes or on selected owned paragraph bundles, including nested paragraph ownership up to a fixed depth.') . '</li>';
+      $output .= '<li>' . t('Can optionally include listings assigned to a domain even when they do not match that domain’s configured filter terms.') . '</li>';
+      $output .= '<li>' . t('Rewrites <code>landing_page</code> teaser URLs to the matching domain root when the landing page is configured as that domain’s front page.') . '</li>';
+      $output .= '<li>' . t('Provides page-template variables so navbar links to <code>/</code>, <code>/list</code>, <code>/map</code>, and <code>/cal</code> keep the active query string. The theme’s domains menu also keeps the current listing query when switching domains.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The module registers custom Views data in <code>hook_views_data_alter()</code>. The <code>HasDomainTerm</code> filter builds SQL <code>EXISTS</code> expressions over taxonomy reference field tables on nodes and owned paragraphs. The <code>ListingDomains</code> field delegates matching to <code>ListingDomainMatcher</code>, which checks each configured domain and returns matching domain labels. <code>FrontpageDomainResolver</code> reads domain-specific <code>system.site</code> configuration and path aliases to identify landing pages used as domain front pages, then entity view hooks rewrite teaser links and add config cache tags. The navigation blocks are regular Drupal block plugins that generate current-route links with updated query arguments.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Configure global or domain-overridden settings from the Nomads navigation settings form. The module depends on Domain Config, so <code>nomads_navigation.settings</code> can be overridden per domain and per language. In Views, add the <em>Has domain term</em> filter or <em>Listing domains</em> field, choose which listing paragraph bundles should be inspected, and decide whether direct domain assignment should bypass term matching. Place the navigation blocks on listing discovery pages whose Views exposed filters understand the <code>tags</code>, <code>geo</code>, <code>t</code>, and <code>month</code> query arguments.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('The SQL matching logic scans all taxonomy term reference field storage definitions for nodes and paragraphs, so new fields can affect matching behavior automatically.') . '</li>';
+      $output .= '<li>' . t('Paragraph ownership matching is built manually in SQL and checks nesting up to depth 8; deeper structures or changed paragraph storage tables may not match.') . '</li>';
+      $output .= '<li>' . t('The optional domain-assignment bypass assumes the <code>node__field_domain_access</code> table and column names from the current Domain Access field setup.') . '</li>';
+      $output .= '<li>' . t('Frontpage URL rewriting depends on domain-specific <code>system.site</code> config naming and configured front paths resolving to node paths or aliases.') . '</li>';
+      $output .= '<li>' . t('The Tag navigation block assumes the tag vocabulary machine name is <code>t</code>. The Geo navigation block assumes the geo vocabulary machine name is <code>cit_countries_information</code>; top-level geo branches <code>1278</code> and <code>1099</code> are hidden, and children of term <code>1098</code> are hidden.') . '</li>';
+      $output .= '<li>' . t('The <code>tags</code> query argument is emitted as a <code>~</code>-separated list. Whether multiple tags behave as AND or OR is controlled by the receiving View/filter handler, not by the block itself.') . '</li>';
+      $output .= '<li>' . t('The <code>t</code> query argument for Specific navigation is emitted as a <code>~</code>-separated list. Domain menu preprocessing removes <code>t</code> before building domain-switch links.') . '</li>';
+      $output .= '<li>' . t('Views filter and field plugins duplicate some matching helper logic, so behavior must be kept aligned when matching rules change.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for domain config overrides, SQL matching across paragraph depths, Views plugin options, frontpage teaser rewriting, navigation block query handling, hover menus, or cache metadata.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('The settings form requires <code>administer site configuration</code>. Views plugins filter and display content that the View is already allowed to query; they do not add node, paragraph, taxonomy, or domain access controls. If domain visibility is sensitive, enforce it with normal access systems in addition to these navigation filters. SQL snippets use Drupal database escaping and placeholders for term and domain values, but changes to field/table assumptions should be reviewed carefully because the module builds low-level query expressions.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
 
 /**
  * Implements hook_views_data_alter().
@@ -24,12 +88,332 @@ function nomads_navigation_views_data_alter(array &$data): void {
       'id' => 'nomads_navigation_has_domain_term',
     ],
   ];
+
+  $data['node_field_data']['nomads_navigation_listing_domains'] = [
+    'title' => t('Listing domains'),
+    'help' => t('Lists domains whose navigation term filter matches the listing.'),
+    'field' => [
+      'id' => 'nomads_navigation_listing_domains',
+    ],
+  ];
+
+  $data['node_field_data']['nomads_navigation_taxonomy_term_id_depth'] = [
+    'title' => t('Taxonomy term ID with depth'),
+    'help' => t('Exposed filter for taxonomy term IDs separated by "~", with vocabulary limits, AND/OR handling, and positive or negative hierarchy depth.'),
+    'filter' => [
+      'id' => 'nomads_navigation_taxonomy_term_id_depth',
+    ],
+  ];
+
+  $data['node_field_data']['nomads_navigation_taxonomy_term_id_depth_match_sort'] = [
+    'title' => t('Taxonomy term ID with depth match'),
+    'help' => t('Sorts content by whether it matches taxonomy term IDs separated by "~", with vocabulary limits, AND/OR handling, and positive or negative hierarchy depth.'),
+    'sort' => [
+      'id' => 'nomads_navigation_taxonomy_term_id_depth_match',
+    ],
+  ];
+
+  $data['views']['nomads_navigation_domain_title'] = [
+    'title' => t('Domain title'),
+    'help' => t('Renders the configured domain-specific View title as an H1 header.'),
+    'area' => [
+      'id' => 'nomads_navigation_domain_title',
+    ],
+  ];
+
+  $data['views']['nomads_navigation_domain_subtitle'] = [
+    'title' => t('Domain subtitle'),
+    'help' => t('Renders the configured domain-specific View subtitle as an H3 header.'),
+    'area' => [
+      'id' => 'nomads_navigation_domain_subtitle',
+    ],
+  ];
+
+  if (isset($data['paragraphs_item_field_data'])) {
+    $data['paragraphs_item_field_data']['nomads_navigation_taxonomy_term_id_depth'] = [
+      'title' => t('Taxonomy term ID with depth'),
+      'help' => t('Exposed filter for taxonomy term IDs separated by "~" on paragraph taxonomy fields, with vocabulary limits, AND/OR handling, and positive or negative hierarchy depth.'),
+      'filter' => [
+        'id' => 'nomads_navigation_taxonomy_term_id_depth',
+      ],
+    ];
+
+    $data['paragraphs_item_field_data']['nomads_navigation_paragraph_date_period'] = [
+      'title' => t('Date period'),
+      'help' => t('Filters paragraphs by date and date range fields using the Date period navigation query value.'),
+      'filter' => [
+        'id' => 'nomads_navigation_paragraph_date_period',
+      ],
+    ];
+  }
+}
+
+/**
+ * Implements hook_preprocess_html().
+ */
+function nomads_navigation_preprocess_html(array &$variables): void {
+  if (nomads_navigation_is_admin_route()) {
+    return;
+  }
+
+  $domain_name = nomads_navigation_get_active_domain_class_name();
+  if ($domain_name === NULL) {
+    return;
+  }
+
+  $variables['attributes']['class'][] = 'domain-' . $domain_name;
+  $variables['#cache']['contexts'][] = 'url.site';
+  $variables['#cache']['contexts'][] = 'domain';
+}
+
+/**
+ * Gets the active domain name segment for use in body classes.
+ */
+function nomads_navigation_get_active_domain_class_name(): ?string {
+  if (!\Drupal::hasService('domain.negotiator')) {
+    return NULL;
+  }
+
+  $domain = \Drupal::service('domain.negotiator')->getActiveDomain();
+  if (!$domain || !method_exists($domain, 'getHostname')) {
+    return NULL;
+  }
+
+  $hostname = (string) $domain->getHostname();
+  if ($hostname === '') {
+    return NULL;
+  }
+
+  $parts = explode('.', $hostname);
+  $name = $parts[0] ?? '';
+  if ($name === '') {
+    return NULL;
+  }
+
+  return Html::getClass($name);
+}
+
+/**
+ * Implements hook_preprocess_page().
+ */
+function nomads_navigation_preprocess_page(array &$variables): void {
+  if (nomads_navigation_is_admin_route()) {
+    return;
+  }
+
+  $query = nomads_navigation_filter_query_normalizer()->normalize(\Drupal::request()->query->all());
+  $variables['nomads_navigation_navbar_urls'] = [
+    'front' => nomads_navigation_path_with_current_query('/', $query),
+    'list' => nomads_navigation_path_with_current_query('/list', $query),
+    'map' => nomads_navigation_path_with_current_query('/map', $query),
+    'cal' => nomads_navigation_path_with_current_query('/cal', $query),
+  ];
+  $variables['#cache']['contexts'] = Cache::mergeContexts($variables['#cache']['contexts'] ?? [], FilterQueryNormalizer::CACHE_CONTEXTS);
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for menu.html.twig.
+ */
+function nomads_navigation_preprocess_menu(array &$variables): void {
+  if (nomads_navigation_is_admin_route()) {
+    return;
+  }
+
+  if (($variables['menu_name'] ?? '') !== 'root-navigation') {
+    return;
+  }
+
+  $request = \Drupal::request();
+  $path = $request->getPathInfo() ?: '/';
+  $query = nomads_navigation_filter_query_normalizer()->normalize($request->query->all());
+  $target_path = nomads_navigation_root_navigation_target_path($path, $query);
+
+  $attributes = nomads_navigation_attributes($variables['attributes'] ?? []);
+  $attributes->addClass(['nomads-specific-navigation', 'specific-wrapper']);
+  $variables['attributes'] = $attributes;
+  nomads_navigation_rewrite_root_navigation_items($variables['items'], $target_path, $query);
+
+  $variables['#cache']['contexts'][] = 'url.path';
+  $variables['#cache']['contexts'] = Cache::mergeContexts($variables['#cache']['contexts'] ?? [], FilterQueryNormalizer::CACHE_CONTEXTS);
+}
+
+/**
+ * Implements hook_block_view_alter().
+ */
+function nomads_navigation_block_view_alter(array &$build, \Drupal\Core\Block\BlockPluginInterface $block): void {
+  if (nomads_navigation_is_admin_route()) {
+    return;
+  }
+
+  if ($block->getPluginId() !== 'system_menu_block:root-navigation') {
+    return;
+  }
+
+  $build['#cache']['contexts'][] = 'url.path';
+  $build['#cache']['contexts'] = Cache::mergeContexts($build['#cache']['contexts'] ?? [], FilterQueryNormalizer::CACHE_CONTEXTS);
+  $build['#attached']['library'][] = 'nomads_navigation/specific_navigation';
+}
+
+/**
+ * Rewrites root-navigation menu item URLs and classes recursively.
+ */
+function nomads_navigation_rewrite_root_navigation_items(array &$items, string $path, array $query): void {
+  foreach ($items as &$item) {
+    $item['attributes'] = nomads_navigation_attributes($item['attributes'] ?? []);
+
+    if (isset($item['url']) && $item['url'] instanceof Url) {
+      $original_url = $item['url'];
+      $rewritten_url = nomads_navigation_rewrite_root_navigation_url($item['url'], $path, $query);
+      if ($rewritten_url !== NULL) {
+        $item['url'] = $rewritten_url;
+      }
+
+      nomads_navigation_apply_specific_navigation_pill_markup($item);
+
+      $class = nomads_navigation_root_navigation_menu_item_class($original_url);
+      if ($class !== NULL) {
+        $item['attributes']->addClass($class);
+      }
+    }
+
+    if (!empty($item['below']) && is_array($item['below'])) {
+      nomads_navigation_rewrite_root_navigation_items($item['below'], $path, $query);
+    }
+  }
+  unset($item);
+}
+
+/**
+ * Normalizes a Twig attribute variable to an Attribute object.
+ */
+function nomads_navigation_attributes(mixed $attributes): Attribute {
+  return $attributes instanceof Attribute ? $attributes : new Attribute((array) $attributes);
+}
+
+/**
+ * Determines the path to use when rewriting root-navigation domain links.
+ */
+function nomads_navigation_root_navigation_target_path(string $path, array $query): string {
+  if ($path !== '/' || !nomads_navigation_has_discovery_query($query)) {
+    return $path;
+  }
+
+  return '/list';
+}
+
+/**
+ * Checks whether the current query contains listing-discovery filters.
+ */
+function nomads_navigation_has_discovery_query(array $query): bool {
+  foreach (FilterQueryNormalizer::ALLOWED_QUERY_ARGS as $key) {
+    if (array_key_exists($key, $query) && $query[$key] !== '' && $query[$key] !== NULL) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Gets the Nomads Navigation filter query normalizer service.
+ */
+function nomads_navigation_filter_query_normalizer(): FilterQueryNormalizer {
+  return \Drupal::service('nomads_navigation.filter_query_normalizer');
+}
+
+/**
+ * Applies Specific navigation pill link/title markup to a menu item.
+ */
+function nomads_navigation_apply_specific_navigation_pill_markup(array &$item): void {
+  if (!isset($item['url']) || !$item['url'] instanceof Url) {
+    return;
+  }
+
+  $options = $item['url']->getOptions();
+  $options['attributes']['class'] = array_values(array_unique(array_merge(
+    $options['attributes']['class'] ?? [],
+    ['nomads-specific-navigation__pill']
+  )));
+  $item['url']->setOptions($options);
+
+  $item['title'] = Markup::create('<span class="nomads-specific-navigation__term-label">' . Html::escape((string) $item['title']) . '</span>');
+}
+
+/**
+ * Rewrites a root-navigation URL to the current path and query string.
+ */
+function nomads_navigation_rewrite_root_navigation_url(Url $url, string $path, array $query): ?Url {
+  if (!$url->isExternal()) {
+    return NULL;
+  }
+
+  $parts = parse_url($url->toString());
+  $scheme = $parts['scheme'] ?? 'https';
+  $host = $parts['host'] ?? '';
+  if ($host === '') {
+    return NULL;
+  }
+
+  $authority = $host;
+  if (isset($parts['port'])) {
+    $authority .= ':' . $parts['port'];
+  }
+
+  $target = $scheme . '://' . $authority . '/' . ltrim($path, '/');
+  if ($query !== []) {
+    $target .= '?' . UrlHelper::buildQuery($query);
+  }
+
+  return Url::fromUri($target);
+}
+
+/**
+ * Builds a menu item class from a root-navigation URL host prefix.
+ */
+function nomads_navigation_root_navigation_menu_item_class(Url $url): ?string {
+  if (!$url->isExternal()) {
+    return NULL;
+  }
+
+  $host = parse_url($url->toString(), PHP_URL_HOST);
+  if (!is_string($host) || $host === '') {
+    return NULL;
+  }
+
+  $prefix = explode('.', $host)[0] ?? '';
+  if ($prefix === '') {
+    return NULL;
+  }
+
+  return Html::getClass($prefix . '-menu-item');
+}
+
+/**
+ * Builds an internal navbar path while preserving the current query string.
+ */
+function nomads_navigation_path_with_current_query(string $path, array $query): string {
+  if ($query === []) {
+    return $path;
+  }
+
+  return $path . '?' . UrlHelper::buildQuery($query);
+}
+
+/**
+ * Determines whether the current route is an admin route.
+ */
+function nomads_navigation_is_admin_route(): bool {
+  return \Drupal::service('router.admin_context')->isAdminRoute();
 }
 
 /**
  * Implements hook_entity_view_alter().
  */
 function nomads_navigation_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display): void {
+  if (nomads_navigation_is_admin_route()) {
+    return;
+  }
+
   if (
     !$entity instanceof NodeInterface ||
     $entity->bundle() !== 'landing_page' ||
@@ -57,6 +441,10 @@ function nomads_navigation_entity_view_alter(array &$build, EntityInterface $ent
  * Implements hook_preprocess_node().
  */
 function nomads_navigation_preprocess_node(array &$variables): void {
+  if (nomads_navigation_is_admin_route()) {
+    return;
+  }
+
   $node = $variables['node'] ?? NULL;
   $view_mode = $variables['view_mode'] ?? NULL;
   if (

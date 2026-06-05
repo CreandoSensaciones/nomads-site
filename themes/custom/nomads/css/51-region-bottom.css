@@ -1,0 +1,11 @@
+
+/* ========== Region Bottom ========== */
+
+section.region-bottom {
+  background: linear-gradient(135deg, #66C3D0 0%, #33A7B8 100%);
+  color: #fff;
+}
+.region-bottom a {
+  text-decoration: none;
+  color: #fff;
+}

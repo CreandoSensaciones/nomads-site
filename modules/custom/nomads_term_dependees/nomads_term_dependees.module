@@ -8,6 +8,54 @@
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\WidgetInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_term_dependees_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_term_dependees':
+      $output = '';
+      $output .= '<h2>' . t('Nomads Term Dependees') . '</h2>';
+      $output .= '<p>' . t('Nomads Term Dependees adds client-side constraint handling for taxonomy term widgets. It can auto-select dependent terms, prevent invalid term combinations, and make hidden Easy Tagging category sections visible when selected terms require them.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Adds a <em>Enable term dependees</em> third-party widget setting to taxonomy term reference widgets.') . '</li>';
+      $output .= '<li>' . t('Automatically enables dependee behavior for the <code>nomads_easy_tagging_master</code> widget and for <code>field_type</code>.') . '</li>';
+      $output .= '<li>' . t('Builds a dependee map from published terms in the <code>t</code> and <code>type</code> vocabularies that have <code>field_dependee</code> references.') . '</li>';
+      $output .= '<li>' . t('Builds a symmetric no-combine map from <code>field_no_combine</code>, expanding forbidden terms to include descendants.') . '</li>';
+      $output .= '<li>' . t('Supports checkboxes, radios, selects, hidden Easy Tagging values, and special category select hidden values as taxonomy selection sources.') . '</li>';
+      $output .= '<li>' . t('Auto-selects transitive dependees and removes auto-selected terms when they are no longer required by any selected controller term.') . '</li>';
+      $output .= '<li>' . t('Disables terms blocked by no-combine rules unless that blocked term is already selected.') . '</li>';
+      $output .= '<li>' . t('Coordinates with Nomads Easy Tagging category-step sections so dependee category labels can become visible when required.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The module attaches data attributes and the <code>nomads_term_dependees/constraints</code> library from field widget and form alter hooks. <code>ConstraintMapBuilder</code> queries taxonomy terms, filters to published terms, builds dependee and no-combine maps, and stores the result in the default cache backend with taxonomy term list cache tags. The JavaScript behavior collects compatible controls per form, computes manual selections versus auto-applied dependees, writes the updated selections back to the underlying widgets, and applies disabled or visibility states.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Enable term dependees from a taxonomy reference widget’s settings on Manage form display, or use a widget/field where the module enables behavior automatically. Taxonomy data must use <code>field_dependee</code> for required terms and <code>field_no_combine</code> for incompatible terms. Constraint maps are currently built only from the <code>t</code> and <code>type</code> vocabularies. The module also defensively normalizes missing entity reference handlers to <code>default:taxonomy_term</code> to avoid selection manager fatals.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Constraint data is hardcoded to the <code>t</code> and <code>type</code> vocabularies and to the fields <code>field_dependee</code> and <code>field_no_combine</code>.') . '</li>';
+      $output .= '<li>' . t('The enforcement is client-side; if JavaScript is unavailable or markup changes, auto-selection and no-combine disabling may not run.') . '</li>';
+      $output .= '<li>' . t('The JavaScript supports several widget markup patterns and is tightly coupled to Nomads Easy Tagging and special category select hidden input conventions.') . '</li>';
+      $output .= '<li>' . t('No-combine descendant expansion follows published reachable terms in the supported vocabularies, so unpublished or disconnected tree branches are ignored.') . '</li>';
+      $output .= '<li>' . t('The older <code>dependees</code> library remains defined, but the module hooks currently attach the newer <code>constraints</code> library.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for map building, cache invalidation, transitive dependees, no-combine behavior, widget compatibility, or wizard selection seeding.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('This module improves editor form behavior but does not provide authoritative server-side validation. Users can bypass browser-side auto-selection or disabled states, so any required term dependencies or no-combine rules that affect data integrity should also be validated server-side. Constraint map queries use <code>accessCheck(FALSE)</code> and expose term IDs in <code>drupalSettings</code> to users who can access the form, so do not store sensitive information solely in these taxonomy relationships.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
 
 /**
  * Implements hook_field_widget_third_party_settings_form().

@@ -1,0 +1,60 @@
+<?php
+
+/**
+ * @file
+ * Adds all fields to the field types (the plugin definition does not
+ * allow this).
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_field_count_formatter_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_field_count_formatter':
+      $output = '';
+      $output .= '<h2>' . t('Nomads Field Count Formatter') . '</h2>';
+      $output .= '<p>' . t('Nomads Field Count Formatter is the Nomads Drupal 11 adaptation of the contributed <a href=":url">Field Count Formatter</a> project. It provides a simple formatter that renders the number of values present in a field instead of rendering the field values themselves.', [':url' => 'https://www.drupal.org/project/field_count_formatter']) . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Provides the <code>count</code> field formatter, labelled <em>Field count</em>.') . '</li>';
+      $output .= '<li>' . t('Displays <code>$items->count()</code> for the current field item list.') . '</li>';
+      $output .= '<li>' . t('Makes the formatter available to all field types by altering field formatter plugin definitions.') . '</li>';
+      $output .= '<li>' . t('Preserves normal field label rendering by returning the count as the first rendered field item.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The formatter plugin uses Drupal 11 attribute-based discovery in <code>Count.php</code>. Its declared field type list is intentionally empty, and <code>hook_field_formatter_info_alter()</code> expands the formatter to every known field type at runtime through the field type plugin manager.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Configure this from an entity Manage display page by selecting <em>Field count</em> as the formatter for a field. The formatter has no settings. It counts stored field items after Drupal has loaded the entity and field item list.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('The formatter ID remains <code>count</code> for compatibility with existing display configuration, so another module defining the same formatter ID would conflict.') . '</li>';
+      $output .= '<li>' . t('Because the formatter is exposed for all field types, it may appear on field types where a count is technically valid but not useful for editors.') . '</li>';
+      $output .= '<li>' . t('Existing sites using the original module machine name <code>field_count_formatter</code> need display configuration and enabled-module state reviewed when moving to this Nomads-prefixed adaptation.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('The formatter renders only an integer count and does not output field values. It still follows Drupal field display and entity access context: if a field is rendered for a viewer, this formatter can reveal how many values are present. Do not use it as a substitute for field access control when the existence or count of values is sensitive.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
+
+/**
+ * Implements hook_field_formatter_info_alter().
+ */
+function nomads_field_count_formatter_field_formatter_info_alter(array &$info): void {
+  // Adds the count formatter to all field types.
+  if (isset($info['count'])) {
+    $field_types = \Drupal::service('plugin.manager.field.field_type')->getDefinitions();
+    $info['count']['field_types'] = array_keys($field_types);
+  }
+}

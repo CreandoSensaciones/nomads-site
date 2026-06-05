@@ -3,6 +3,53 @@
 declare(strict_types=1);
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_media_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_media':
+      $output = '';
+      $output .= '<h2>' . t('Nomads Media') . '</h2>';
+      $output .= '<p>' . t('Nomads Media adds listing-image editing enhancements for Media Library widgets. It targets the listing images form operation and lets editors drag, reorder, and duplicate selected media items across matching <code>field_images</code> media-library widgets.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Attaches the <code>nomads_media/listing_images</code> library on the dedicated <code>node_listing_images_form</code> form ID.') . '</li>';
+      $output .= '<li>' . t('Also attaches the library when editing a <code>listing</code> node with the <code>images</code> form operation.') . '</li>';
+      $output .= '<li>' . t('Marks the form with <code>data-nomads-media-listing-images</code> so CSS and JavaScript apply only to the intended editor.') . '</li>';
+      $output .= '<li>' . t('Uses Sortable to make Media Library selections draggable within and between <code>field_images</code> widgets.') . '</li>';
+      $output .= '<li>' . t('Duplicates dragged items when moving between parent and nested image widgets, while normal moves remain possible within equivalent widget levels.') . '</li>';
+      $output .= '<li>' . t('Retargets item deltas, remove button names, hidden target IDs, weights, IDs, and Drupal selectors after reordering or cross-widget moves.') . '</li>';
+      $output .= '<li>' . t('Applies grid and sticky-position CSS to make image selection management easier on the listing image form.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The module uses form alters to detect the listing images edit context and attach one asset library. The JavaScript behavior finds Media Library selection containers inside fieldsets whose IDs start with <code>field_images-media-library-wrapper</code>, initializes Sortable with a shared group, and synchronizes Drupal form element names and weights after every update, add, remove, or drag end event. Cloned items have their <code>data-once</code> attributes reset before Drupal behaviors are reattached.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('There is no settings form. The behavior depends on a <code>listing</code> node form operation named <code>images</code>, a Media Library field named <code>field_images</code>, and Drupal core’s Media Library widget markup. Attachments are automatic for the recognized form ID or operation. The library depends on Drupal core Sortable, Media Library widget assets, <code>drupal</code>, and <code>once</code>.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('The JavaScript is tightly coupled to <code>field_images</code>, Media Library widget class names, wrapper ID prefixes, hidden input names, remove button labels, and selector naming conventions.') . '</li>';
+      $output .= '<li>' . t('If Drupal core Media Library markup changes, retargeting remove buttons, target IDs, or weight inputs may stop working correctly.') . '</li>';
+      $output .= '<li>' . t('Cross-widget duplication relies on comparing widget paths to distinguish parent and nested widgets, which can be fragile in deeply nested form structures.') . '</li>';
+      $output .= '<li>' . t('The behavior requires <code>globalThis.Sortable</code>; if Sortable is missing, the form remains usable but enhanced dragging is disabled.') . '</li>';
+      $output .= '<li>' . t('A rollout <code>console.debug</code> trace remains in the JavaScript and may add noise during browser debugging.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for drag reorder, clone behavior, form-element retargeting, AJAX reattachment, or fallback behavior without Sortable.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('This module changes client-side editing ergonomics only. It does not grant media access, upload access, or node edit access, and it submits through Drupal’s normal Media Library widget inputs. Server-side field validation and media permissions remain the authority. Because client-side retargeting controls submitted media IDs and weights, any workflow that depends on strict media ownership or moderation should continue to enforce those rules through normal Drupal access and validation.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
 
 /**
  * Implements hook_form_FORM_ID_alter() for the listing images form mode.

@@ -3,3 +3,6 @@ type: module
 description: 'Adds listing-specific node edit tabs/routes, access control callback, and listing/admin asset libraries (layout CSS and Leaflet resize helper JS).'
 package: 'Nomads Features'
 core_version_requirement: '^11'
+dependencies:
+  - entity_reference_revisions:entity_reference_revisions
+  - paragraphs:paragraphs

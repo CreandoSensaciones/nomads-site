@@ -4,3 +4,49 @@
  * @file
  * Magical Links module hooks.
  */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function magical_links_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.magical_links':
+      $output = '';
+      $output .= '<h2>' . t('Magical Links') . '</h2>';
+      $output .= '<p>' . t('Magical Links provides a custom link field widget and formatter that turn taxonomy terms into reusable link definitions. Editors choose icons while entering links, and rendered output groups links by the taxonomy parent that defines each icon group.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Provides the <code>magical_links</code> field widget for core <code>link</code> fields.') . '</li>';
+      $output .= '<li>' . t('Provides the <code>magical_links</code> field formatter for grouped icon-and-label link output.') . '</li>';
+      $output .= '<li>' . t('Builds available icon definitions from leaf terms in the <code>links</code> vocabulary.') . '</li>';
+      $output .= '<li>' . t('Uses term icons from <code>field_icons</code> and URL/title prefill values from <code>field_prefill</code>, with optional legacy prefix fallbacks in the repository.') . '</li>';
+      $output .= '<li>' . t('Groups icon choices and rendered links by parent taxonomy term, preserving taxonomy tree order.') . '</li>';
+      $output .= '<li>' . t('Uses JavaScript to create the editor-side icon selector, prefill URL fields, track the selected icon, hide noisy link metadata, and cooperate with add-more Ajax rebuilds.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The widget extends Drupal core’s Link widget and adds icon chooser markup plus the <code>magical_links/widget</code> library. The formatter extends <code>FormatterBase</code>, resolves link definitions again, matches field items by URL prefix or title, groups matched links, and renders external-style links with icons and labels. The <code>magical_links.definition_repository</code> service loads taxonomy terms, translations, icon files or media images, prefill values, and group labels, then caches the normalized definitions with vocabulary, term, media, file, and language cache metadata.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Configure a link field to use the <em>Magical Links</em> widget on form display and the <em>Magical Links</em> formatter on view display. Icon definitions are content-managed through the <code>links</code> taxonomy vocabulary: parent terms become groups and leaf terms become selectable link definitions. The formatter exposes one setting, <code>trim_length</code>, which limits rendered link text length; leaving it empty disables trimming.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('The widget JavaScript performs substantial DOM restructuring and listens to Ajax completion. Changes in Drupal link widget markup, tabledrag markup, or Ajax behavior can break editor interactions.') . '</li>';
+      $output .= '<li>' . t('The editor CSS includes broad URL-description selectors outside the widget wrapper, so style changes should verify that unrelated link fields are not affected.') . '</li>';
+      $output .= '<li>' . t('The formatter stylesheet targets <code>.field--name-field-links</code>, coupling frontend layout to one field machine name.') . '</li>';
+      $output .= '<li>' . t('Definition matching depends on URL prefixes and exact title/icon labels. Generic prefixes are ignored, and taxonomy label or prefill changes can move links between groups.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for repository caching, icon media resolution, widget Ajax behavior, formatter matching, group ordering, or cache invalidation.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('Definition labels, group labels, prefixes, icon URLs, and rendered link labels are escaped before being inserted into markup. Formatter links open in a named target and include <code>noopener</code> and <code>noreferrer</code>; non-website definitions also receive <code>nofollow</code>. The widget prefill behavior is only an editor convenience and must not be treated as URL validation. Link field validation, allowed URI schemes, taxonomy edit access, file/media access, and normal entity permissions remain responsible for controlling what can be stored and rendered.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}

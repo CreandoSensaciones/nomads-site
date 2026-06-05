@@ -1,0 +1,275 @@
+.node--type-resource.node--view-mode-teaser {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+  /* height: 100%; */
+  margin-right: 10px;
+  margin-left: 10px;
+}
+
+.node--type-resource.node--view-mode-teaser .node__content .overlay-area,
+.node--type-resource.node--view-mode-teaser .node__content .hover-overlay {
+  display: flex;
+  flex-direction: column;
+  height: 200px;
+  box-sizing: border-box;
+}
+.node--type-resource.node--view-mode-teaser .node__content .hover-overlay {
+  display: none;
+}
+
+
+
+
+/* ===================================
+  Land page teasers - Subdomain cards
+======================================= */
+
+/* ======= Subdomain Heaser ======= */
+
+.node--type-resource.node--view-mode-teaser {
+  max-width: 300px;
+}
+
+.node--type-resource.node--view-mode-teaser .field--name-title {
+  order: 1;
+  background: #fff;
+  padding: 5px 10px 5px;
+  text-align: center;
+  line-height: 1;
+}
+.node--type-resource.node--view-mode-teaser .field--name-title span {
+  padding: 0 5px;
+}
+.node--type-resource.node--view-mode-teaser .field--name-title .prefix,
+.node--type-resource.node--view-mode-teaser .field--name-title .suffix {
+  display: contents;
+}
+.node--type-resource.node--view-mode-teaser .field--name-title h3 {
+  margin: 0;
+  font-size: 14pt;
+  font-weight: 600;
+  line-height: 1;
+  color: #666;
+  text-transform: uppercase;
+}
+.node--type-resource.node--view-mode-teaser .field--name-title a {
+  display: inline-block;
+  text-decoration: none;
+  color: #0575b1;
+}
+
+/* current fallback, style the first word stronger if whole title stays one link */
+.node--type-resource.node--view-mode-teaser .field--name-title a::first-line {
+  color: inherit;
+}
+.node--type-resource.node--view-mode-teaser .field--name-title a:focus-visible {
+  outline: 2px solid #0575b1;
+  outline-offset: 2px;
+  background: rgba(5, 117, 177, 0.12);
+  border-radius: 6px;
+}
+
+/* If you later split subdomain into spans like:
+   <span class="domain-first">COLIVING</span><span class="domain-dot"> • </span><span class="domain-rest">nomads.site</span>
+   then these will apply immediately
+*/
+.node--type-resource.node--view-mode-teaser .field--name-title .domain-first {
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #0575b1;
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .node--type-resource.node--view-mode-teaser .field--name-title .domain-first {
+    background-image: linear-gradient(135deg, #66C3D0 0%, #005F8A 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+.node--type-resource.node--view-mode-teaser .field--name-title .domain-rest {
+  text-transform: lowercase;
+  color: #b0b0b0;
+  font-weight: 400;
+}
+
+.node--type-resource.node--view-mode-teaser .field--name-title .domain-dot {
+  color: #c0c0c0;
+  font-weight: 400;
+  padding: 0 0.3em;
+}
+
+
+
+/* ============ Image area ================= */
+
+.node--type-resource.node--view-mode-teaser .field--name-field-img {
+  order: 2;
+  position: relative;
+  margin: 0;
+  flex: 1 1 auto;
+}
+
+
+.node--type-resource.node--view-mode-teaser .field--name-field-img  img {
+  display: block;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+
+
+/* ==============  Teaser line overlay =================== */
+
+.node--type-resource.node--view-mode-teaser .field--name-field-teaser-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  margin: 0;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 6px 10px 6px;
+  text-align: center;
+  font-size: 9pt;
+  color: #fff;
+}
+
+.node--type-resource.node--view-mode-teaser:hover .field--name-field-website {
+  display: block;
+}
+
+
+.node--type-resource.node--view-mode-teaser .field--name-field-website a {
+  color: #fff;
+  text-decoration: none;
+  text-wrap: balance;
+}
+
+.node--type-resource.node--view-mode-teaser .field--name-field-website a:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+
+
+
+/* =============== Hover ========================= */
+/*
+.node--type-resource.node--view-mode-teaser {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.node--type-resource.node--view-mode-teaser:hover,
+.node--type-resource.node--view-mode-teaser:focus-within {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
+}
+*/
+
+
+
+/* =========================
+   Responsive
+   ========================= */
+
+@media (max-width: 700px) {
+  .node--type-resource.node--view-mode-teaser .field--name-title {
+    padding: 14px 16px 12px;
+  }
+
+  .node--type-resource.node--view-mode-teaser .field--name-field-teaser-teaser2 {
+    padding: 14px 16px 16px;
+  }
+}
+
+
+/* =========================
+   Hide contextual overflow issues
+   ========================= */
+
+.node--type-resource.node--view-mode-teaser .contextual {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 20;
+}
+.node--type-resource.node--view-mode-teaser .nomads-pill {
+  border: 1px solid rgba(255,255,255, 0.5);
+  font-size: 10pt;
+}
+.node--type-resource.node--view-mode-teaser .field--name-field-resource-type {
+  position: absolute;
+  left: 7px;
+  top: 7px;
+  z-index: 20;
+}
+.node--type-resource.node--view-mode-teaser .overlay-area {
+  position: relative;
+}
+.node--type-resource.node--view-mode-teaser .hover-overlay {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+  color: #fff;
+  background:  #005F8A;
+  text-align: right;
+  border-radius: 8px;
+  padding-top: 10px;
+}
+
+.node--type-resource.node--view-mode-teaser .hover-overlay > div {
+  text-align: right;
+  padding-left: 10px;
+}
+.node--type-resource.node--view-mode-teaser .hover-overlay .field--name-field-resource-tag {
+  text-align: center;
+}
+.node--type-resource.node--view-mode-teaser .hover-overlay .nomads-pill {
+  font-size: 9px;
+  background: linear-gradient(135deg, #005F8A 0%, #003B5C 100%);
+  margin-bottom: 10px;
+}
+.node--type-resource.node--view-mode-teaser .hover-overlay .double-field-second {
+  display: inline-block;
+  width: 200px;
+  opacity: 0.5;
+  text-align: left;
+  font-size: 9pt;
+  padding-left: 20px;
+  vertical-align: middle;
+}
+.node--type-resource.node--view-mode-teaser .hover-overlay .field--name-body {
+  opacity: 0.7;
+  text-align: left;
+  font-size: 9pt;
+  padding-left: 20px;
+}
+
+.node--type-resource.node--view-mode-teaser div .field--name-field-website {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  margin: 0;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 6px 10px 6px;
+  text-align: center;
+  font-size: 9pt;
+  color: #fff;
+}
+.node--type-resource.node--view-mode-teaser:hover .hover-overlay {
+  display: flex;
+}

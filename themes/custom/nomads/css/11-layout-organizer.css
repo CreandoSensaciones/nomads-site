@@ -1,0 +1,71 @@
+
+
+/* ======================
+  Base layout
+========================= */
+
+.node--type-organizer.node--view-mode-full > .node__content {
+  display: grid;
+  gap: 16px;
+  grid-template-columns:
+    minmax(0, 22%)
+    minmax(0, 1fr)
+    minmax(0, 28%);
+  grid-template-areas:
+    "logo content right"
+    "left content right";
+  align-items: stretch;
+  margin-top: 10px;
+}
+
+.node--type-organizer.node--view-mode-full > .node__content > .logo-area {
+  grid-area: logo;
+  justify-self: center;
+}
+.node--type-organizer.node--view-mode-full .nomads-logo {
+    width: 200px;
+    height: 200px;
+    font-size: 16pt;
+    margin-top: -80px;
+}
+.node--type-organizer.node--view-mode-full > .node__content > #left-sidebar {
+  grid-area: left;
+  padding: 0 2vw;
+  box-sizing: border-box;
+}
+
+.node--type-organizer.node--view-mode-full > .node__content > #content-container {
+  grid-area: content; 
+}
+
+.node--type-organizer.node--view-mode-full > .node__content > #right-sidebar {
+  grid-area: right;
+  padding: 0 2vw;
+  box-sizing: border-box;
+}
+
+
+@media (max-width: 980px) {
+.node--type-organizer.node--view-mode-full > .node__content {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "logo logo"
+      "content content"
+      "left right"
+  }
+  .node--type-organizer.node--view-mode-full .nomads-logo {
+    margin-top: 0;
+  }
+}
+@media (max-width: 766px) {
+.node--type-organizer.node--view-mode-full > .node__content {
+  grid-template-columns: 1fr; 
+  grid-template-areas:
+      "logo"
+      "content"
+      "left"
+      "right"
+}
+}
+
+

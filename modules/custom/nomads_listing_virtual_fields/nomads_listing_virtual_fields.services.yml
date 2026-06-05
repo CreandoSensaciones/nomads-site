@@ -4,12 +4,6 @@ services:
     arguments:
       - '@string_translation'
 
-  nomads_listing_virtual_fields.price_builder:
-    class: Drupal\nomads_listing_virtual_fields\PriceVirtualFieldBuilder
-    arguments:
-      - '@commerce_price.currency_formatter'
-      - '@string_translation'
-
   nomads_listing_virtual_fields.location_builder:
     class: Drupal\nomads_listing_virtual_fields\LocationExtraFieldBuilder
     arguments:

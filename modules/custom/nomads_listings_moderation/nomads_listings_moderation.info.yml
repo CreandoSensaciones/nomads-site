@@ -1,5 +1,0 @@
-name: Nomads Listings Moderation
-type: module
-description: 'Provides custom moderation widget behavior for listing taxonomy tag fields, including grouped branch UI and tag force/block synchronization helpers.'
-core_version_requirement: ^10 || ^11
-package: 'Nomads Features'

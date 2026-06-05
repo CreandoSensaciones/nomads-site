@@ -6,7 +6,7 @@
 ## What It Does
 - Adds field formatter plugin `nomads_tiles_media` for media-image reference fields.
 - Adds Field Group formatter plugin `nomads_data_tile` for view-mode groups intended as data-tile sources.
-- Collects configured data-tile groups and renders their child fields into tile containers.
+- Collects configured data-tile groups and renders their label and child fields as direct children of tile containers.
 - Auto-wraps consecutive rendered child fields that share the same `tile-row-*` marker class.
 - Builds image tiles from referenced media images (using image style `tile` if available).
 - Generates output sequence using configurable `D/I` patterns:

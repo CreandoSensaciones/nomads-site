@@ -8,6 +8,54 @@ declare(strict_types=1);
  */
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_tiles_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_tiles':
+      $output = '';
+      $output .= '<h2>' . t('Nomads Tiles') . '</h2>';
+      $output .= '<p>' . t('Nomads Tiles provides a media-image field formatter and a companion Field Group formatter for building mixed tile layouts. It combines image tiles from media references with structured data tiles built from selected display fields or extra fields.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Provides the <code>nomads_tiles_media</code> formatter, shown as <em>Nomads Tiles (media images)</em>, for media image reference fields.') . '</li>';
+      $output .= '<li>' . t('Provides the <code>nomads_data_tile</code> Field Group formatter for view-mode groups whose children should be consumed as data tile content.') . '</li>';
+      $output .= '<li>' . t('Builds data tiles from configured Field Group children, including normal fields and extra fields produced by entity view hooks.') . '</li>';
+      $output .= '<li>' . t('Builds image tiles from referenced image media using the <code>tile</code> image style when available and <code>lightbox</code> for full-size gallery URLs when available.') . '</li>';
+      $output .= '<li>' . t('Sequences data and image tiles with configurable <code>D</code>/<code>I</code> patterns for one, two, or three data tiles.') . '</li>';
+      $output .= '<li>' . t('Supports minimum and maximum tile counts, filling with empty tiles when needed.') . '</li>';
+      $output .= '<li>' . t('Groups consecutive child fields that share a <code>tile-row-*</code> class into a shared row wrapper.') . '</li>';
+      $output .= '<li>' . t('Attaches desktop GLightbox links, hidden gallery links for omitted media, and a mobile-only Swiper representation of the tile sequence.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The formatter collects <code>nomads_data_tile</code> Field Group definitions from the active entity view display, renders their child fields manually, builds image tile link render arrays, and combines both sources into one tile sequence. The module also uses <code>hook_entity_view_alter()</code> plus a pre-render callback to suppress fields that belong to data tile groups, preventing those child fields from rendering twice outside the tile layout. The Field Group formatter itself renders no output; it exists as a configuration marker and source container for the tile formatter.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Configure a media image reference field with the <em>Nomads Tiles (media images)</em> formatter on Manage display. Create Field Group groups with the <em>Nomads Data Tile</em> formatter and place fields or extra fields inside them. Formatter settings are <code>pattern_1d</code>, <code>pattern_2d</code>, <code>pattern_3d</code>, <code>min_total_tiles</code>, and <code>max_total_tiles</code>. Patterns use <code>D</code> for data tiles and <code>I</code> for image tiles; other characters are ignored. Add shared <code>tile-row-*</code> classes to adjacent child fields when they should be wrapped together.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('The formatter depends on Field Group configuration internals and the <code>nomads_data_tile</code> formatter ID to discover data tiles.') . '</li>';
+      $output .= '<li>' . t('Recursive child-field suppression can remove fields broadly when the same field machine name appears elsewhere in nested render arrays.') . '</li>';
+      $output .= '<li>' . t('Image rendering assumes referenced media bundles use an image source; unsupported media are skipped.') . '</li>';
+      $output .= '<li>' . t('The <code>tile</code> and <code>lightbox</code> image style names are hardcoded fallbacks; missing styles change generated URLs and gallery quality silently.') . '</li>';
+      $output .= '<li>' . t('Extra field rendering invokes entity view hooks during formatter rendering, which can add overhead and may trigger assumptions in other modules.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for Field Group discovery, field suppression, extra-field rendering, row grouping, D/I sequencing, GLightbox links, or mobile Swiper output.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('The formatter renders fields through their configured display formatters and checks field item view access before rendering normal fields. Media image URLs are generated from referenced media source files and image styles; normal media, file, field, and entity access must still be configured correctly. Hidden GLightbox links can expose gallery images that are not visible in the tile sequence, so do not include restricted media in the field unless access control allows it.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
 
 /**
  * Implements hook_entity_view_alter().

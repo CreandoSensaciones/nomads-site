@@ -10,8 +10,53 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\FieldConfigInterface;
+
+/**
+ * Implements hook_help().
+ */
+function field_subtitle_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.field_subtitle':
+      $output = '';
+      $output .= '<h2>' . t('Field Subtitle') . '</h2>';
+      $output .= '<p>' . t('Field Subtitle adds a short, configurable subtitle to field widgets on entity edit forms. It is used when a field label needs a concise supporting line without changing the field description or widget implementation.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Adds a <em>Field subtitle</em> section to field configuration forms.') . '</li>';
+      $output .= '<li>' . t('Stores subtitle text as third-party configuration on the field config entity.') . '</li>';
+      $output .= '<li>' . t('Renders the subtitle below or beside the field label and above the widget, depending on available space and widget structure.') . '</li>';
+      $output .= '<li>' . t('Supports single-value and multi-value fields, with placement logic for complete widget wrappers when needed.') . '</li>';
+      $output .= '<li>' . t('Includes special placement handling for the Special Category Select and Nomads Easy Tagging master widgets.') . '</li>';
+      $output .= '<li>' . t('Uses fallback traversal after form build to catch nested widget structures, including paragraph subforms where standard widget alter hooks may not expose the final target element.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The module extends the field configuration edit form with a third-party setting named <code>third_party_settings[field_subtitle][subtitle]</code>. During form rendering it reads the subtitle from the field definition or field config, chooses the best widget element to decorate, adds <code>field-subtitle-enabled</code> classes, attaches the <code>field_subtitle/field_subtitle</code> stylesheet, and inserts escaped subtitle text through field prefix markup. A form after-build callback recursively applies fallback subtitles where widget-specific hooks miss nested structures.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Configure subtitles on each field instance from the field settings edit form. The only stored option is <code>subtitle</code>, defined in config schema under <code>field.field.*.*.*.third_party.field_subtitle</code>. Empty values are normalized to <code>NULL</code> so blank subtitles are not rendered.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Subtitle placement depends on Drupal form element structure, including <code>#title</code>, <code>#field_prefix</code>, <code>value</code> children, and widget-specific title elements.') . '</li>';
+      $output .= '<li>' . t('The module contains widget-specific branches for project widgets, which couples this generic behavior to local widget markup.') . '</li>';
+      $output .= '<li>' . t('Fallback subtitle resolution may load field config entities during form build. This is acceptable for normal editor forms but should be watched on very large or heavily nested forms.') . '</li>';
+      $output .= '<li>' . t('Class and library attachment happens from multiple alter paths. The code avoids duplicate subtitle markup, but repeated rebuilds should still be checked when changing widget behavior.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for Ajax rebuilds, multi-value widgets, paragraph nesting, or project-specific widgets.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('Subtitle text is configuration, not editor-submitted content during normal entity editing. The module escapes subtitle text before creating markup, so subtitles should be treated as plain text and not as HTML. Access to edit field configuration controls who can create or change subtitles. The module does not grant field access or bypass normal entity form validation.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
 
 /**
  * Implements hook_form_FORM_ID_alter().

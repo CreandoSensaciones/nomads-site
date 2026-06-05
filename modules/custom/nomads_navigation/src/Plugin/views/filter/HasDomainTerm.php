@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\nomads_navigation\Plugin\views\filter;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -13,6 +14,7 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\domain\DomainNegotiatorInterface;
+use Drupal\domain_config\DomainConfigOverrider;
 use Drupal\views\Attribute\ViewsFilter;
 use Drupal\views\Plugin\views\filter\FilterPluginBase;
 use Drupal\views\Plugin\views\query\CastSqlInterface;
@@ -87,6 +89,7 @@ final class HasDomainTerm extends FilterPluginBase implements ContainerFactoryPl
     $plugin_id,
     $plugin_definition,
     private readonly ConfigFactoryInterface $configFactory,
+    private readonly StorageInterface $configStorage,
     private readonly EntityFieldManagerInterface $entityFieldManager,
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly Connection $database,
@@ -105,6 +108,7 @@ final class HasDomainTerm extends FilterPluginBase implements ContainerFactoryPl
       $plugin_id,
       $plugin_definition,
       $container->get('config.factory'),
+      $container->get('config.storage'),
       $container->get('entity_field.manager'),
       $container->get('entity_type.manager'),
       $container->get('database'),
@@ -177,7 +181,11 @@ final class HasDomainTerm extends FilterPluginBase implements ContainerFactoryPl
    * {@inheritdoc}
    */
   public function getCacheTags(): array {
-    return array_values(array_unique(array_merge(parent::getCacheTags(), ['config:nomads_navigation.settings'])));
+    $config_tags = array_map(
+      static fn (string $config_name): string => 'config:' . $config_name,
+      $this->getSettingsConfigNamesForRead(),
+    );
+    return array_values(array_unique(array_merge(parent::getCacheTags(), $config_tags)));
   }
 
   /**
@@ -314,6 +322,24 @@ final class HasDomainTerm extends FilterPluginBase implements ContainerFactoryPl
    *   Configured filter term IDs.
    */
   private function getConfiguredFilterTids(): array {
+    foreach ($this->getSettingsConfigNamesForRead() as $config_name) {
+      $data = $this->configStorage->read($config_name);
+      if (!is_array($data)) {
+        continue;
+      }
+
+      if (array_key_exists('filter_tids', $data)) {
+        $filter_tids = $this->normalizeTermIds((array) $data['filter_tids']);
+        if ($filter_tids !== [] || !array_key_exists('filter_tid', $data)) {
+          return $filter_tids;
+        }
+      }
+
+      if (array_key_exists('filter_tid', $data)) {
+        return $this->normalizeTermIds([$data['filter_tid']]);
+      }
+    }
+
     $settings = $this->configFactory->get('nomads_navigation.settings');
     $filter_tids = $this->normalizeTermIds($settings->get('filter_tids') ?? []);
     if ($filter_tids !== []) {
@@ -321,6 +347,28 @@ final class HasDomainTerm extends FilterPluginBase implements ContainerFactoryPl
     }
 
     return $this->normalizeTermIds([$settings->get('filter_tid')]);
+  }
+
+  /**
+   * Gets config names in active-domain override order.
+   *
+   * Domain Config merges numeric arrays recursively, but filter term IDs are an
+   * override list. Reading raw config makes the active domain authoritative.
+   *
+   * @return string[]
+   *   Config object names.
+   */
+  private function getSettingsConfigNamesForRead(): array {
+    $config_names = [];
+    $domain = $this->domainNegotiator->getActiveDomain();
+    if ($domain && method_exists($domain, 'id')) {
+      $domain_id = (string) $domain->id();
+      $config_names[] = DomainConfigOverrider::getConfigNameByDomain('nomads_navigation.settings', $domain_id);
+    }
+
+    $config_names[] = 'nomads_navigation.settings';
+
+    return array_values(array_unique($config_names));
   }
 
   /**

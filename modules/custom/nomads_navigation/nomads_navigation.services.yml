@@ -5,3 +5,21 @@ services:
       - '@entity_type.manager'
       - '@config.storage'
       - '@path_alias.manager'
+  nomads_navigation.listing_domain_matcher:
+    class: Drupal\nomads_navigation\ListingDomainMatcher
+    arguments:
+      - '@config.storage'
+      - '@entity_field.manager'
+      - '@entity_type.manager'
+      - '@database'
+      - '@views.cast_sql'
+  nomads_navigation.term_label_override_manager:
+    class: Drupal\nomads_navigation\TermLabelOverrideManager
+    arguments:
+      - '@config.storage'
+      - '@domain.negotiator'
+  nomads_navigation.filter_query_normalizer:
+    class: Drupal\nomads_navigation\FilterQueryNormalizer
+    arguments:
+      - '@datetime.time'
+      - '@config.factory'

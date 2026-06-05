@@ -33,6 +33,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements ContainerFactoryPluginInterface {
 
   /**
+   * Number of secondary slots in the full desktop gallery design.
+   */
+  protected const DESKTOP_TILE_SLOTS = 6;
+
+  /**
    * The image style storage.
    */
   protected ImageStyleStorageInterface $imageStyleStorage;
@@ -202,7 +207,6 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
    */
   public function viewElements(FieldItemListInterface $items, $langcode): array {
     $elements = [];
-    $media_items = $this->getEntitiesToView($items, $langcode);
     $gallery_media_items = $this->getGalleryMediaItems($items, $langcode);
     $gallery_items = $this->buildGalleryItems($gallery_media_items);
     $gallery_id = $this->buildGalleryId($items);
@@ -212,13 +216,13 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
     $second_style = (string) $this->getSetting('image_style_second');
     $rest_style = (string) $this->getSetting('image_style_rest');
 
-    $limit = $max_images > 0 ? min($max_images, 7, count($media_items)) : min(7, count($media_items));
+    $limit = $max_images > 0 ? min($max_images, count($gallery_media_items)) : count($gallery_media_items);
     $responsive_styles_to_cache = [];
     $image_styles_to_cache = [];
 
     $rendered_images = [];
     $count = 0;
-    foreach ($media_items as $media) {
+    foreach ($gallery_media_items as $media) {
       if ($count >= $limit) {
         break;
       }
@@ -265,111 +269,137 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
       $count++;
     }
 
-    $gallery_slots = array_slice($rendered_images, 0, 7);
-    while (count($gallery_slots) < 7) {
-      $gallery_slots[] = NULL;
+    $main_image = $rendered_images[0] ?? NULL;
+    $secondary_images = array_slice($rendered_images, 1);
+    $slide_count = count($rendered_images);
+    $has_multiple_slides = $slide_count > 1;
+    $swiper_classes = ['nomads-hero-gallery__swiper', 'hero-swiper', 'swiper'];
+    if (!$has_multiple_slides) {
+      $swiper_classes[] = 'hero-swiper--single';
     }
 
-    $lead = $gallery_slots[0];
-    $secondary_images = array_slice($gallery_slots, 1, 6);
-
-    $desktop = [
+    $swiper = [
       '#type' => 'container',
       '#attributes' => [
-        'class' => ['nomads-hero-gallery__desktop'],
+        'class' => $swiper_classes,
+        'aria-label' => $this->t('Hero gallery slideshow'),
+        'data-slide-count' => (string) $slide_count,
       ],
-      'lead' => [
+      'wrapper' => [
         '#type' => 'container',
         '#attributes' => [
-          'class' => ['nomads-hero-gallery__lead'],
-        ],
-        'image' => $lead
-          ? $this->wrapImageWithGalleryLink($lead['image'], $lead['media'], $gallery_id, [
-            'nomads-hero-gallery__trigger--lead',
-          ])
-          : $this->buildPlaceholderItem(TRUE),
-      ],
-      'grid' => [
-        '#type' => 'container',
-        '#attributes' => [
-          'class' => ['nomads-hero-gallery__grid'],
+          'class' => ['swiper-wrapper'],
         ],
       ],
     ];
 
-    foreach ($secondary_images as $index => $rendered_image) {
-      $cell_classes = ['nomads-hero-gallery__cell'];
-      if ($index >= 4) {
-        $cell_classes[] = 'nomads-hero-gallery__cell--tablet-hidden';
+    if ($main_image) {
+      foreach ($rendered_images as $index => $rendered_image) {
+        $slide_classes = ['swiper-slide', 'nomads-hero-gallery__slide'];
+        $trigger_classes = ['nomads-hero-gallery__trigger--slide'];
+        if ($index > 0) {
+          $slide_classes[] = 'nomads-hero-gallery__slide--mobile-only';
+          $trigger_classes[] = 'nomads-hero-gallery__trigger--mobile-slide';
+        }
+
+        $swiper['wrapper']['slide_' . $index] = [
+          '#type' => 'container',
+          '#attributes' => [
+            'class' => $slide_classes,
+          ],
+          'image' => $this->wrapImageWithGalleryLink($rendered_image['image'], $rendered_image['media'], $gallery_id, $trigger_classes),
+        ];
       }
-      $desktop['grid']['cell_' . $index] = [
-        '#type' => 'container',
-        '#attributes' => [
-          'class' => $cell_classes,
-        ],
-        'image' => $rendered_image
-          ? $this->wrapImageWithGalleryLink($rendered_image['image'], $rendered_image['media'], $gallery_id)
-          : $this->buildPlaceholderItem(),
-      ];
     }
-
-    $mobile = [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => ['nomads-hero-gallery__mobile'],
-      ],
-      'swiper' => [
-        '#type' => 'container',
-        '#attributes' => [
-          'class' => ['nomads-hero-gallery__mobile-swiper', 'swiper'],
-          'aria-label' => $this->t('Hero gallery slideshow'),
-        ],
-        'wrapper' => [
-          '#type' => 'container',
-          '#attributes' => [
-            'class' => ['swiper-wrapper'],
-          ],
-        ],
-        'pagination' => [
-          '#type' => 'container',
-          '#attributes' => [
-            'class' => ['swiper-pagination'],
-          ],
-        ],
-      ],
-    ];
-
-    foreach ($gallery_slots as $index => $rendered_image) {
-      $mobile['swiper']['wrapper']['slide_' . $index] = [
+    else {
+      $swiper['wrapper']['placeholder'] = [
         '#type' => 'container',
         '#attributes' => [
           'class' => ['swiper-slide', 'nomads-hero-gallery__slide'],
         ],
-        'image' => $rendered_image
-          ? $this->wrapImageWithGalleryLink($rendered_image['image'], $rendered_image['media'], $gallery_id, [
-            'nomads-hero-gallery__trigger--slide',
-          ])
-          : $this->buildPlaceholderItem(),
+        'image' => $this->buildPlaceholderItem(TRUE),
       ];
     }
+
+    if ($has_multiple_slides) {
+      $swiper['button_prev'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['swiper-button-prev'],
+          'aria-label' => $this->t('Previous image'),
+        ],
+      ];
+      $swiper['button_next'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['swiper-button-next'],
+          'aria-label' => $this->t('Next image'),
+        ],
+      ];
+      $swiper['pagination'] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['swiper-pagination'],
+        ],
+      ];
+    }
+
+    $tiles = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['nomads-hero-gallery__tiles'],
+      ],
+    ];
+
+    foreach ($secondary_images as $index => $rendered_image) {
+      if ($index >= self::DESKTOP_TILE_SLOTS) {
+        break;
+      }
+
+      $tiles['tile_' . $index] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['nomads-hero-gallery__tile'],
+        ],
+        'image' => $this->wrapImageWithGalleryLink($rendered_image['image'], $rendered_image['media'], $gallery_id, [
+          'nomads-hero-gallery__trigger--tile',
+        ]),
+      ];
+    }
+
+    $visible_tile_count = min(count($secondary_images), self::DESKTOP_TILE_SLOTS);
+    for ($index = $visible_tile_count; $index < self::DESKTOP_TILE_SLOTS; $index++) {
+      $tiles['placeholder_' . $index] = [
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => [
+            'nomads-hero-gallery__tile',
+            'nomads-hero-gallery__tile--placeholder',
+          ],
+        ],
+        'image' => $this->buildPlaceholderItem(),
+      ];
+    }
+
+    $gallery_classes = ['nomads-hero-gallery'];
+    $desktop_visible_count = min(count($rendered_images), self::DESKTOP_TILE_SLOTS + 1);
 
     $elements = [
       0 => [
         '#type' => 'container',
         '#attributes' => [
-          'class' => ['nomads-hero-gallery', 'nomads-hero-gallery--responsive'],
+          'class' => $gallery_classes,
           'data-gallery-id' => $gallery_id,
-          'data-swiper-breakpoint' => '768',
         ],
-        'desktop' => $desktop,
-        'mobile' => $mobile,
-        'gallery_items' => $this->buildHiddenGalleryLinks($gallery_items, $gallery_id, count($rendered_images)),
+        'swiper' => $swiper,
+        'tiles' => $tiles,
+        'gallery_items' => $this->buildHiddenGalleryLinks($gallery_items, $gallery_id, $desktop_visible_count),
       ],
       '#attached' => [
         'library' => [
           'nomads_hero_gallery/hero_gallery',
           'nomads_hero_gallery/glightbox',
-          'nomads_hero_gallery/mobile_swiper',
+          'nomads_hero_gallery/swiper',
         ],
       ],
     ];
@@ -446,7 +476,7 @@ class HeroGalleryMediaFormatter extends EntityReferenceFormatterBase implements 
     $gallery_field = 'field_images';
 
     if ($entity instanceof FieldableEntityInterface && $entity->hasField($gallery_field)) {
-      $gallery_items = $entity->get($gallery_field)->referencedEntities();
+      $gallery_items = $this->getEntitiesToView($entity->get($gallery_field), $langcode);
     }
     else {
       $gallery_items = $this->getEntitiesToView($items, $langcode);

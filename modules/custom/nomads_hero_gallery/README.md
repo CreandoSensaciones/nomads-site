@@ -10,28 +10,29 @@
   - second image
   - remaining images
 - Supports optional image count limiting via `max_images`.
-- Renders a responsive hero-gallery structure:
-  - desktop grid at `1200px` and wider with 1 lead image and 6 secondary images
-  - tablet grid from `768px` to `1199px` with 1 lead image and 4 visible secondary images
-  - mobile Swiper slideshow below `768px`
+- Renders a unified hero-gallery structure:
+  - one Swiper container for the main image area
+  - secondary images as desktop/tablet tiles outside Swiper
+  - the same Swiper becomes a full slideshow below `768px`
 - Attaches `nomads_hero_gallery/hero_gallery` CSS library for gallery layout styling.
 
 ## Files
 - `src/Plugin/Field/FieldFormatter/HeroGalleryMediaFormatter.php`
   Formatter plugin and render/build logic.
 - `css/hero-gallery.css`
-  Hero-gallery responsive grid and mobile slideshow layout styles.
+  Hero-gallery responsive tile and Swiper layout styles.
 - `js/nomads-hero-gallery.swiper.js`
-  Initializes and destroys the mobile-only Swiper behavior.
+  Initializes the unified Swiper behavior.
 - `nomads_hero_gallery.libraries.yml`
   Library declaration.
 
 ## Runtime Behavior
-1. Collects referenced media entities from field items.
+1. Collects referenced media entities from `field_images`.
 2. Resolves each media source image field and applies responsive image style by position.
-3. Outputs a desktop/tablet grid container and a mobile Swiper container.
-4. Keeps overflow images as hidden GLightbox-only links.
-5. Adds responsive image style, fallback image style, and media cache dependencies to render output.
+3. Splits images into one main image and remaining secondary images.
+4. Outputs one Swiper container and a separate desktop/tablet tile container.
+5. Keeps overflow images as hidden desktop GLightbox-only links when image limiting is enabled.
+6. Adds responsive image style, fallback image style, and media cache dependencies to render output.
 
 ## Concerns
 - Stability: Source field resolution assumes media type source field exists and is type `image`; non-image media references are silently skipped.
@@ -42,5 +43,5 @@
 - Add formatter-level tests for:
   - mixed media references (image and non-image)
   - style assignment across first/second/rest positions
-  - `max_images` limiting and 7-image layout output
+  - `max_images` limiting and unified Swiper output
 - If additional fixed layouts are needed, consider explicit setting options instead of implicit numeric branching.

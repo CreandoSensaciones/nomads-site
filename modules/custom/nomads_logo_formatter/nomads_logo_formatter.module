@@ -1,0 +1,53 @@
+<?php
+
+/**
+ * @file
+ * Help hooks for Nomads Logo Formatter.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_logo_formatter_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_logo_formatter':
+      $output = '';
+      $output .= '<h2>' . t('Nomads Logo Formatter') . '</h2>';
+      $output .= '<p>' . t('Nomads Logo Formatter provides a display formatter that renders a referenced logo image when available and falls back to a circular title badge when no usable logo image exists.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Provides the <code>nomads_logo_or_title_circle</code> formatter, shown as <em>Nomads: Logo or title circle</em>.') . '</li>';
+      $output .= '<li>' . t('Supports <code>image</code> fields and <code>entity_reference</code> fields that reference image media.') . '</li>';
+      $output .= '<li>' . t('Resolves a media item’s source image field through the media type source definition.') . '</li>';
+      $output .= '<li>' . t('Renders logo images with an optional image style and lazy loading.') . '</li>';
+      $output .= '<li>' . t('Falls back to a circular badge using either the full entity title or up to two initials.') . '</li>';
+      $output .= '<li>' . t('Links the logo and displayed title to the entity canonical URL when the entity has one.') . '</li>';
+      $output .= '<li>' . t('Attaches the <code>nomads_logo_formatter/logo_formatter</code> CSS library for circular image and fallback styling.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The formatter is a Drupal 11 attribute-based <code>FieldFormatter</code> plugin extending <code>FormatterBase</code>. During render it reads the host entity label and canonical link template, tries to build an image render array from each field item, and falls back to an inline-template badge when no file can be resolved. Image media resolution uses the media bundle source plugin to find the source field, while direct image fields use the referenced file from the image item.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Configure the formatter from an entity Manage display page. Settings are <code>size</code>, <code>use_initials</code>, and <code>image_style</code>. <code>size</code> is clamped between 16 and 256 pixels and is used for fallback badge classes and image dimensions. <code>use_initials</code> switches fallback text from the full title to initials. <code>image_style</code> optionally applies a Drupal image style to resolved logo files; leaving it empty renders the original image.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Entity reference support assumes referenced entities are media items with an image source field; non-image media fall back to the title badge.') . '</li>';
+      $output .= '<li>' . t('The formatter renders one logo item per field item, which may produce repeated title links on multi-value fields.') . '</li>';
+      $output .= '<li>' . t('Fallback size-specific classes are generated dynamically, but the CSS currently defines a fixed fallback width and height, so visual size may not fully follow the setting without matching CSS.') . '</li>';
+      $output .= '<li>' . t('Image style dependencies are not explicitly added by the formatter, so display configuration exports and cache invalidation should be reviewed if image styles change frequently.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for media source resolution, image-style output, fallback initials, canonical links, or multi-value rendering.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('Logo images are rendered through Drupal image and image-style render arrays, and fallback text is rendered through Twig inline-template escaping. The formatter does not grant access to private files, media, or host entities; normal field, media, file, and entity access must be configured correctly. If entity titles contain sensitive text, remember that the fallback badge and title link can expose that title wherever the field display is visible.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}

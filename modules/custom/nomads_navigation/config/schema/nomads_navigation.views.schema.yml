@@ -14,3 +14,88 @@ views.filter.nomads_navigation_has_domain_term:
     bypass_domain_assigned:
       type: boolean
       label: 'Bypass listings assigned to the active domain'
+views.field.nomads_navigation_listing_domains:
+  type: views_field
+  label: 'Listing domains'
+  mapping:
+    selected_paragraph_bundles:
+      type: sequence
+      label: 'Selected paragraph bundles'
+      sequence:
+        type: string
+        label: 'Paragraph bundle'
+    paragraph_bundle_selection_initialized:
+      type: boolean
+      label: 'Paragraph bundle selection initialized'
+    bypass_domain_assigned:
+      type: boolean
+      label: 'Include listings assigned to each domain'
+    display_style:
+      type: string
+      label: 'Display style'
+views.filter.nomads_navigation_taxonomy_term_id_depth:
+  type: views_filter
+  label: 'Taxonomy term ID with depth'
+  mapping:
+    vocabularies:
+      type: sequence
+      label: 'Vocabularies'
+      sequence:
+        type: string
+        label: 'Vocabulary'
+    depth:
+      type: integer
+      label: 'Depth'
+    multiple_value_operator:
+      type: string
+      label: 'Multiple value operator'
+    selected_paragraph_bundles:
+      type: sequence
+      label: 'Selected paragraph bundles'
+      sequence:
+        type: string
+        label: 'Paragraph bundle'
+    paragraph_bundle_selection_initialized:
+      type: boolean
+      label: 'Paragraph bundle selection initialized'
+views.filter.nomads_navigation_paragraph_date_period:
+  type: views_filter
+  label: 'Paragraph date period'
+  mapping:
+    query_identifier:
+      type: string
+      label: 'Query identifier'
+    pass_empty_dates:
+      type: boolean
+      label: 'Let empty date fields pass'
+views.sort.nomads_navigation_taxonomy_term_id_depth_match:
+  type: views_sort
+  label: 'Taxonomy term ID with depth match'
+  mapping:
+    term_ids:
+      type: string
+      label: 'Fallback term IDs'
+    query_identifier:
+      type: string
+      label: 'Query identifier'
+    vocabularies:
+      type: sequence
+      label: 'Vocabularies'
+      sequence:
+        type: string
+        label: 'Vocabulary'
+    depth:
+      type: integer
+      label: 'Depth'
+    multiple_value_operator:
+      type: string
+      label: 'Multiple value operator'
+    selected_paragraph_bundles:
+      type: sequence
+      label: 'Selected paragraph bundles'
+      sequence:
+        type: string
+        label: 'Paragraph bundle'
+    paragraph_bundle_selection_initialized:
+      type: boolean
+      label: 'Paragraph bundle selection initialized'

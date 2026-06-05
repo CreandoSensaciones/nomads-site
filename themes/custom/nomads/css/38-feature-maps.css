@@ -1,7 +1,3 @@
-.path-map section.region-bottom,
-.path-map section.region-footer {
-  display: none;
-}
 
 
 
@@ -39,6 +35,18 @@
   left: auto;
   right: 4rem;
 }
+
+@media (max-width: 980px) {
+.nomads-content .map-detail-panel {
+  left: 2%;
+  right: auto;
+  top: 10%;
+  width: 96%;
+  max-width: none;
+  box-sizing: border-box;
+}
+}
+
 .nomads-map .node--view-mode-teaser .field--name-field-defaults-tags.field__items {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     margin-top: 20px;
@@ -107,25 +115,87 @@ body.path-map .leaflet-container {
 }
 
 /* Floating navbar over the map */
-body.path-map .nomads-navbar {
+.nomads-navbar-region-wrapper--map {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  padding: 0 50px;
+  z-index: 20000;
 }
-body.path-map .region-title {
-  display: none;
+
+.nomads-navbar-region-wrapper--map .nomads-navbar {
+  position: relative;
+  z-index: 20000;
+  background: rgba(255, 255, 255, 0.5);
+/*  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px); bricht nav positionierung */
 }
 
 /* Keep navbar inner full width too */
-body.path-map .nomads-navbar__inner {
+.nomads-navbar-region-wrapper--map .nomads-navbar__inner {
   max-width: none !important;
   width: 100%;
+}
+
+.nomads-navbar-region-wrapper--map .region-navigation--map-extension {
+  position: absolute;
+  z-index: 1;
+  top: 60px;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  width: 100%;
+  max-height: calc(100vh - 60px);
+  overflow: visible;
+  padding: 10px 0 14px;
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.16);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-100%);
+  transition: transform 180ms ease, opacity 140ms ease;
+}
+
+.nomads-navbar-region-wrapper--map:hover .region-navigation--map-extension,
+.nomads-navbar-region-wrapper--map:focus-within .region-navigation--map-extension {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.nomads-navbar-region-wrapper--map .region-navigation--map-extension .nomads-inner,
+.nomads-navbar-region-wrapper--map .region-navigation--map-extension .nomads-inner--constrained {
+  max-width: none !important;
+  width: 100%;
+  box-sizing: border-box;
+  padding-inline: 16px !important;
+}
+
+@media (max-width: 980px) {
+  .nomads-navbar-region-wrapper--map .region-navigation--map-extension {
+    position: fixed;
+    z-index: 19970;
+    top: 126px;
+    bottom: 70px;
+    max-height: none;
+    overflow-y: auto;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-100%);
+  }
+
+  .nomads-navbar-region-wrapper--map:hover .region-navigation--map-extension {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-100%);
+  }
+
+  body.nomads-mobile-search-open .nomads-navbar-region-wrapper--map .region-navigation--map-extension,
+  body.nomads-mobile-search-open .nomads-navbar-region-wrapper--map:focus-within .region-navigation--map-extension {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
 }
 
 /* Push map controls below floating navbar */
@@ -155,14 +225,47 @@ body.path-map #toolbar-administration {
 }
 
 
-.date-location-table table {
-  table-layout: fixed;
-  font-size: 15pt;
-  font-weight: 600;
-  color:#0570A1;
-  margin: 0 auto 15px;
+.domain-nomads.path-map #block-nomads-rootnavigation-2 {
+  position: absolute;
+  top: 10vh;
+  left: 1vw;
+  z-index: 600;
 }
-.date-location-table td {
-  padding: 3px 30px;
+.domain-nomads.path-map .specific-wrapper {
+  display: flex;
+flex-direction: column;
+justify-content: space-between;
+align-items: flex-start;
+height: 70vh;
+min-height: 500px;
+width: 100%;
+}
+.domain-nomads.path-map .nomads-specific-navigation__term-label {
+  font-size: 1.1em;
+}
+.domain-nomads.path-map .region.region-navigation .block-nomads-navigation-tag-navigation {
+  grid-row: 1 / 3;
 }
 
+.path-map .nomads-navbar:hover {
+  box-shadow: none;
+  border: 0;
+}
+.path-map .icon-wrapper {
+  background: transparent;
+}
+.path-map .nomads-navbar {
+  padding-top: 8px;
+  height: 52px;
+}
+.path-map .nomads-navbar__inner {
+  min-height: 52px;
+  height: 52px;
+}
+.path-map  .nomads-navbar__brand-wrap {
+  margin-left: 25px;
+}
+.path-map  .nomads-navbar__group--user {
+  margin-right: 25px;
+}
+  

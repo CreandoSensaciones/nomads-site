@@ -1,27 +1,127 @@
 
+.navbar-beta {
+  color: rgb(176, 2, 2);
+  font-size: 11px;
+  font-weight: 500;
+  margin: -6px 0 0 -2px;
+}
+@media (max-width: 900px) {
+  .navbar-beta {
+  font-size: 9px;
+}
+  }
 
-/* ========== Presentation ========== */
+/* ========= Win Win Economy ========= */
 
-.feature-card .field--type-entity-reference {
-  margin: 30px auto;
+.win-win-wrapper {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.7fr) minmax(520px, 1.3fr);
+  grid-template-areas:
+    "text image"
+    ". bottom";
+  column-gap: 5rem;
+  row-gap: 1.25rem;
+  align-items: start;
+  margin: 2.5rem 0;
 }
-.presentation .blue-cards-container {
-  max-width: 1400px;
-  margin-right: auto;
-  margin-left: auto;
+
+.win-win-wrapper .left {
+  grid-area: text;
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  align-self: stretch;
+  padding-top: 13%;
+  padding-bottom: 8%;
 }
-.presentation .blue-cards-container p {
-  padding: 0 10px;
+
+.win-win-wrapper .left p {
+  margin: 0;
+  max-width: 420px;
 }
-.presentation p {
+
+.win-win-wrapper .left p:first-child {
+  align-self: center;
+}
+
+.win-win-wrapper .left p:last-child {
+  align-self: center;
+}
+
+.win-win-img-wrapper {
+  grid-area: image;
+}
+
+.win-win-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.bottom-explainer {
+  grid-area: bottom;
+  max-width: none;
+  margin: 0;
+  text-align: left;
+}
+
+.bottom-explainer p {
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .win-win-wrapper {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "image"
+      "text"
+      "bottom";
+    gap: 1.5rem;
+  }
+
+  .win-win-wrapper .left {
+    display: block;
+    padding: 0;
+  }
+
+  .win-win-wrapper .left p + p {
+    margin-top: 1.25rem;
+  }
+}
+
+
+/* ========= Perk explainer ======= */
+
+.perk-explainer table img {
+  width: 400px;
+  height: 400px;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0, 0.25);
+  margin: 20px;
+}
+.perk-explainer table {
+  font-size: 30px;
+  line-height: 1.1em;
+  color: #444;
   text-align: center;
+  max-width: 1200px;
+  margin: 10px auto;
 }
-.presentation .feature-card.key-aspect-cards img {
-  width: auto;
-  height: 100px;
+.perk-explainer table td {
+  min-width: 200px;
 }
-.presentation .feature-card .field--name-field-reference {
-  max-width: 1400px;
-  margin-right: auto;
-  margin-left: auto;
+@media (max-width: 1199px) {
+  .perk-explainer table img {
+  width: 90%;
+  max-width: 400px;
+  height: auto;
 }
+.perk-explainer table {
+  width: 100%;
+  max-width: 100%;
+}
+.perk-explainer table td {
+  min-width: 25%;
+}
+
+}
+

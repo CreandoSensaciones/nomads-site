@@ -4,9 +4,23 @@
   margin-bottom: 50px;
 }
 .main-navigation .view-header h1 {
-  margin: 15px auto;
-  font-size: 20pt;
-  color: #777;
+  font-size: clamp(2rem, 3vw, 3.4rem);
+  font-weight: 600;
+  color: #aaa;
+  letter-spacing: -0.03em;
+  margin-bottom: 10px;
+}
+.main-navigation .view-header h3 {
+  font-size: clamp(1rem, 1.25vw, 1.35rem);
+  font-weight: 400;
+  color: #118bb0;
+  line-height: 1.45;
+  max-width: 780px;
+  margin-inline: auto;
+  margin-top: 10px;
+}
+.main-navigation .view-header p {
+  display: none;
 }
 .main-navigation .view-header p {
   color:#118bb0;
@@ -18,7 +32,7 @@
   width: 100%;
 
   margin: 10px 0;
-  font-size: 28pt;
+  font-size: clamp(18pt, 2.8vw, 36px);
   color: #999;
   text-align: center;
 }
@@ -30,3 +44,90 @@
   border-top: 1px solid #ccc;
   margin: 0 20px;
 }
+
+
+
+
+.specific-wrapper .nomads-specific-navigation__pill {
+  background: linear-gradient(135deg, #66C3D0 0%, #33A7B8 100%);
+  color: #fff;
+  border-color: #fff;
+}
+
+
+.nomads-specific-navigation__pill {
+  color: #fff;
+  border: 0;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, .12);
+}
+
+/* Remote work, clear digital blue */
+.digital-menu-item .nomads-specific-navigation__pill {
+  background: linear-gradient(135deg, #1e88e5, #43c6e8);
+}
+
+/* Coliving, warm social coral */
+.coliving-menu-item .nomads-specific-navigation__pill {
+  background: linear-gradient(135deg, #ff7a59, #ffb36b);
+}
+
+/* Coworkations, productive violet-blue */
+.coworkation-menu-item .nomads-specific-navigation__pill {
+  background: linear-gradient(135deg, #5b6ee1, #8f7cf4);
+}
+
+/* Culture, expressive magenta */
+.culture-menu-item .nomads-specific-navigation__pill {
+  background: linear-gradient(135deg, #c44cc8, #f06aa3);
+}
+
+/* Retreats, calm lavender */
+.retreat-menu-item .nomads-specific-navigation__pill {
+  background: linear-gradient(135deg, #7e70d8, #b7a8f6);
+}
+
+/* Adventures, energetic orange */
+.adventures-menu-item .nomads-specific-navigation__pill {
+  background: linear-gradient(135deg, #f57c00, #ffc04d);
+}
+
+/* Communities, heartful teal */
+.community-menu-item .nomads-specific-navigation__pill {
+  background: linear-gradient(135deg, #00897b, #4db6ac);
+}
+
+/* Ecovillages, green earth */
+.ecovillages-menu-item .nomads-specific-navigation__pill {
+  background: linear-gradient(135deg, #43a047, #9ccc65);
+}
+
+/* Hostals, friendly yellow-gold */
+.hostal-menu-item .nomads-specific-navigation__pill {
+  background: linear-gradient(135deg, #d99a00, #ffd166);
+}
+
+/* Independent living, homey clay */
+.home-menu-item .nomads-specific-navigation__pill {
+  background: linear-gradient(135deg, #b56b45, #d9a06f);
+}
+
+/* Ocean, deep aqua */
+.ocean-menu-item .nomads-specific-navigation__pill {
+  background: linear-gradient(135deg, #008bb8, #43d3d4);
+}
+
+/* Family, soft warm pink */
+.family-menu-item .nomads-specific-navigation__pill {
+  background: linear-gradient(135deg, #ec6f91, #f7a6b8);
+}
+
+/* Learning, fresh lime-blue */
+.skill-menu-item .nomads-specific-navigation__pill {
+  background: linear-gradient(135deg, #6fbf3d, #35b6b4);
+}
+
+/* Impact, strong hopeful green-blue */
+.impact-menu-item .nomads-specific-navigation__pill {
+  background: linear-gradient(135deg, #00796b, #2fbf71);
+}
+ 

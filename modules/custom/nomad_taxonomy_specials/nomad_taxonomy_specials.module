@@ -6,6 +6,57 @@
  */
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function nomad_taxonomy_specials_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomad_taxonomy_specials':
+      $output = '';
+      $output .= '<h2>' . t('Nomad Taxonomy Specials') . '</h2>';
+      $output .= '<p>' . t('Nomad Taxonomy Specials applies client-side incompatibility rules to taxonomy term reference widgets that target the <code>type</code> vocabulary. It is used to prevent editors from combining special top-level type branches with incompatible normal type branches while editing content.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Detects entity reference fields whose target type is <code>taxonomy_term</code> and whose target bundles include the <code>type</code> vocabulary.') . '</li>';
+      $output .= '<li>' . t('Attaches the <code>nomad_taxonomy_specials/widget</code> library and passes taxonomy tree settings through <code>drupalSettings.nomadTaxonomySpecials</code>.') . '</li>';
+      $output .= '<li>' . t('Builds a map from every term ID to its top-level branch and a list of term IDs in each top-level branch.') . '</li>';
+      $output .= '<li>' . t('Disables incompatible checkboxes, radios, select options, and Special Category Select tree links in the browser.') . '</li>';
+      $output .= '<li>' . t('Shows a temporary <em>Incompatible choice</em> status message when an editor clicks a disabled Special Category Select item.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Rules') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('If top-level branch <code>14</code>, or any child of that branch, is selected, all other branches are disabled.') . '</li>';
+      $output .= '<li>' . t('If top-level branch <code>25</code>, or any child of that branch, is selected, all other branches are disabled.') . '</li>';
+      $output .= '<li>' . t('If any other branch is selected, branches <code>14</code> and <code>25</code>, including their children, are disabled.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The PHP hooks only decide when to attach the JavaScript and build settings from the current <code>type</code> taxonomy tree. <code>hook_field_widget_form_alter()</code> handles normal field widget contexts, while <code>hook_form_alter()</code> covers forms with a <code>field_types</code> element. The JavaScript reads selected term IDs from hidden Special Category Select inputs, normal taxonomy inputs, select options, and selected-list markup, computes disabled IDs from the top-level branch map, and applies disabled states to matching controls.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('There is no admin configuration form. The module is configured in code by the <code>type</code> vocabulary and the hardcoded exclusive top-level term IDs <code>14</code> and <code>25</code>. If those terms are recreated, migrated, or renumbered, the code must be updated. The behavior applies automatically to matching taxonomy reference widgets when the module is enabled.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('The exclusive branch IDs are hardcoded numeric term IDs. Taxonomy migrations or content rebuilds can change IDs and silently invalidate the rules.') . '</li>';
+      $output .= '<li>' . t('The JavaScript depends on Special Category Select CSS classes and data attributes, including selected-list and tree-link markup.') . '</li>';
+      $output .= '<li>' . t('The selector also scans broad <code>.special-category-select</code> containers and then filters by field naming conventions, so similarly shaped widgets should be checked for unintended behavior.') . '</li>';
+      $output .= '<li>' . t('The branch lookup walks parent references with a guard limit. Very unusual taxonomy structures, multiple parents, or deep hierarchies may not behave as expected.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for rule computation, widget selector coverage, Ajax rebuilds, or stale selections.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('The restrictions are enforced in the browser only. A user, migration, API client, or disabled JavaScript environment can still submit incompatible term combinations unless server-side validation exists elsewhere. Treat this module as an editor guidance and usability layer, not as an integrity or access-control boundary. It does not add permissions, change taxonomy access, or validate saved entity values on the server.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
 
 /**
  * Implements hook_field_widget_form_alter().

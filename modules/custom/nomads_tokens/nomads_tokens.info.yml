@@ -1,0 +1,5 @@
+name: Nomads Tokens
+type: module
+description: 'Provides Nomads site tokens for menu labels and other token-aware text.'
+package: 'Nomads'
+core_version_requirement: ^11

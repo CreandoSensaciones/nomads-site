@@ -1,0 +1,34 @@
+<?php
+
+/**
+ * @file
+ * Install and update hooks for Nomads Display Tweaks.
+ */
+
+use Drupal\system\Entity\Action;
+
+/**
+ * Implements hook_install().
+ */
+function nomads_display_tweaks_install(): void {
+}
+
+/**
+ * Keeps the old field-based listing display update from creating new config.
+ */
+function nomads_display_tweaks_update_11001(): void {
+}
+
+/**
+ * Removes legacy field-based listing bulk actions.
+ */
+function nomads_display_tweaks_update_11002(): void {
+  foreach ([
+    'nomads_display_tweaks_mark_listing_advanced_action',
+    'nomads_display_tweaks_mark_listing_simple_action',
+  ] as $id) {
+    if ($action = Action::load($id)) {
+      $action->delete();
+    }
+  }
+}

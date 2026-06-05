@@ -38,9 +38,26 @@
     return limits;
   }
 
-  function shouldDisable(item, limits) {
+  function getCardinality(element) {
+    let source = element.matches('[data-selection-tweaks-cardinality]')
+      ? element
+      : element.closest('[data-selection-tweaks-cardinality]');
+    if (!source && element.querySelector) {
+      source = element.querySelector('[data-selection-tweaks-cardinality]');
+    }
+    const cardinality = parseInt(
+      source ? source.getAttribute('data-selection-tweaks-cardinality') : '',
+      10
+    );
+    return Number.isNaN(cardinality) || cardinality < 1 ? 0 : cardinality;
+  }
+
+  function shouldDisable(item, limits, selectedCount, cardinality) {
     if (item.selected) {
       return false;
+    }
+    if (cardinality > 0 && selectedCount >= cardinality) {
+      return true;
     }
     return Object.keys(item.groups).some((letter) => {
       const limit = limits[letter];
@@ -48,52 +65,63 @@
     });
   }
 
-  function applyLimits(items, applyDisabled) {
+  function applyLimits(items, cardinality, applyDisabled) {
     const limits = computeLimits(items);
+    const selectedCount = items.filter((item) => item.selected).length;
     items.forEach((item) => {
-      const disabled = shouldDisable(item, limits);
+      const disabled = shouldDisable(item, limits, selectedCount, cardinality);
       applyDisabled(item, disabled);
     });
   }
 
   function applySelectLimits(select) {
+    const cardinality = getCardinality(select);
     const items = Array.from(select.options)
-      .filter((option) => option.value !== '')
+      .filter((option) => option.value !== '' && option.value !== '_none')
       .map((option) => ({
         node: option,
         selected: option.selected,
         groups: parseGroups(option.value),
       }))
-      .filter((item) => Object.keys(item.groups).length > 0);
+      .filter((item) => cardinality > 0 || Object.keys(item.groups).length > 0);
 
     if (!items.length) {
       return;
     }
 
-    applyLimits(items, (item, disabled) => {
+    applyLimits(items, cardinality, (item, disabled) => {
       item.node.disabled = disabled;
     });
   }
 
   function applyCheckboxLimits(container) {
+    const cardinality = getCardinality(container);
     const inputs = Array.from(
       container.querySelectorAll('input[type="checkbox"]')
     );
     const items = inputs
+      .filter((input) => input.value !== '' && input.value !== '_none')
       .map((input) => ({
         node: input,
         selected: input.checked,
         groups: parseGroups(input.value),
       }))
-      .filter((item) => Object.keys(item.groups).length > 0);
+      .filter((item) => cardinality > 0 || Object.keys(item.groups).length > 0);
 
     if (!items.length) {
       return;
     }
 
-    applyLimits(items, (item, disabled) => {
-      item.node.disabled = disabled;
-    });
+    applyLimits(items, cardinality, applyCheckboxDisabled);
+  }
+
+  function applyCheckboxDisabled(item, disabled) {
+    item.node.disabled = disabled;
+    const prettyElement = item.node.closest('.pretty-element');
+    if (prettyElement) {
+      prettyElement.classList.toggle('is-disabled', disabled);
+      prettyElement.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+    }
   }
 
   function getCheckboxContainer(element) {
@@ -101,13 +129,16 @@
       element.closest('.form-checkboxes') ||
       element.closest('.form-boolean-group') ||
       element.closest('.form-type-checkboxes') ||
-      element.closest('fieldset') ||
-      element.closest('.form-wrapper')
+      element.closest('fieldset')
     );
   }
 
   function hasGroups(value) {
     return Object.keys(parseGroups(value)).length > 0;
+  }
+
+  function isIgnoredCheckbox(input) {
+    return input.classList.contains('field-group-toggle__checkbox');
   }
 
   Drupal.behaviors.selectionTweaks = {
@@ -121,8 +152,14 @@
 
       once('selection-tweaks-checkbox', 'input[type="checkbox"]', context).forEach(
         (input) => {
-          if (!hasGroups(input.value)) {
+          if (isIgnoredCheckbox(input)) {
             return;
+          }
+          if (!hasGroups(input.value)) {
+            const wrapper = getCheckboxContainer(input);
+            if (!wrapper || !getCardinality(wrapper)) {
+              return;
+            }
           }
           const container = getCheckboxContainer(input);
           if (container) {

@@ -1,21 +1,329 @@
 <?php
 
+use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\field\FieldConfigInterface;
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_listing_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_listing':
+      $output = '';
+      $output .= '<h2>' . t('Nomads Listings') . '</h2>';
+      $output .= '<p>' . t('Nomads Listings provides listing-specific editing entry points and small UI helpers. It adds separate local task tabs for editing listing text, images, and offers through dedicated node form operations, and includes a JavaScript helper for resizing Leaflet maps after tab and AJAX interactions.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Adds listing node edit routes for <code>/node/{node}/edit/text</code>, <code>/node/{node}/edit/images</code>, and <code>/node/{node}/edit/offers</code>.') . '</li>';
+      $output .= '<li>' . t('Adds local task tabs titled <em>Edit texts</em>, <em>Manage images</em>, and <em>Manage offers</em> on node pages.') . '</li>';
+      $output .= '<li>' . t('Builds the standard node edit form while switching the form operation to <code>text</code>, <code>images</code>, or <code>offers</code>, allowing Drupal form display modes for those operations to control which fields appear.') . '</li>';
+      $output .= '<li>' . t('Returns a 404 for these custom edit routes when the node is not a <code>listing</code> bundle.') . '</li>';
+      $output .= '<li>' . t('Moves the node delete local task to the end of the tab list.') . '</li>';
+      $output .= '<li>' . t('Provides the <code>nomads_leaflet_fix</code> library, which dispatches delayed resize events after tab clicks and AJAX attaches to help Leaflet maps recalculate their size.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('Routes are declared in <code>nomads_listing.routing.yml</code> and handled by <code>ListingFormModeEditController</code>. The controller injects the entity type manager and form builder, gets the normal node edit form object, sets the operation, assigns the current node, and returns the built form. Local tasks are declared in <code>nomads_listing.links.task.yml</code>. The module file currently contains lightweight hooks for local task ordering and placeholder form/entity hooks.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('There is no settings form. Configure the actual editing experience by creating or maintaining node form displays for the <code>listing</code> bundle operations <code>text</code>, <code>images</code>, and <code>offers</code>. Attach the <code>nomads_listing/nomads_leaflet_fix</code> library only on pages or forms where Leaflet maps need the resize workaround.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('The split edit routes depend on node form operations named <code>text</code>, <code>images</code>, and <code>offers</code>; missing form displays can cause the forms to fall back to default edit behavior.') . '</li>';
+      $output .= '<li>' . t('Route access currently uses Drupal’s <code>node.update</code> entity access requirement; bundle restriction is enforced in the controller by returning 404 for non-listing nodes.') . '</li>';
+      $output .= '<li>' . t('The included <code>ListingTextFormAccess</code> class is not currently wired to the active routes, so maintainers should avoid assuming it controls route access unless the routing file is changed.') . '</li>';
+      $output .= '<li>' . t('The Leaflet fix listens to broad tab selectors, including <code>.tabs a</code>, and dispatches global resize events; attach it narrowly to avoid unnecessary layout work.') . '</li>';
+      $output .= '<li>' . t('The module contains empty hook stubs, which add maintenance noise and can obscure which behavior is active.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for route access, form operation switching, local task visibility, delete-tab ordering, or the Leaflet resize behavior.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('The custom edit routes require normal node update access through Drupal entity access, and the controller refuses non-listing bundles. The module does not add new content permissions or bypass node form validation. Because the split forms are still node edit forms, field visibility and editability must be controlled through Drupal form displays, field access, and normal node permissions. The Leaflet JavaScript only dispatches browser resize events and does not process user input.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}
+
 /**
  * Implements hook_form_alter().
  */
 function nomads_listing_form_alter(array &$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id): void {
+  $form_object = $form_state->getFormObject();
+  if (!is_object($form_object) || !method_exists($form_object, 'getEntity')) {
+    return;
+  }
+
+  $entity = $form_object->getEntity();
+  if (!$entity instanceof NodeInterface || $entity->bundle() !== 'listing') {
+    return;
+  }
+
+  $form['#attached']['library'][] = 'nomads_listing/listing_form_sticky';
+  $form['#attributes']['data-nomads-listing-form'] = '1';
+
+  if (!isset($form['field_price']) || !is_array($form['field_price'])) {
+    return;
+  }
+
+  nomads_listing_open_default_price($entity, $form_state);
+
+  $form['#after_build'][] = 'nomads_listing_price_after_build';
+
+  if (!isset($form['#entity_builders']) || !is_array($form['#entity_builders'])) {
+    $form['#entity_builders'] = [];
+  }
+  if (!in_array('nomads_listing_price_entity_builder', $form['#entity_builders'], TRUE)) {
+    $form['#entity_builders'][] = 'nomads_listing_price_entity_builder';
+  }
+}
+
+/**
+ * Implements hook_entity_prepare_form().
+ */
+function nomads_listing_entity_prepare_form(EntityInterface $entity, $operation, \Drupal\Core\Form\FormStateInterface $form_state): void {
+  if (
+    $entity->getEntityTypeId() !== 'node' ||
+    !$entity instanceof NodeInterface ||
+    $entity->bundle() !== 'listing' ||
+    !in_array($operation, ['default', 'edit', 'offers'], TRUE)
+  ) {
+    return;
+  }
+
+  nomads_listing_open_default_price($entity, $form_state);
+}
+
+/**
+ * Adds one unsaved price paragraph when listing.field_price is empty.
+ */
+function nomads_listing_open_default_price(NodeInterface $entity, \Drupal\Core\Form\FormStateInterface $form_state): void {
+  if (!$entity->hasField('field_price') || !$entity->get('field_price')->isEmpty()) {
+    return;
+  }
+
+  $input = $form_state->getUserInput();
+  if (is_array($input) && array_key_exists('field_price', $input)) {
+    return;
+  }
+
+  $definition = $entity->getFieldDefinition('field_price');
+  if (!$definition instanceof FieldConfigInterface) {
+    return;
+  }
+
+  $target_bundles = $definition->getSetting('handler_settings')['target_bundles'] ?? [];
+  if (empty($target_bundles['price'])) {
+    return;
+  }
+
+  $paragraph = \Drupal::entityTypeManager()->getStorage('paragraph')->create([
+    'type' => 'price',
+  ]);
+  if (method_exists($paragraph, 'setParentEntity')) {
+    $paragraph->setParentEntity($entity, 'field_price');
+  }
+
+  $entity->get('field_price')->appendItem(['entity' => $paragraph]);
+}
+
+/**
+ * Attaches price item cleanup after Paragraphs has built the widget items.
+ */
+function nomads_listing_price_after_build(array $form, \Drupal\Core\Form\FormStateInterface $form_state): array {
+  if (isset($form['field_price']['widget']) && is_array($form['field_price']['widget'])) {
+    nomads_listing_attach_price_empty_item_handlers($form['field_price']['widget']);
+  }
+  return $form;
+}
+
+/**
+ * Attaches validation cleanup to price paragraph widget items.
+ */
+function nomads_listing_attach_price_empty_item_handlers(array &$widget): void {
+  foreach (\Drupal\Core\Render\Element::children($widget) as $delta) {
+    if (!isset($widget[$delta]) || !is_array($widget[$delta])) {
+      continue;
+    }
+    $item = &$widget[$delta];
+    $field_name = (string) ($item['#field_name'] ?? ($item['#parents'][0] ?? ''));
+    if (
+      $field_name !== 'field_price' ||
+      ($item['#paragraph_type'] ?? '') !== 'price' ||
+      !isset($item['#element_validate']) ||
+      !is_array($item['#element_validate'])
+    ) {
+      continue;
+    }
+    if (!in_array('nomads_listing_price_empty_item_validate', $item['#element_validate'], TRUE)) {
+      array_unshift($item['#element_validate'], 'nomads_listing_price_empty_item_validate');
+    }
+  }
+}
+
+/**
+ * Removes the temporary open price item from final submits if it is still empty.
+ */
+function nomads_listing_price_empty_item_validate(array $element, \Drupal\Core\Form\FormStateInterface $form_state, array $form): void {
+  $trigger = $form_state->getTriggeringElement() ?? [];
+  $trigger_name = (string) ($trigger['#name'] ?? '');
+  if (str_contains($trigger_name, 'add_more') || str_contains($trigger_name, 'remove')) {
+    return;
+  }
+
+  $subform_values = [];
+  if (isset($element['subform']['#parents']) && is_array($element['subform']['#parents'])) {
+    $exists = NULL;
+    $subform_values = NestedArray::getValue($form_state->getValues(), $element['subform']['#parents'], $exists);
+    if (!$exists || !is_array($subform_values)) {
+      $subform_values = [];
+    }
+  }
+
+  if (nomads_listing_price_values_have_content($subform_values)) {
+    return;
+  }
+
+  $field_name = (string) ($element['#field_name'] ?? ($element['#parents'][0] ?? ''));
+  $delta = $element['#delta'] ?? NULL;
+  if ($field_name !== 'field_price' || !is_numeric($delta)) {
+    return;
+  }
+
+  $widget_state = \Drupal\paragraphs\Plugin\Field\FieldWidget\ParagraphsWidget::getWidgetState($element['#field_parents'], $field_name, $form_state);
+  if (isset($widget_state['paragraphs'][(int) $delta])) {
+    $widget_state['paragraphs'][(int) $delta]['mode'] = 'remove';
+    \Drupal\paragraphs\Plugin\Field\FieldWidget\ParagraphsWidget::setWidgetState($element['#field_parents'], $field_name, $form_state, $widget_state);
+  }
+}
+
+/**
+ * Entity builder callback that guarantees empty price options are not saved.
+ */
+function nomads_listing_price_entity_builder(string $entity_type_id, EntityInterface $entity, array &$form, \Drupal\Core\Form\FormStateInterface $form_state): void {
+  if (!$entity instanceof NodeInterface || $entity->bundle() !== 'listing' || !$entity->hasField('field_price')) {
+    return;
+  }
+
+  $items = $entity->get('field_price');
+  if ($items->isEmpty()) {
+    return;
+  }
+
+  for ($delta = $items->count() - 1; $delta >= 0; $delta--) {
+    $paragraph = $items->get($delta)->entity;
+    if (!$paragraph instanceof EntityInterface || $paragraph->bundle() !== 'price') {
+      continue;
+    }
+    if (nomads_listing_price_paragraph_has_content($paragraph)) {
+      continue;
+    }
+    $items->removeItem($delta);
+  }
+}
+
+/**
+ * Checks submitted price paragraph values for meaningful content.
+ */
+function nomads_listing_price_values_have_content(array $values): bool {
+  $ignored_keys = [
+    '_weight',
+    'actions',
+    'behavior_plugins',
+    'created',
+    'field_currency',
+    'langcode',
+    'revision_log_message',
+    'revision_timestamp',
+    'revision_uid',
+    'status',
+  ];
+
+  foreach ($values as $key => $value) {
+    if (is_string($key) && in_array($key, $ignored_keys, TRUE)) {
+      continue;
+    }
+    if (nomads_listing_price_value_is_nonempty($value)) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Checks a stored price paragraph for meaningful content.
+ */
+function nomads_listing_price_paragraph_has_content(EntityInterface $paragraph): bool {
+  foreach ($paragraph->getFieldDefinitions() as $field_name => $definition) {
+    if (!$definition instanceof FieldConfigInterface || !$paragraph->hasField($field_name)) {
+      continue;
+    }
+    if ($field_name === 'field_currency') {
+      continue;
+    }
+    if (nomads_listing_price_value_is_nonempty($paragraph->get($field_name)->getValue())) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Recursively checks widget/entity values for user-entered price content.
+ */
+function nomads_listing_price_value_is_nonempty($value): bool {
+  if ($value === NULL) {
+    return FALSE;
+  }
+  if (is_string($value)) {
+    $value = trim($value);
+    return $value !== '' && $value !== '_none';
+  }
+  if (is_bool($value)) {
+    return $value;
+  }
+  if (is_int($value) || is_float($value)) {
+    return TRUE;
+  }
+  if (!is_array($value)) {
+    return FALSE;
+  }
+
+  foreach ($value as $key => $child) {
+    if (is_string($key) && in_array($key, ['currency_code', 'format'], TRUE)) {
+      continue;
+    }
+    if (nomads_listing_price_value_is_nonempty($child)) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Implements hook_entity_view().
+ */
+function nomads_listing_entity_view(array &$build, \Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display, string $view_mode): void {
+  if (!$entity instanceof NodeInterface || $entity->bundle() !== 'listing' || $view_mode !== 'full') {
+    return;
+  }
+
+  $build['#attached']['library'][] = 'nomads_listing/flexi_box_auto';
 }
 
 /**
  * Implements hook_entity_type_build().
- *
- * Keep base field title in $content when display-configurable in full view.
- * This follows the core/manage_display rendering path, not custom injection.
  */
 function nomads_listing_entity_type_build(array &$entity_types): void {
-  if (isset($entity_types['node'])) {
-    $entity_types['node']->set('enable_base_field_custom_preprocess_skipping', TRUE);
-  }
 }
 
 /**

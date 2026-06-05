@@ -1,0 +1,108 @@
+.term-tree-list {
+  --term-tree-link-bg: #f5f7f8;
+  --term-tree-link-bg-hover: #e9eef1;
+  --term-tree-link-bg-open: #1f2933;
+  --term-tree-link-color: #1f2933;
+  --term-tree-link-color-open: #fff;
+  --term-tree-dot: #6b7780;
+  --term-tree-branch-line: #d7dee3;
+  font-size: 0.6875rem;
+  line-height: 1.1;
+}
+
+.term-tree-list .item-list,
+.term-tree-list ul.term {
+  margin: 0;
+  padding: 0;
+}
+
+.term-tree-list ul.term {
+  display: flex;
+  flex-flow: row wrap;
+  gap: 0.16rem;
+  list-style: none !important;
+}
+
+.term-tree-list li,
+.term-tree-list li::marker {
+  list-style: none !important;
+  margin: 0;
+  padding: 0;
+}
+
+.term-tree-list.is-term-tree-initialized li.nomads-term-tree-branch {
+  display: none;
+}
+
+.term-tree-list li > a {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 1.15rem;
+  padding: 0.12rem 0.42rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--term-tree-link-bg);
+  color: var(--term-tree-link-color);
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  text-decoration: none;
+  vertical-align: top;
+}
+
+.term-tree-list li > a:hover,
+.term-tree-list li > a:focus-visible {
+  background: var(--term-tree-link-bg-hover);
+  text-decoration: none;
+}
+
+.term-tree-list li.nomads-term-tree-parent > a {
+  cursor: pointer;
+}
+
+.term-tree-list li.nomads-term-tree-hidden-parent {
+  display: none;
+}
+
+.term-tree-list li:not(.nomads-term-tree-parent) > a {
+  cursor: default;
+}
+
+.term-tree-list li.nomads-term-tree-parent.is-open > a {
+  background: var(--term-tree-link-bg-open);
+  color: var(--term-tree-link-color-open);
+}
+
+.term-tree-list .nomads-term-tree-dots {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 0.12rem;
+  margin-left: 0.22rem;
+  align-items: center;
+}
+
+.term-tree-list .nomads-term-tree-dot {
+  width: 0.22rem;
+  height: 0.22rem;
+  border-radius: 50%;
+  background: var(--term-tree-dot);
+}
+
+.term-tree-list li.nomads-term-tree-parent.is-open > a .nomads-term-tree-dots {
+  display: none;
+}
+
+.term-tree-list li.nomads-term-tree-branch {
+  flex: 0 0 100%;
+  margin: 0.06rem 0 0.18rem 0.45rem;
+  padding-left: 0.45rem;
+  border-left: 1px solid var(--term-tree-branch-line);
+}
+
+.term-tree-list.is-term-tree-initialized li.nomads-term-tree-branch.is-visible {
+  display: block;
+}
+
+.term-tree-list li.nomads-term-tree-branch > .item-list > ul.term {
+  gap: 0.14rem;
+}

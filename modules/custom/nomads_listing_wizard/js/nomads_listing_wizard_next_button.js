@@ -441,7 +441,7 @@
     }
     var requiredStepFields = getRequiredFieldsForStep(stepId, visibleFields);
 
-    if (!isFinalStep && categoryStepState === false) {
+    if (categoryStepState === false) {
       setInlineSubmitState(nextButton, false, hasDialogButton);
       setDialogButtonState(dialogNextButton, false);
       return;

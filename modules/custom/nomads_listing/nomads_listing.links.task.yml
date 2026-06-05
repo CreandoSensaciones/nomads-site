@@ -1,17 +1,22 @@
-nomads_listing.node_text_edit_tab:
-  title: 'Edit texts'
-  route_name: nomads_listing.node_text_edit
-  base_route: entity.node.canonical
-  weight: 15
+[]
 
-nomads_listing.node_images_edit_tab:
-  title: 'Manage images'
-  route_name: nomads_listing.node_images_edit
-  base_route: entity.node.canonical
-  weight: 16
-
-nomads_listing.node_offers_edit_tab:
-  title: 'Manage offers'
-  route_name: nomads_listing.node_offers_edit
-  base_route: entity.node.canonical
-  weight: 17
+# Temporarily disabled local tasks. Uncomment these definitions to reactivate
+# the listing edit tabs.
+#
+# nomads_listing.node_text_edit_tab:
+#   title: 'Edit texts'
+#   route_name: nomads_listing.node_text_edit
+#   base_route: entity.node.canonical
+#   weight: 15
+#
+# nomads_listing.node_images_edit_tab:
+#   title: 'Manage images'
+#   route_name: nomads_listing.node_images_edit
+#   base_route: entity.node.canonical
+#   weight: 16
+#
+# nomads_listing.node_offers_edit_tab:
+#   title: 'Manage offers'
+#   route_name: nomads_listing.node_offers_edit
+#   base_route: entity.node.canonical
+#   weight: 17

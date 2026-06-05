@@ -5,3 +5,10 @@ nomads_navigation.settings:
     _title: 'Nomads navigation'
   requirements:
     _permission: 'administer site configuration'
+
+nomads_navigation.navbar_term_search:
+  path: '/nomads-navigation/navbar-term-search'
+  defaults:
+    _controller: '\Drupal\nomads_navigation\Controller\NavbarTermSearchController::search'
+  requirements:
+    _access: 'TRUE'

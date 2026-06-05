@@ -2,3 +2,38 @@ settings_form:
   css:
     theme:
       css/nomads-navigation-settings-form.css: {}
+
+region_navigation:
+  js:
+    js/nomads-region-navigation.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+tag_navigation:
+  css:
+    theme:
+      css/nomads-tag-navigation.css: {}
+  dependencies:
+    - nomads_navigation/region_navigation
+
+geo_navigation:
+  css:
+    theme:
+      css/nomads-geo-navigation.css: {}
+  dependencies:
+    - nomads_navigation/region_navigation
+
+specific_navigation:
+  css:
+    theme:
+      css/nomads-specific-navigation.css: {}
+  dependencies:
+    - nomads_navigation/region_navigation
+
+date_period_navigation:
+  css:
+    theme:
+      css/nomads-date-period-navigation.css: {}
+  dependencies:
+    - nomads_navigation/region_navigation

@@ -6,3 +6,20 @@ nomads_leaflet_fix:
   dependencies:
     - core/drupal
     - core/once
+
+listing_form_sticky:
+  css:
+    theme:
+      css/listing-form-sticky.css: {}
+  js:
+    js/listing-form-sticky.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+flexi_box_auto:
+  js:
+    js/flexi-box-auto.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

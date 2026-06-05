@@ -23,8 +23,9 @@
 /* ======= Subdomain Heaser ======= */
 
 .node--type-landing-page.node--view-mode-teaser {
-  max-width: 520px;
-}
+  max-width: 540px;
+  margin-left: 10px;
+} 
 
 .node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain {
   order: 1;
@@ -42,9 +43,14 @@
 }
 .node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain h3 {
   margin: 0;
-  font-size: clamp(1.2rem, 1.8vw, 2.4rem);
+  font-size: 18pt;
   font-weight: 400;
   line-height: 1;
+}
+@media (max-width: 600px) {
+  .node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain h3 {
+  font-size: 15pt;
+}
 }
 .node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain a {
   display: inline-block;
@@ -78,12 +84,11 @@
   color: #0575b1;
 }
 
-@supports ((-webkit-background-clip: text) or (background-clip: text)) {
-  .node--type-landing-page.node--view-mode-teaser .field--name-field-subdomain .domain-first {
-    background-image: linear-gradient(90deg, #0dafc5, #0575b1);
+@supports (-webkit-background-clip: text) {
+  .node--type-landing-page.node--view-mode-teaser 
+  .field--name-field-subdomain .domain-first {
+    background-image: linear-gradient(135deg, #66C3D0 0%, #005F8A 100%);
     -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
     -webkit-text-fill-color: transparent;
   }
 }
@@ -143,7 +148,7 @@
   z-index: 5;
   margin: 0;
   background: rgba(0, 0, 0, 0.48);
-  padding: 16px 20px 18px;
+  padding: 10px;
   text-align: center;
 }
 
@@ -154,7 +159,7 @@
 
 .node--type-landing-page.node--view-mode-teaser .field--name-field-teaser-line h4 {
   margin: 0;
-  font-size: clamp(1.15rem, 1.2vw, 1.7rem);
+  font-size: 13pt;
   line-height: 1.2;
   font-weight: 400;
 }
@@ -199,7 +204,7 @@
   }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 780px) {
   .field--name-field-reference.grid-3.field__items {
     grid-template-columns: 1fr;
   }
@@ -209,7 +214,10 @@
   }
 
   .node--type-landing-page.node--view-mode-teaser .field--name-field-teaser-line {
-    padding: 14px 16px 16px;
+    padding: 5px 10px;
+  } 
+  .node--type-landing-page.node--view-mode-teaser .field--name-field-teaser-line h4 {
+    font-size: 11pt;
   }
 }
 

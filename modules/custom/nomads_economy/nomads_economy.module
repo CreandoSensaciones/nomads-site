@@ -1,0 +1,326 @@
+<?php
+
+/**
+ * @file
+ * Price and Perk features for Nomads listings.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_economy_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_economy':
+      $output = '';
+      $output .= '<h2>' . t('Nomads economy') . '</h2>';
+      $output .= '<p>' . t('Nomads economy groups Price and Perk features for Nomads listings.') . '</p>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Provides the <em>Price - from</em> virtual display field for listing nodes.') . '</li>';
+      $output .= '<li>' . t('Builds one promotional “from” price from referenced <code>price</code> paragraphs in <code>field_price</code>.') . '</li>';
+      $output .= '</ul>';
+      return $output;
+  }
+
+  return NULL;
+}
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function nomads_economy_entity_extra_field_info(): array {
+  return [
+    'node' => [
+      'listing' => [
+        'display' => [
+          'nomads_economy_price_from' => [
+            'label' => t('Price - from'),
+            'description' => t('Renders one promotional from price from listing price option paragraphs.'),
+            'weight' => 0,
+            'visible' => FALSE,
+          ],
+        ],
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_entity_view().
+ */
+function nomads_economy_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, string $view_mode): void {
+  if (!$entity instanceof NodeInterface || $entity->bundle() !== 'listing') {
+    return;
+  }
+
+  $view_display = \Drupal::service('entity_display.repository')->getViewDisplay('node', 'listing', $view_mode);
+  $component = $view_display->getComponent('nomads_economy_price_from');
+  if (empty($component) || ($component['region'] ?? 'hidden') === 'hidden') {
+    return;
+  }
+
+  $price_from = nomads_economy_resolve_price_from($entity);
+  if ($price_from === NULL) {
+    return;
+  }
+
+  $build['nomads_economy_price_from'] = [
+    '#type' => 'html_tag',
+    '#tag' => 'span',
+    '#value' => $price_from['text'],
+    '#attributes' => [
+      'class' => ['nomads-economy-price-from'],
+    ],
+    '#weight' => $component['weight'] ?? 0,
+    '#region' => $component['region'] ?? 'content',
+  ];
+
+  $cacheability = (new CacheableMetadata())
+    ->addCacheableDependency($entity);
+  foreach ($price_from['cache_dependencies'] as $dependency) {
+    $cacheability->addCacheableDependency($dependency);
+  }
+  $cacheability->applyTo($build['nomads_economy_price_from']);
+}
+
+/**
+ * Resolves the best single promotional "from" price for a listing.
+ *
+ * @return array{text: string, cache_dependencies: \Drupal\Core\Cache\CacheableDependencyInterface[]}|null
+ *   The resolved output and dependencies, or NULL when no usable price exists.
+ */
+function nomads_economy_resolve_price_from(NodeInterface $listing): ?array {
+  if (!$listing->hasField('field_price') || $listing->get('field_price')->isEmpty()) {
+    return NULL;
+  }
+
+  $options = [];
+  $dependencies = [];
+  foreach ($listing->get('field_price')->referencedEntities() as $paragraph) {
+    if (!$paragraph instanceof EntityInterface || $paragraph->bundle() !== 'price') {
+      continue;
+    }
+    $dependencies[] = $paragraph;
+
+    $option = nomads_economy_build_price_option($paragraph);
+    if ($option !== NULL) {
+      $options[] = $option;
+    }
+  }
+
+  if ($options === []) {
+    return NULL;
+  }
+
+  $best = nomads_economy_choose_price_option($options);
+  if ($best === NULL) {
+    return NULL;
+  }
+
+  return [
+    'text' => nomads_economy_format_price_from($best),
+    'cache_dependencies' => $dependencies,
+  ];
+}
+
+/**
+ * Builds normalized option data from a price paragraph.
+ */
+function nomads_economy_build_price_option(EntityInterface $paragraph): ?array {
+  if (
+    !$paragraph->hasField('field_price')
+    || $paragraph->get('field_price')->isEmpty()
+    || !$paragraph->hasField('field_price_unit')
+    || $paragraph->get('field_price_unit')->isEmpty()
+  ) {
+    return NULL;
+  }
+
+  $price_item = $paragraph->get('field_price')->first();
+  $price_value = nomads_economy_get_lowest_range_value($price_item ? $price_item->getValue() : []);
+  if ($price_value === NULL) {
+    return NULL;
+  }
+
+  $unit_key = (string) $paragraph->get('field_price_unit')->value;
+  $unit_label = nomads_economy_get_allowed_value_label($paragraph, 'field_price_unit', $unit_key);
+  $currency_key = $paragraph->hasField('field_currency') && !$paragraph->get('field_currency')->isEmpty()
+    ? (string) $paragraph->get('field_currency')->value
+    : '';
+  $currency_label = $currency_key !== ''
+    ? nomads_economy_get_allowed_value_label($paragraph, 'field_currency', $currency_key)
+    : '';
+
+  return [
+    'amount' => (float) $price_value,
+    'currency_key' => $currency_key,
+    'currency_symbol' => nomads_economy_extract_currency_symbol($currency_label, $currency_key),
+    'unit_key' => $unit_key,
+    'unit_label' => $unit_label !== '' ? $unit_label : $unit_key,
+    'unit_factor' => nomads_economy_get_unit_factor($unit_key),
+  ];
+}
+
+/**
+ * Gets the lowest numeric value from a range field item.
+ */
+function nomads_economy_get_lowest_range_value(array $value): ?float {
+  $values = [];
+  foreach (['from', 'to', 'value'] as $key) {
+    if (isset($value[$key]) && is_numeric($value[$key])) {
+      $values[] = (float) $value[$key];
+    }
+  }
+
+  return $values === [] ? NULL : min($values);
+}
+
+/**
+ * Chooses the strongest promotional price option.
+ */
+function nomads_economy_choose_price_option(array $options): ?array {
+  $entity_options = array_values(array_filter($options, static fn (array $option): bool => $option['unit_key'] === 'entity'));
+  if ($entity_options !== []) {
+    usort($entity_options, static fn (array $a, array $b): int => $a['amount'] <=> $b['amount']);
+    $entity_options[0]['display_amount'] = $entity_options[0]['amount'];
+    $entity_options[0]['display_unit_key'] = $entity_options[0]['unit_key'];
+    $entity_options[0]['display_unit_label'] = $entity_options[0]['unit_label'];
+    return $entity_options[0];
+  }
+
+  $groups = [];
+  foreach ($options as $option) {
+    $groups[$option['currency_key']][] = $option;
+  }
+
+  $best = NULL;
+  foreach ($groups as $group) {
+    $candidate = nomads_economy_choose_price_option_for_currency($group);
+    if ($candidate === NULL) {
+      continue;
+    }
+
+    // Without exchange rates, prefer the currency represented by the most
+    // options, then the smallest promotional display amount.
+    $candidate['_currency_group_count'] = count($group);
+    if (
+      $best === NULL
+      || $candidate['_currency_group_count'] > $best['_currency_group_count']
+      || (
+        $candidate['_currency_group_count'] === $best['_currency_group_count']
+        && $candidate['display_amount'] < $best['display_amount']
+      )
+    ) {
+      $best = $candidate;
+    }
+  }
+
+  if ($best !== NULL) {
+    unset($best['_currency_group_count']);
+  }
+
+  return $best;
+}
+
+/**
+ * Chooses a price option within one currency group.
+ */
+function nomads_economy_choose_price_option_for_currency(array $options): ?array {
+  $numeric = array_values(array_filter($options, static fn (array $option): bool => $option['unit_factor'] !== NULL));
+  $candidates = [];
+
+  if ($numeric !== []) {
+    $base_factor = min(array_column($numeric, 'unit_factor'));
+    $base_options = array_values(array_filter($numeric, static fn (array $option): bool => $option['unit_factor'] === $base_factor));
+    usort($base_options, static fn (array $a, array $b): int => $a['amount'] <=> $b['amount']);
+    $base = $base_options[0];
+
+    foreach ($numeric as $option) {
+      $option['display_amount'] = $option['amount'] / ($option['unit_factor'] / $base_factor);
+      $option['display_unit_key'] = $base['unit_key'];
+      $option['display_unit_label'] = $base['unit_label'];
+      $candidates[] = $option;
+    }
+  }
+
+  foreach ($options as $option) {
+    if ($option['unit_factor'] !== NULL) {
+      continue;
+    }
+    $option['display_amount'] = $option['amount'];
+    $option['display_unit_key'] = $option['unit_key'];
+    $option['display_unit_label'] = $option['unit_label'];
+    $candidates[] = $option;
+  }
+
+  if ($candidates === []) {
+    return NULL;
+  }
+
+  usort($candidates, static function (array $a, array $b): int {
+    $amount_comparison = $a['display_amount'] <=> $b['display_amount'];
+    if ($amount_comparison !== 0) {
+      return $amount_comparison;
+    }
+    return $a['amount'] <=> $b['amount'];
+  });
+
+  return $candidates[0];
+}
+
+/**
+ * Formats a resolved price option.
+ */
+function nomads_economy_format_price_from(array $option): string {
+  $amount = nomads_economy_format_amount((float) $option['display_amount']);
+  $symbol = (string) ($option['currency_symbol'] ?? '');
+  $unit = trim((string) ($option['display_unit_label'] ?? $option['unit_label'] ?? ''));
+
+  return trim('from ' . $amount . ($symbol !== '' ? ' ' . $symbol : '') . ($unit !== '' ? ' ' . $unit : ''));
+}
+
+/**
+ * Formats a promotional price amount.
+ */
+function nomads_economy_format_amount(float $amount): string {
+  return (string) (int) round($amount);
+}
+
+/**
+ * Gets a list field allowed value label.
+ */
+function nomads_economy_get_allowed_value_label(EntityInterface $entity, string $field_name, string $key): string {
+  if (!$entity->hasField($field_name)) {
+    return '';
+  }
+
+  $allowed_values = $entity->get($field_name)->getFieldDefinition()->getSetting('allowed_values') ?: [];
+  return isset($allowed_values[$key]) ? (string) $allowed_values[$key] : '';
+}
+
+/**
+ * Extracts a display currency symbol from labels like "EUR (€)".
+ */
+function nomads_economy_extract_currency_symbol(string $label, string $fallback_key): string {
+  if (preg_match('/\(([^)]+)\)/', $label, $matches)) {
+    return trim($matches[1]);
+  }
+
+  return $fallback_key !== '' ? strtoupper($fallback_key) : '';
+}
+
+/**
+ * Converts comparable unit keys to a relative duration factor.
+ */
+function nomads_economy_get_unit_factor(string $unit_key): ?float {
+  if (is_numeric($unit_key)) {
+    return (float) $unit_key;
+  }
+
+  return NULL;
+}

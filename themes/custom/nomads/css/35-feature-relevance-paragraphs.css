@@ -1,3 +1,42 @@
+.shadow-box {
+    background: #fff;
+    /* border-radius: 20px;
+    border: 3px solid #0DAFC5 */
+    padding: 10px;
+    border-radius: 12px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.10);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    transition: box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease;
+}
+  .shadow-box h3 {
+    font-family: Candara, "Segoe UI", Arial, sans-serif;
+    font-weight: 700;
+    font-size: 18pt;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #66C3D0 0%, #005F8A 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 1;
+    white-space: nowrap;
+    margin: 0;
+}
+
+
+
+.paragraph--viewmode-vm-3 .paragraph-left-column {
+  position: relative;
+  /* height: 100%; */
+}
+.paragraph--viewmode-vm-3 .promoted-link {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  bottom: 0;
+}
+
+
 
 /* ========== Layout ========== */
 
@@ -38,16 +77,17 @@
   width: 110px;
   height: 90px;
 }
+.paragraph--bundle-location .paragraph-left-column .icon-placeholder {
+  width: 70px;
+  height: 60px;
+}
 
 .paragraph--viewmode-vm-3 {
   width: auto;
+  max-width: 1570px;
+  height: 510px;
   margin: 0 auto;
   padding: 10px;
-  border-radius: 12px;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.10);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-   /* overflow: hidden;keeps rounded corners clean */
-  transition: box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease;
 }
 .paragraph--viewmode-vm-3 .nomads-paragraph-icon-wrapper {
   display: flex;
@@ -55,7 +95,7 @@
   text-align: left;
 }
 .paragraph--viewmode-vm-3 h2 {
-  margin: 25px 10px 0;
+  margin: 35px 10px 0;
 }
 
 /* ??? welcher ??? */
@@ -75,11 +115,17 @@
   position: relative;
 }
 
+@media (min-width: 980px) {
+  /* gilt ab 600px Breite und größer */
 
 .paragraph--viewmode-vm-3 .nomads-paragraph-icon-wrapper {
   position: absolute;
   top: 0px;
   left: 0;
+}
+.paragraph--viewmode-vm-3 .nomads-paragraph-header {
+    height: 0;
+}
 }
 .paragraph--viewmode-vm-3 .nomads-paragraph-title {
   flex: 1 1 auto;
@@ -92,11 +138,15 @@
   height: auto;
   display: block;
 }
+.paragraph--bundle-location  .nomads-paragraph-icon img {
+  width: 70px;
+}
 
 
 .paragraph--viewmode-vm-3.relevance-paragraph .paragraph-left-column .field--name-field-country {
-  margin: 15px 0 5px 110px;
+  margin: 15px 0 5px 0;
   text-align: center;
+  background: rgba(255, 255, 255, 0.5);
 }
 .paragraph--viewmode-vm-3.relevance-paragraph .paragraph-left-column .field--name-field-country a {
   color: #035c8f;
@@ -212,22 +262,19 @@
 
 
 
-
 /* ========== Paragraphs view mode 2 ========== */
 
 .paragraph--viewmode-vm-2 {
   display: flex;
   flex-direction: column;
-  max-height: 695px;
   gap: 10px;
   text-align: center;
-  padding: 3px;
 }
 .paragraph--viewmode-vm-2 .nomads-paragraph-header {
   position: relative;
   display: flex;
   gap: 12px;
-  text-align: left;
+  text-align: center;
 }
 .paragraph--viewmode-vm-2 .nomads-paragraph-icon-wrapper {
   display: flex;
@@ -244,7 +291,7 @@
 .paragraph--viewmode-vm-2 .nomads-paragraph-title {
   flex: 1 1 auto;
   width: 100%;
-  margin-top: 15px;
+  margin-top: 20px;
   text-align: center;
 }
 
@@ -254,16 +301,36 @@
   color: #015180;
 }
 .paragraph--viewmode-vm-2 .nomads-paragraph-label-wrapper {
-  top: -15px;
+  top: -8px;
   left: 70px;
-  background-color: #fff;
+  
   padding: 0 20px;
   position: absolute;
 }
 
 .paragraph--viewmode-vm-2 .nomads-paragraph-title-wrapper {
-  position: relative;
+  width: 100%;
 }
+
+
+
+
+
+
+
+.paragraph--viewmode-vm-2.relevance-paragraph .nomads-paragraph-icon-wrapper {
+    position: relative;
+}
+
+.paragraph--viewmode-vm-2.relevance-paragraph .nomads-paragraph-icon {
+    position: absolute;
+    top: -5px;
+    left: -5px;
+}
+
+
+
+
 
 
 /* ---------- View mode 2 fields ---------- */
@@ -291,7 +358,7 @@
   background: #0DAFC5;
 }
 .paragraph--viewmode-vm-2 .nomads-pill {
-  font-size: 8pt;
+  font-size: 9pt;
 }
 
 
@@ -330,7 +397,7 @@
 
 
 .paragraph--viewmode-vm-2 .field--name-field-description {
-  flex: 1 1 auto;
+  /* flex: 1 1 auto;
   min-height: 0;
   padding-bottom: 0;
   overflow: hidden;
@@ -346,7 +413,7 @@
     #000 0,
     #000 calc(100% - 40px),
     transparent 100%
-  );
+  ); */
 }
 
 /* ---------- Images ---------- */
@@ -395,9 +462,6 @@
   right: 0;
   bottom: 0;
   margin: 0;
-}
-.nomads-paragraph-modal-link-wrapper .ajax-progress-throbber .message {
-  display: none;
 }
 
 

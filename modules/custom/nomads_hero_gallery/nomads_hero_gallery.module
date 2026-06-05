@@ -1,0 +1,55 @@
+<?php
+
+/**
+ * @file
+ * Help hooks for Nomads Hero Gallery.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_hero_gallery_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_hero_gallery':
+      $output = '';
+      $output .= '<h2>' . t('Nomads Hero Gallery') . '</h2>';
+      $output .= '<p>' . t('Nomads Hero Gallery provides a media reference field formatter for large responsive image galleries. It is designed for hero areas that combine one lead image, secondary desktop tiles, a mobile slideshow, and desktop lightbox access to the complete image set.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Provides the <code>nomads_hero_gallery_media</code> formatter, shown as <em>Hero gallery (media images)</em> on Manage display.') . '</li>';
+      $output .= '<li>' . t('Supports entity reference fields that target media entities and skips referenced media whose source field is not an image field.') . '</li>';
+      $output .= '<li>' . t('Applies separate responsive image styles to the first image, second image, and remaining images.') . '</li>';
+      $output .= '<li>' . t('Renders a Swiper-based main image area and up to six secondary desktop/tablet tiles.') . '</li>';
+      $output .= '<li>' . t('Uses the same Swiper structure as a mobile slideshow below 768px.') . '</li>';
+      $output .= '<li>' . t('Adds GLightbox links on desktop, including hidden links for images that are not visible as desktop tiles.') . '</li>';
+      $output .= '<li>' . t('Adds placeholders when fewer images are available than the desktop tile layout expects.') . '</li>';
+      $output .= '<li>' . t('Adds cache dependencies for rendered media, selected responsive image styles, their fallback image styles, and the optional <code>lightbox</code> image style.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The formatter is a Drupal 11 attribute-based <code>FieldFormatter</code> plugin extending <code>EntityReferenceFormatterBase</code>. It resolves viewable media entities, derives the image source field from each media type, builds responsive image formatter render arrays, wraps image output in lightbox links, and attaches the <code>hero_gallery</code>, <code>glightbox</code>, and <code>swiper</code> libraries. JavaScript behaviors initialize Swiper only when the gallery has a sane visible width, toggle mobile-only slide behavior, and enable GLightbox only for desktop links.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Configure the formatter from an entity Manage display page. Settings are <code>image_style_first</code>, <code>image_style_second</code>, <code>image_style_rest</code>, and <code>max_images</code>. Each image style setting references a responsive image style; leaving it empty renders the original image. <code>max_images</code> limits how many media images are rendered, and <code>0</code> means no formatter-level limit. At runtime the formatter caps collected gallery media at 24 items.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('The formatter assumes referenced media types expose an image source field; non-image media are silently skipped and can reduce the visible image count.') . '</li>';
+      $output .= '<li>' . t('When the rendered entity has a <code>field_images</code> field, the formatter uses that field as the gallery source instead of only the field it is attached to.') . '</li>';
+      $output .= '<li>' . t('The desktop layout has one lead image and six fixed secondary tile slots, so major design changes may require coordinated CSS, render array, and JavaScript updates.') . '</li>';
+      $output .= '<li>' . t('Swiper behavior depends on the <code>swiper_formatter/remote</code> library exposing a compatible Swiper constructor.') . '</li>';
+      $output .= '<li>' . t('Desktop lightbox behavior depends on external GLightbox and DOMPurify library files under <code>/libraries</code>. Missing files leave the gallery visible but without lightbox behavior.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for responsive style assignment, media filtering, cache dependencies, lightbox link generation, or viewport-specific JavaScript behavior.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('The formatter relies on Drupal entity reference access through <code>getEntitiesToView()</code> and renders images with Drupal image formatter render arrays. Lightbox URLs are generated from file URIs through image styles or the file URL generator, and hidden lightbox links escape generated URLs and attributes. The module does not add media access controls; private media and file visibility must be enforced by the site’s normal media, field, and file access configuration. Third-party JavaScript loaded from <code>/libraries</code> should be kept patched and sourced from trusted releases.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}

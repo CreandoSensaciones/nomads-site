@@ -1,0 +1,22 @@
+@media (min-width: 61rem) {
+  [data-nomads-listing-form] {
+    position: relative;
+  }
+
+  .region-content:has([data-nomads-listing-form]) {
+    overflow: visible;
+  }
+
+  [data-nomads-listing-form] .field-group-tabs-wrapper .vertical-tabs__menu {
+    position: sticky;
+    top: var(--nl-sticky-top, calc(var(--drupal-displace-offset-top, 0px) + 16px));
+    align-self: flex-start;
+    max-height: calc(100vh - var(--nl-sticky-top, 16px) - 24px);
+    overflow-y: auto;
+    z-index: 12;
+  }
+
+  [data-nomads-listing-form] .form-actions.is-nl-save-lifted {
+    transform: translateY(var(--nl-actions-y, 0));
+  }
+}

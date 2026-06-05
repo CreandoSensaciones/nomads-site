@@ -1,0 +1,9 @@
+name: 'Nomads economy'
+type: module
+description: 'Price and Perk features for Nomads listings.'
+package: 'Nomads Features'
+core_version_requirement: ^11
+dependencies:
+  - drupal:node
+  - paragraphs:paragraphs
+  - range:range

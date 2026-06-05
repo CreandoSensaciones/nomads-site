@@ -1,0 +1,55 @@
+<?php
+
+/**
+ * @file
+ * Help hooks for Nomads Taxonomy Icons.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function nomads_taxonomy_icons_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  switch ($route_name) {
+    case 'help.page.nomads_taxonomy_icons':
+      $output = '';
+      $output .= '<h2>' . t('Nomads Taxonomy Icons') . '</h2>';
+      $output .= '<p>' . t('Nomads Taxonomy Icons provides a formatter for taxonomy term reference fields that renders term labels with optional icons, link behavior, pill styling, category grouping, and collapsible overflow output.') . '</p>';
+
+      $output .= '<h3>' . t('Functionality') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Provides the <code>nomads_taxonomy_icons</code> formatter, shown as <em>Taxonomy icons</em>.') . '</li>';
+      $output .= '<li>' . t('Applies only to entity reference fields that target taxonomy terms.') . '</li>';
+      $output .= '<li>' . t('Renders icons from each term’s <code>field_icons</code> field, supporting either image fields or media reference fields with image sources.') . '</li>';
+      $output .= '<li>' . t('Falls back to a built-in SVG circle when a term has no usable icon.') . '</li>';
+      $output .= '<li>' . t('Supports optional image style selection, custom wrapper classes, first-item-only classes, label links, and icon links.') . '</li>';
+      $output .= '<li>' . t('Can render items after the first as Nomads pills without icons.') . '</li>';
+      $output .= '<li>' . t('Can group terms under first-level or <code>category_label</code> ancestor terms.') . '</li>';
+      $output .= '<li>' . t('Can limit visible output with <code>max_number</code>, showing terms marked <code>primary</code> directly and putting remaining terms in a collapsible section.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Architecture') . '</h3>';
+      $output .= '<p>' . t('The formatter is a Drupal 11 attribute-based <code>FieldFormatter</code> plugin with dependency injection for the entity type manager. It expands field items from the host entity when Views supplies only a contextual subset, sorts most fields by taxonomy tree order, and keeps <code>field_type</code> in original delta order. Grouping walks the primary parent chain, uses category-label settings when present, and otherwise falls back to the top ancestor. JavaScript in <code>nomads_taxonomy_icons/taxonomy-icons</code> only controls collapsible open and close behavior.') . '</p>';
+
+      $output .= '<h3>' . t('Configuration') . '</h3>';
+      $output .= '<p>' . t('Configure the formatter from an entity Manage display page. Settings are <code>image_style</code>, <code>css_classes</code>, <code>first_item_css_classes</code>, <code>pills_after_first</code>, <code>first_level_categories</code>, <code>link_label</code>, <code>link_icon</code>, and <code>max_number</code>. Terms can influence output through settings fields named <code>field_setting</code>, <code>field_settings</code>, <code>field_easy_tagging_settings</code>, or <code>field_easy_tagging_behavior</code>; recognized values include <code>primary</code> and <code>category_label</code>.') . '</p>';
+
+      $output .= '<h3>' . t('Stability concerns') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Icon resolution is hardcoded to the term field <code>field_icons</code>; taxonomy schema changes require code changes.') . '</li>';
+      $output .= '<li>' . t('Grouping and sorting follow a single parent path, so multi-parent taxonomy terms may not group as editors expect.') . '</li>';
+      $output .= '<li>' . t('The formatter can create image derivatives during rendering when the derivative extension differs from the original, which can add filesystem work on page requests.') . '</li>';
+      $output .= '<li>' . t('The module uses media and image APIs but currently relies on site configuration rather than explicit module dependencies for every possible icon source path.') . '</li>';
+      $output .= '<li>' . t('Combining grouping, pills, links, max-number limits, primary terms, and category-label terms creates many branches with no automated regression coverage.') . '</li>';
+      $output .= '<li>' . t('There is no automated test coverage for icon source resolution, missing-icon fallback, category grouping, contextual item expansion, collapsible behavior, or image-style output.') . '</li>';
+      $output .= '</ul>';
+
+      $output .= '<h3>' . t('Security concerns') . '</h3>';
+      $output .= '<p>' . t('Icons are rendered through Drupal image and image-style render arrays when they come from image files or media image sources, and the fallback SVG is hardcoded. Labels use Drupal render arrays or link render arrays. The formatter does not enforce taxonomy term, media, or file access beyond the normal field rendering context; if icons or term pages are sensitive, enforce access through field, media, file, taxonomy term, and route permissions. Custom CSS classes are entered by site builders and should be treated as trusted configuration.') . '</p>';
+
+      return $output;
+  }
+
+  return NULL;
+}

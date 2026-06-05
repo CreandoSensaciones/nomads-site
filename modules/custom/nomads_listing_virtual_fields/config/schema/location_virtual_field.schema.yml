@@ -5,6 +5,9 @@ core.entity_view_display.*.*.*.third_party.nomads_listing_virtual_fields:
     link_terms:
       type: boolean
       label: 'Link terms'
+    output_mode:
+      type: string
+      label: 'Output mode'
     max_bundles:
       type: integer
       label: 'Maximal number of bundles'
