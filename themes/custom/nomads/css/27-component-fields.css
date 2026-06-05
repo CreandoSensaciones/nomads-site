@@ -69,9 +69,7 @@ article .field--name-field-description {
   padding: 10px;
 }
 
-.node--view-mode-full .paragraph-relevance-key-aspects__group {
-  margin-top: 30px;
-}
+
 /* Paragraph relevance group labels (h3) */
 .node--view-mode-full .nomads-icon-formatter--paragraph-relevance .nomads-icon-formatter__title {
   font-size: 13pt;

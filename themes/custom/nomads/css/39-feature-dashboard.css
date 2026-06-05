@@ -38,9 +38,6 @@
   margin-right: 5px;
   /* margin-left: -20px; */
 }
-.view-dashboard-content .nomads-pill {
-  padding: 1px 3px;
-}
 .view-dashboard-content .nomads-pills > * + * {
   opacity: 0.7;
 }
@@ -67,8 +64,7 @@
   color: #fff !important;
 }
 .nomads-dashboard-tile .nomads-pill {
-  background: #fff;
-  color:#012f47;
+  background: linear-gradient(135deg, #66C3D0 0%, #33A7B8 100%) !important;
 }
 .nomads-dashboard-tile .views-field-field-defaults-tags .nomads-pill {
   font-size: 8pt;

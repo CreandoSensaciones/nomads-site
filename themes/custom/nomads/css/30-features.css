@@ -120,6 +120,19 @@
 
 
 /* ========== Feedback ========== */
+@media (max-width: 960px) {
+.website-feedback-toggle-wrapper {
+    bottom: 75px;
+    z-index: 21000;
+}
+.website-feedback-dialog {
+    top: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box;
+    padding: 10px 10px 50px 10px !important;
+    z-index: 21000 !important;
+}
+}
 /*
 .website-feedback-toggle-wrapper {
   position: fixed;

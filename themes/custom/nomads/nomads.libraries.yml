@@ -20,6 +20,7 @@ global:
       css/25-component-tiles.css: {}
       css/26-component-modals.css: {}
       css/27-component-fields.css: {}
+      css/28-component-booking-bar.css: {}
       css/30-features.css: {}
       css/31-feature-navbar.css: {}
       css/32-feature-hero.css: {}

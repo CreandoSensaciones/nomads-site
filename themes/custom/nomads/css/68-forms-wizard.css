@@ -524,3 +524,6 @@
 }
 
 
+.node-listing-onboarding-form .tabledrag-hide {
+  display: none !important;
+}

@@ -523,7 +523,8 @@
   font-size: 1.05rem;
   line-height: 1.45;
   font-weight: 500;
-  color: rgba(255,255,255,0.98);
+  
+  color:#00486E;
 }
 
 /* normal paragraphs */
@@ -531,7 +532,8 @@
   margin: 0 0 16px;
   font-size: 1rem;
   line-height: 1.5;
-  color: rgba(255,255,255,0.92);
+  
+  color:#00486E;
 }
 
 /* bullet list */
@@ -622,11 +624,17 @@
 .promo-sticker {
   position: absolute;
   bottom: 0;
-  right: 0;
-  width: 15vw;
-  height: 15vw;
+  right: -20px;
+  width: 200px;
+  height: 200px;
   transform: rotate(12deg);
   filter: drop-shadow(8px 10px 10px rgba(0,0,0,.2));
+}
+@media (min-width: 1000px) {
+  .promo-sticker {
+  width: 280px;
+  height: 280px;
+  }
 }
 
 /* responsive */
@@ -638,9 +646,12 @@
   .membership-section #paragraph_grid > .field--name-field-paragraphs > .field__item:nth-child(2) .paragraph--type--text {
     transform: none;
   }
+  .membership-section #paragraph_grid > .field--name-field-paragraphs > .field__item:nth-child(2) .paragraph--type--text {
+    transform: none;
+  }
 
-  .membership-section #paragraph_grid > .field--name-field-paragraphs > .field__item:nth-child(2) .paragraph--type--text:hover {
-    transform: translateY(-4px);
+  .membership-section #paragraph_grid > .field--name-field-paragraphs > .field__item:nth-child(2) ul {
+    margin-bottom: 80px;
   }
 }
 
@@ -682,6 +693,9 @@
   --bg: #f2f2f2;
 
   position: relative;
+}
+.root-frontpage .landing-collapsed-wrap {
+  --bg: #eee;
 }
 
 .landing-collapsed {

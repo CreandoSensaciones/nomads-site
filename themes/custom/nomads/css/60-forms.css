@@ -22,7 +22,8 @@
 }
 
 .vertical-tabs__pane .details-wrapper,
-.vertical-tabs__pane .paragraphs-subform  {
+.vertical-tabs__pane .paragraphs-subform,
+form.paragraph-form  {
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -50,8 +51,6 @@ form {
 
   --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
   --shadow-md: 0 10px 24px rgba(16, 24, 40, 0.08);
-
-  color: var(--form-text);
 }
 
 
@@ -1387,3 +1386,4 @@ form.user-form #edit-account > .form-item:last-child {
     font-weight: 600;
     color: #035c8f;
     margin: 0;
+}

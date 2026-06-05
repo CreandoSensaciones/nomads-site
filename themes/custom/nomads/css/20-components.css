@@ -26,143 +26,81 @@
 }
 */
 
-
-/* Booking bar */
-.booking-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px 28px;
-  width: 100%;
-  max-width: 1570px;
-  grid-column: 1 / -1;
-  margin: 30px auto;
+.block-block-content {
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
 }
-.booking-bar:has(> :nth-child(2)) {
-  justify-content: space-between;
-  max-width: 800px;
+#block-nomads-lastfooternote {
+  max-width: none;
 }
-.booking-bar:has(> :nth-child(4)) {
-  justify-content: space-between;
-  max-width: 1570px;
-}
-
-.booking-bar > .field {
-  flex: 0 0 auto;
-}
-
-/* Price */
-.booking-bar .field--name-field-price-incentive {
-  white-space: nowrap;
-  font-size: 22px;
-  font-weight: 500;
-  color: #444;
-  line-height: 1.15;
-}
-
-.booking-bar .field--name-field-price-incentive::before {
-  content: "Pricing";
-  display: block;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  color: #0d79b7;
-  margin-bottom: 2px;
-}
-
-/* Website + Booking buttons */
-.booking-bar .field--name-field-website a,
-.booking-bar .field--name-field-booking-link a {
+.soon-come {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 160px;
-  height: 44px;
-  padding: 0;
-  font-size: 0 !important;
-  line-height: 1;
-  text-decoration: none;
-}
-
-.booking-bar .field--name-field-website a::after,
-.booking-bar .field--name-field-booking-link a::after {
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1;
-  color: #fff;
-}
-
-.booking-bar .field--name-field-website a::after {
-  content: "Website";
-}
-
-.booking-bar .field--name-field-booking-link a::after {
-  content: "Booking";
-}
-
-/* WhatsApp + email icons */
-.booking-bar .field--name-field-whatsapp a,
-.booking-bar .field--name-field-email a {
-  display: block;
-  width: 64px;
-  height: 64px;
-  overflow: hidden;
-  font-size: 0 !important;
-  line-height: 0;
-  color: transparent;
-  text-indent: -9999px;
-  white-space: nowrap;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-}
-
-.booking-bar .field--name-field-whatsapp a {
-  background-image: url("/themes/custom/nomads/assets/ui/Whatsapp.svg");
-}
-
-.booking-bar .field--name-field-email a {
-  background-image: url("/themes/custom/nomads/assets/ui/email.svg");
-}
-
-/* Perk */
-.booking-bar .field--name-field-perk-percentage {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 8px;
-  white-space: nowrap;
-  padding: 8px 18px;
+  padding: 0.28em 0.7em;
   border-radius: 999px;
-  background: rgba(13, 121, 183, .08);
-  font-size: 42px;
-  line-height: 1;
-  color: #222;
-}
 
-.booking-bar .field--name-field-perk-percentage::before {
-  content: "Member perk";
-  font-size: 14px;
+  font-size: 1rem;
   font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: .04em;
-  color: #0d79b7;
+  line-height: 1;
+
+  color: #00486E;
+  background: linear-gradient(135deg, #D6F5F2 0%, #9ADFEF 100%);
+  border: 1px solid rgba(0, 72, 110, 0.18);
+  box-shadow: 0 4px 12px rgba(0, 72, 110, 0.12);
+  white-space: nowrap;
+  margin: 0 auto;
+  align-self: center;
+}
+.soon-come-wrapper {
+  text-align: center;
+  padding: 20px;
 }
 
-.booking-bar .field--name-field-perk-percentage::after {
-  content: "for members";
-  font-size: 18px;
-  font-weight: 400;
-  color: #222;
+.soon-come::before {
+  content: "✦";
+  margin-right: 0.35em;
+  font-size: 0.8em;
+  opacity: 0.85;
 }
 
-/* Mobile fallback */
-@media (max-width: 900px) {
-  .booking-bar {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
+/* profile-map */
+
+#profile-map {
+  margin: 20px auto;
+  padding: 20px;
+  min-width: 80%;
+  box-sizing: border-box;
 }
+#profile-map .fieldset-wrapper {
+  
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  height: 100%;
+  gap: 20px;
+}
+#profile-map legend {
+  color: #aaa;
+  text-transform: uppercase;
+  padding: 0;
+  display: block;
+  float: none;
+  position: static;
+}
+#profile-map .nomads-icon-formatter {
+  display: contents;
+}
+@media (min-width: 960px) {
+  #profile-map {
+  min-height: 60%;
+}
+}
+
+
 
 
 

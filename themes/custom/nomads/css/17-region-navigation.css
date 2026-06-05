@@ -112,14 +112,19 @@
   }
 
   .region.region-navigation {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: auto auto auto;
-    align-items: start;
-    column-gap: 0.75rem;
-    row-gap: 0.9rem;
-    width: 100%;
+    display: flex;
+
+  flex-direction: column;
+    flex-wrap: wrap;
+    align-items: flex-start;
   }
+.region-navigation > * {
+  flex: 0 0 auto;
+}
+.region-navigation > *:last-child {
+  flex: 1 1 auto;
+}
+
 
   .region.region-navigation .block-nomads-navigation-geo-navigation,
   .region.region-navigation .block-nomads-navigation-date-period-navigation {
@@ -196,9 +201,12 @@
   }
 
   .region.region-navigation .nomads-specific-navigation__pill {
-    min-height: 2rem;
-    padding: 0.32rem 0.58rem;
+    padding: 3px 10px;
+    margin: 5px 0;
   }
+  .region.region-navigation .nomads-specific-navigation__term-label {
+    font-size: 10pt;
+}
 
   .region.region-navigation .nomads-specific-navigation__clear {
     align-self: flex-start;
@@ -213,6 +221,18 @@
     margin: 0 !important;
     justify-self: stretch;
   }
+  .region.region-navigation #block-nomads-rootnavigation {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    justify-self: stretch;
+  }
+  .region.region-navigation #block-nomads-rootnavigation li {
+    display: inline-block;
+  }
+
 
   .region.region-navigation .nomads-tag-navigation {
     display: flex;

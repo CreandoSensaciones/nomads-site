@@ -1,5 +1,10 @@
 /* ========== Paragraphs general ========== */
 
+
+.page-node-type-page .field--name-field-paragraphs {
+  margin-top: 50px;
+}
+
 /* ========== Location ========== */
 
 #edit-group-location-date .tabledrag-toggle-weight-wrapper {
@@ -8,9 +13,12 @@
 #edit-group-price .tabledrag-toggle-weight-wrapper {
   display: none;
 }
-tbody .paragraph-type--location > td > div > .form-wrapper,
-tbody .paragraph-type--price > td > div > .form-wrapper,
-tbody .paragraph-type--price > td > div.ajax-new-content > div > .form-wrapper {
+.node-listing-edit-form tbody .paragraph-type--location > td > div > .form-wrapper,
+.node-listing-edit-form tbody .paragraph-type--price > td > div > .form-wrapper,
+.node-listing-edit-form tbody .paragraph-type--price > td > div.ajax-new-content > div > .form-wrapper,
+.node-listing-form tbody .paragraph-type--location > td > div > .form-wrapper,
+.node-listing-form tbody .paragraph-type--price > td > div > .form-wrapper,
+.node-listing-form tbody .paragraph-type--price > td > div.ajax-new-content > div > .form-wrapper {
   border: 2px solid #000;
   margin: 20px 0;
   padding: 20px;
@@ -164,6 +172,8 @@ tbody .paragraph-type--price > td > div.ajax-new-content > div > .form-wrapper {
   float: right;
   margin-left: 2vw;
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.3);
+  max-width: 40%;
+  height: auto;
 }
 .user-picture {
   aspect-ratio: 1 / 1;

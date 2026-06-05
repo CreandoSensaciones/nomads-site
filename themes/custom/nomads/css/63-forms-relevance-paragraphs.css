@@ -30,3 +30,22 @@
 form .relevance-paragraph h2 {
   font-size: 20pt;
 }
+
+
+form.paragraph-form {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.relevance-ui .field--name-field-relevance .form-radios,
+.relevance-ui .field--name-field-relevance2 .form-radios {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.relevance-ui .field--name-field-relevance .fieldset-wrapper,
+.relevance-ui .field--name-field-relevance2 .fieldset-wrapper {
+  display: contents;
+}

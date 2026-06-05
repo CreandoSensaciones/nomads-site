@@ -69,11 +69,14 @@
 
   /* optional: keep both columns nicely balanced when possible */
   column-fill: balance;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 /* Responsive: fall back to 1 column on narrow screens */
 @media (max-width: 700px) {
   .nomads-taxonomy-icons--grouped {
     column-count: 1;
+    column-gap: 0;
   }
 }
 
@@ -91,6 +94,10 @@
   border-radius: 8px;
   padding: 5px 15px 15px 15px;
   margin: 0 0 1rem 0;
+  max-width: 100%;
+  box-sizing: border-box;
+
+  break-inside: auto;
 
   /* shadow box */
   box-shadow: 0 10px 24px rgba(9, 96, 128, 0.08);

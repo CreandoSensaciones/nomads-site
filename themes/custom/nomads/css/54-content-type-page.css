@@ -2,8 +2,15 @@
 
 /* paragraph stack */
 
+.user-picture.align-right {
+  max-width: 50%;
+  height: auto;
+}
 
-
+.organizer-features .field--name-field-media-image-1 img {
+  width: 200px;
+  height: 200px;
+}
 
 
 .node--type-page.node--view-mode-full .field--name-body p,
@@ -28,14 +35,25 @@
   margin-right: auto;
   margin-left: auto;
 }
+.node--type-page.node--view-mode-full .field--name-field-images .field__item {
+  text-align: center;
+}
+.node--type-page.node--view-mode-full .field--name-field-images img {
+  border-radius: 12px;
+  width: 100% !important;
+  max-width: 500px;
+  height: auto !important;
+  margin: 10px auto;
+}
+@media (min-width: 980px) {
 .node--type-page.node--view-mode-full.width-960 .field--name-field-images {
   width: 40vw;
   float: right;
   margin: 10px !important;
 }
 .node--type-page.node--view-mode-full .field--name-field-images img {
-  border-radius: 12px;
   width: 40vw !important;
   height: auto !important;
+}
 }
 

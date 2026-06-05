@@ -1,0 +1,114 @@
+
+/* Price */
+.booking-bar .field--name-field-price-incentive {
+  white-space: nowrap;
+  font-size: 22px;
+  font-weight: 500;
+  color: #444;
+  line-height: 1.15;
+}
+
+.booking-bar .field--name-field-price-incentive::before {
+  content: "Pricing";
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #0d79b7;
+  margin-bottom: 2px;
+}
+
+/* Website + Booking buttons */
+.booking-bar .field--name-field-website a,
+.booking-bar .field--name-field-booking-link a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 160px;
+  height: 44px;
+  padding: 0;
+  font-size: 0 !important;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.booking-bar .field--name-field-website a::after,
+.booking-bar .field--name-field-booking-link a::after {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+}
+
+.booking-bar .field--name-field-website a::after {
+  content: "Website";
+}
+
+.booking-bar .field--name-field-booking-link a::after {
+  content: "Booking";
+}
+
+/* WhatsApp + email icons */
+.booking-bar .field--name-field-whatsapp a,
+.booking-bar .field--name-field-email a {
+  display: block;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  font-size: 0 !important;
+  line-height: 0;
+  color: transparent;
+  text-indent: -9999px;
+  white-space: nowrap;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+.booking-bar .field--name-field-whatsapp a {
+  background-image: url("/themes/custom/nomads/assets/ui/Whatsapp.svg");
+}
+
+.booking-bar .field--name-field-email a {
+  background-image: url("/themes/custom/nomads/assets/ui/email.svg");
+}
+
+/* Perk */
+.booking-bar .field--name-field-perk-percentage {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(13, 121, 183, .08);
+  font-size: 42px;
+  line-height: 1;
+  color: #222;
+}
+
+.booking-bar .field--name-field-perk-percentage::before {
+  content: "Member perk";
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #0d79b7;
+}
+
+.booking-bar .field--name-field-perk-percentage::after {
+  content: "for members";
+  font-size: 18px;
+  font-weight: 400;
+  color: #222;
+}
+
+/* Mobile fallback */
+@media (max-width: 900px) {
+  .booking-bar {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+

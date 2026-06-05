@@ -1,4 +1,9 @@
 
+@media (max-width: 980px) {
+.nomads-navbar__brand-wrap .logo-label {
+  display: none;
+}
+}
 
 /* Nomads: basic vertical spacing */
 
@@ -210,7 +215,7 @@
     transform: translateY(-100%);
   }
 
-  .region-navigation {
+  section.region-navigation {
     position: fixed;
     z-index: 19970;
     top: 126px;
@@ -257,7 +262,13 @@
     min-width: 64px;
     height: 64px;
     overflow: visible;
-    padding-bottom: 2px;
+    padding: 3px 0;
+    
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+
+  align-items: center;
   }
 
   .nomads-navbar .nomads-navbar__group--views .icon-label {
@@ -283,8 +294,8 @@
   }
 
   div .nomads-navbar__group--views img {
-    height: 10vw;
-    width: 10vw;
+    height: 8vw;
+    width: 8vw;
     max-height: 50px;
     max-width: 50px;
   }
@@ -329,7 +340,7 @@
   height: 20px;
 }
 .nomads-navbar:hover .icon-wrapper {
-  height: 65px;
+  height: 64px;
 }
 .nomads-navbar__icon {
   width: 55px;
@@ -377,7 +388,7 @@
 
 @media (max-width: 980px) {
   .nomads-navbar__icon {
-  width: 45px;
+  width: 32px;
   height: 32px;
 }
   .nomads-navbar__icon img {
@@ -417,7 +428,7 @@
   
 }
 
-@media (max-width: 900px) {
+@media (max-width: 980px) {
   .nomads-navbar__group {
     gap: 10px;
   }
